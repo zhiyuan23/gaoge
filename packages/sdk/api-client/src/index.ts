@@ -1,8 +1,8 @@
-import type { ApiEnvelope } from '@gaoge/shared-types';
+import type { ApiEnvelope } from '@gaoge/shared-types'
 
 export interface ApiClient {
-  baseURL: string;
-  get<T>(path: string): Promise<ApiEnvelope<T>>;
+  baseURL: string
+  get<T>(path: string): Promise<ApiEnvelope<T>>
 }
 
 export function createApiClient(baseURL: string): ApiClient {
@@ -12,7 +12,7 @@ export function createApiClient(baseURL: string): ApiClient {
       return {
         data: undefined as T,
         requestId: `${baseURL}:${path}`,
-      };
+      }
     },
-  };
+  }
 }

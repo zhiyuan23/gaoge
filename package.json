@@ -3,28 +3,54 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.8.1",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "turbo run dev --parallel",
+    "dev:admin": "turbo run dev --filter=@gaoge/app-admin",
+    "dev:web": "turbo run dev --filter=@gaoge/app-web",
+    "dev:miniapp": "turbo run dev --filter=@gaoge/app-miniapp",
+    "dev:api": "turbo run dev --filter=@gaoge/app-api",
     "build": "turbo run build",
-    "lint": "prettier --check . && eslint .",
+    "lint": "prettier --check . && eslint . && pnpm lint:style",
+    "lint:fix": "prettier --write . && eslint . --fix && pnpm lint:style:fix",
+    "lint:style": "stylelint \"apps/**/*.{css,scss,vue}\" \"packages/**/*.{css,scss,vue}\"",
+    "lint:style:fix": "stylelint \"apps/**/*.{css,scss,vue}\" \"packages/**/*.{css,scss,vue}\" --fix",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean && rm -rf .turbo",
     "prepare": "husky",
-    "cz": "pnpm dlx czg"
+    "cz": "git-cz"
   },
   "devDependencies": {
+    "@stylistic/stylelint-config": "^5.0.0",
     "@commitlint/cli": "^20.1.0",
     "@commitlint/config-conventional": "^20.0.0",
+    "commitizen": "^4.3.1",
+    "cz-git": "^1.11.0",
     "eslint": "^9.25.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-vue": "^10.4.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.1",
     "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "stylelint": "^17.8.0",
+    "stylelint-config-recess-order": "^7.7.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-config-standard-vue": "^1.0.0",
+    "stylelint-order": "^8.0.1",
+    "stylelint-scss": "^7.0.0",
     "turbo": "^2.5.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.32.0",
+    "vue-eslint-parser": "^10.1.3"
   },
-  "lint-staged": {
-    "*.{js,mjs,cjs,ts,tsx,json,md,yml,yaml}": [
-      "prettier --write"
-    ]
+  "config": {
+    "commitizen": {
+      "path": "node_modules/cz-git"
+    }
   }
 }

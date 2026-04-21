@@ -27,3 +27,16 @@ This branch rebuilds the repository as a full-stack monorepo baseline.
 2. `packages/*` must never depend on `apps/*`.
 3. `shared/*` stays runtime-agnostic.
 4. UI is shared per framework, not across all frameworks by force.
+
+## Formatting
+
+- `Prettier` is the only formatter.
+- `ESLint` is responsible for code quality, not formatting.
+- VS Code should format on save and run ESLint fixes explicitly on save.
+- Code style follows the admin baseline: no semicolons, single quotes, at most one empty line, sorted imports, and stable Vue block order.
+- `Stylelint` is responsible for CSS/SCSS/Vue style blocks.
+
+## Versioning
+
+- `changeset` creates package change records for shared packages.
+- `pnpm version-packages` applies pending version updates when package publishing is introduced.

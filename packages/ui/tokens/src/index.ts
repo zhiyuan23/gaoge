@@ -5,4 +5,4 @@ export const lightTokens = {
   colorPrimary: '#0f766e',
   radiusMedium: '16px',
   spacingMedium: '16px',
-} as const;
+} as const
