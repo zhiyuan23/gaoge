@@ -1,6 +1,6 @@
 # Gaoge Monorepo
 
-当前分支用于搭建全栈 monorepo 基座。
+当前仓库用于承载高歌体育的全栈 monorepo。
 
 ## 目录结构
 
@@ -9,17 +9,24 @@
 - `infra/`：部署与环境相关资源
 - `docs/`：架构说明与协作约定
 
-## 第一阶段范围
+## 当前应用
 
-- `apps/api`：NestJS 服务端应用入口
-- `apps/admin`：Vue 3 管理后台壳
-- `apps/web`：Vue Web 应用壳
-- `apps/miniapp`：uni-app 小程序应用壳
+- `apps/api`：已迁入的 NestJS 服务端，当前包含球员信息 CRUD
+- `apps/admin`：已迁入的 Vue 3 管理后台，当前已接通球员信息 CRUD
+- `apps/web`：后续迁入的 Vue Web 应用
+- `apps/miniapp`：后续迁入的 uni-app 小程序应用
 - `packages/shared/*`：类型、常量、工具函数、校验契约
 - `packages/sdk/*`：接口客户端与契约生成边界
 - `packages/ui/tokens`：跨端设计令牌
 - `packages/server/database`：服务端数据库访问边界
 - `packages/configs/*`：工作区级共享配置
+
+## 当前迁移状态
+
+- `gaoge-server` 已迁入 `apps/api`
+- `gaoge-admin` 已迁入 `apps/admin`
+- 原单仓库中的独立配置已按当前 monorepo 规范收敛
+- 当前部署入口以 `apps/api` 为主，后续其他应用迁入后再继续补充工作流
 
 ## 基础约束
 

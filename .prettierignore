@@ -5,3 +5,8 @@ dist
 coverage
 .changeset/*.md
 pnpm-lock.yaml
+apps/admin/public/tinymce/**
+apps/admin/src/iconify/data.json
+apps/admin/src/iconify/index.json
+apps/admin/src/types/auto-imports.d.ts
+apps/admin/src/types/components.d.ts

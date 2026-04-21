@@ -1,8 +1,4 @@
 {
-  "extends": "../../packages/configs/typescript-config/web.json",
-  "compilerOptions": {
-    "rootDir": "../..",
-    "outDir": "dist"
-  },
-  "include": ["src/**/*.ts"]
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "files": []
 }

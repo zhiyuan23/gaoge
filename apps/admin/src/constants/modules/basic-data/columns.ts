@@ -1,0 +1,217 @@
+export const BASIC_DATA_COLUMNS = {
+  // 兽药生产企业数据
+  syscqyinfo: [
+    { prop: 'qymc', label: '企业名称' },
+    { prop: 'xkzh', label: '许可证号' },
+    { prop: 'gmpZsh', label: 'GMP证书' },
+    { prop: 'cym', label: '曾用名' },
+    {
+      label: '操作',
+      slot: 'action',
+      actionParams: { name: 'qydm' },
+      width: 100,
+      fixed: 'right' as const,
+      align: 'center' as const,
+    },
+  ],
+  // 兽药经营企业数据
+  distributor: [
+    { prop: 'code', label: '许可证号', width: 300 },
+    { prop: 'fullName', label: '企业名称', width: 300 },
+    { prop: 'location', label: '所在地', width: 300 },
+    { prop: 'distributorAddress', label: '经营地址', width: 400 },
+    { prop: 'distributorRange', label: '经营范围', width: 400 },
+    { prop: 'issueDate', label: '发证日期', width: 110 },
+    { prop: 'terminationDate', label: '有效期至', width: 110 },
+    { prop: 'issuingAgency', label: '发证机关', width: 200 },
+    { prop: 'nameUsedBefore', label: '备注', width: 300 },
+  ],
+  // 兽药产品批准文号数据
+  sycppzwh: [
+    { prop: 'qymc', label: '企业名称', width: 300 },
+    { prop: 'tym', label: '通用名' },
+    { prop: 'gg', label: '规格', width: 300 },
+    { prop: 'spm', label: '商品名', width: 100 },
+    { prop: 'pzwh', label: '批准文号', width: 180 },
+    { prop: 'pzrq', label: '批准日期', width: 110 },
+    { prop: 'yxq', label: '有效期', width: 110 },
+    { prop: 'sxyy', label: '失效原因', width: 150 },
+    { prop: 'bgqk', label: '变更情况', width: 150 },
+  ],
+  // 进口兽用生物制品批签发数据
+  jksyby: [
+    { prop: 'dljg', label: '代理机构', width: 250 },
+    { prop: 'scqy', label: '生产企业', width: 300 },
+    { prop: 'cpmc', label: '产品' },
+    { prop: 'zczsh', label: '注册证书号', width: 200 },
+    { prop: 'ph', label: '生产批号', width: 150 },
+    { prop: 'gg', label: '规格(头(羽)/份/瓶)', width: 145 },
+    { prop: 'sxrq', label: '失效日期', width: 100 },
+    { prop: 'qfjg', label: '签发结果', width: 100 },
+    { prop: 'qfrq', label: '签发日期', width: 100 },
+  ],
+  // 国产兽用生物制品批签发数据
+  syswzppqfgl: [
+    { prop: 'scqy', label: '生产企业', width: 300 },
+    { prop: 'cpmc', label: '产品' },
+    { prop: 'pzwh', label: '批准文号', width: 180 },
+    { prop: 'ph', label: '生产批号', width: 120 },
+    { prop: 'sxrq', label: '失效日期', width: 100 },
+    { prop: 'qfjg', label: '签发结果', width: 100 },
+    { prop: 'qfrq', label: '签发日期', width: 100 },
+  ],
+  // 化药监督抽检结果数据
+  hyjdcjjg: [
+    { prop: 'nd', label: '年度', width: 70 },
+    { prop: 'jd', label: '季度', width: 70 },
+    { prop: 'yf', label: '月份', width: 70 },
+    { prop: 'cjps', label: '抽检批次', width: 100 },
+    {
+      prop: 'cpwh',
+      label: '批准文号',
+      width: 180,
+      link: true,
+      linkParams: {
+        type: 'detail',
+        code: 'sycppzwh',
+        name: 'pzwhitemid',
+      },
+    },
+    { prop: 'cjhj', label: '抽样环节', width: 100 },
+    { prop: 'cpmc', label: '通用名称', width: 250 },
+    { prop: 'spm', label: '商品名', width: 150 },
+    { prop: 'yylb', label: '用药类别', width: 100 },
+    { prop: 'bcscqy', label: '标称生产企业', width: 350 },
+    { prop: 'bcydwmc', label: '被抽样单位', width: 350 },
+    { prop: 'ph', label: '生产批号', width: 120 },
+    { prop: 'bhgxm', label: '不符合规定项目', width: 250 },
+    { prop: 'jydw', label: '检验机构', width: 100 },
+    { prop: 'bz', label: '备注', width: 300 },
+  ],
+  // 生药监督抽检结果数据
+  syjdcjjg: [
+    { prop: 'nd', label: '年度', width: 70 },
+    { prop: 'jd', label: '季度', width: 70 },
+    {
+      prop: 'cpwh',
+      label: '批准文号',
+      width: 180,
+      link: true,
+      linkParams: {
+        type: 'detail',
+        code: 'sycppzwh',
+        name: 'pzwhitemid',
+      },
+    },
+    { prop: 'cjhj', label: '抽样环节', width: 100 },
+    { prop: 'cpmc', label: '通用名称', width: 300 },
+    { prop: 'bcscqy', label: '标称生产企业', width: 350 },
+    { prop: 'bcydwmc', label: '被抽样单位', width: 350 },
+    { prop: 'ph', label: '生产批号', width: 120 },
+    { prop: 'jyxm', label: '检验项目', width: 500 },
+    { prop: 'bhgxm', label: '不符合规定项目', width: 250 },
+    { prop: 'jydw', label: '检验机构', width: 100 },
+    { prop: 'jyyj', label: '检验依据', width: 400 },
+    { prop: 'bz', label: '备注', width: 300 },
+  ],
+  // 临床试验审批数据
+  lcsysp: [
+    { prop: 'pjh', label: '批件号', width: 120 },
+    {
+      prop: 'xmmc',
+      label: '项目名称',
+      width: 500,
+      link: true,
+      linkParams: {
+        type: 'list',
+        name: 'xmmc',
+        code: 'gnxsyzc',
+      },
+    },
+    { prop: 'sqdwmc', label: '申请单位名称', width: 500 },
+    { prop: 'szcpph', label: '试制产品批号', width: 500 },
+    { prop: 'szcpsl', label: '试制产品的数量', width: 500 },
+    { prop: 'nlcsydd', label: '拟临床试验地点', width: 500 },
+    { prop: 'yxqx', label: '有效期限', width: 200 },
+  ],
+  // 国内新兽药注册数据
+  gnxsyzc: [
+    { prop: 'xsymc', label: '新兽药名称' },
+    { prop: 'yzdw', label: '研制单位', width: 400 },
+    { prop: 'lb', label: '类别', width: 70 },
+    { prop: 'gg', label: '规格', width: 100 },
+    { prop: 'syz', label: '适应症' },
+    { prop: 'zsh', label: '新兽药注册证书号' },
+    { prop: 'bz', label: '备注' },
+    { prop: 'ggh', label: '公告号', width: 100 },
+    { prop: 'ggrq', label: '公告日期', width: 120 },
+  ],
+  // 进口兽药注册数据
+  jksyzc: [
+    { prop: 'symc', label: '兽药名称', width: 400 },
+    { prop: 'syywmc', label: '兽药英文名称', width: 200 },
+    { prop: 'scqymc', label: '生产企业名称', width: 400 },
+    { prop: 'scqyywmc', label: '生产企业英文名称', width: 140 },
+    { prop: 'sccmc', label: '生产厂名称', width: 400 },
+    { prop: 'sccdz', label: '生产厂地址', width: 400 },
+    { prop: 'gg', label: '规格', width: 250 },
+    { prop: 'syz', label: '适应症', width: 200 },
+    { prop: 'zsh', label: '证书号', width: 250 },
+    { prop: 'yxqx', label: '有效期限', width: 200 },
+    { prop: 'bz', label: '备注' },
+    { prop: 'ggh', label: '公告号', width: 100 },
+    { prop: 'ggrq', label: '公告日期', width: 120 },
+  ],
+  // 国内兽药说明书数据
+  gnsybqsms: [
+    { prop: 'tym', label: '通用名' },
+    { prop: 'gg', label: '规格' },
+    {
+      prop: 'fjm',
+      label: '说明书范本',
+      link: true,
+      linkParams: { type: 'pdf', name: 'fj' },
+    },
+    { prop: 'fjsm', label: '附件说明', width: 100 },
+  ],
+  // 进口兽药说明书数据
+  jksybqsms: [
+    { prop: 'tym', label: '通用名' },
+    { prop: 'gg', label: '规格' },
+    {
+      prop: 'fjm',
+      label: '说明书范本',
+      link: true,
+      linkParams: { type: 'pdf', name: 'fj' },
+    },
+    { prop: 'fjsm', label: '附件说明', width: 100 },
+  ],
+  // 兽药国家标准数据
+  sygjbz: [
+    {
+      prop: 'bzmc',
+      label: '标准名称',
+      link: true,
+      linkParams: {
+        type: 'list',
+        name: 'fjm',
+        code: 'sycppzwh',
+      },
+    },
+    { prop: 'gg', label: '规格' },
+    { prop: 'bzbm', label: '标准编码', width: 200 },
+    {
+      prop: 'fjm',
+      label: '附件名',
+      link: true,
+      linkParams: { type: 'pdf', name: 'fj' },
+    },
+    { prop: 'bz', label: '备注', width: 150 },
+  ],
+  // 兽用抗菌药使用减量化达标养殖场数据
+  companyIntegrityRecord: [
+    { prop: 'provinceName', label: '省份', width: 150 },
+    { prop: 'poultryType', label: '兽禽种类', width: 150 },
+    { prop: 'finalName', label: '养殖场名称' },
+  ],
+}

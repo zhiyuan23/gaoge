@@ -1,0 +1,237 @@
+name: 部署 API 到生产环境
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api-production
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  verify:
+    name: 校验与构建
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 获取 pnpm store 目录
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: 缓存 pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 生成 Prisma Client
+        run: pnpm --filter @gaoge/app-api db:generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: 类型检查
+        run: pnpm typecheck
+
+      - name: 构建管理后台
+        run: pnpm --filter @gaoge/app-admin build
+
+      - name: 构建服务端
+        run: pnpm --filter @gaoge/app-api build
+
+  deploy:
+    name: 部署到服务器
+    runs-on: ubuntu-latest
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 获取 pnpm store 目录
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: 缓存 pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 生成 Prisma Client
+        run: pnpm --filter @gaoge/app-api db:generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: 构建管理后台
+        run: pnpm --filter @gaoge/app-admin build
+
+      - name: 构建服务端
+        run: pnpm --filter @gaoge/app-api build
+
+      - name: 配置 SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 写入服务器 known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: 确保部署目录存在
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
+            mkdir -p ${{ secrets.DEPLOY_PATH }}
+          "
+
+      - name: 写入服务端环境变量
+        run: |
+          if [ -z "${{ secrets.DEPLOY_ENV_FILE }}" ]; then
+            echo "GitHub Secret DEPLOY_ENV_FILE 为空" >&2
+            exit 1
+          fi
+
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "mkdir -p ${{ secrets.DEPLOY_PATH }}/apps/api"
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/apps/api/.env" <<'EOF'
+          ${{ secrets.DEPLOY_ENV_FILE }}
+          EOF
+
+      - name: 同步 monorepo 文件到服务器
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.github' \
+            --exclude='.husky' \
+            --exclude='.vscode' \
+            --exclude='docs' \
+            --exclude='infra' \
+            --exclude='apps/web' \
+            --exclude='apps/miniapp' \
+            --exclude='*.log' \
+            ./ \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
+
+      - name: 安装生产依赖并生成 Prisma Client
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash -lc '
+            set -eo pipefail
+            export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
+            export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+            set -u
+
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            command -v node >/dev/null 2>&1 || { echo \"node not found\" >&2; exit 1; }
+            command -v pnpm >/dev/null 2>&1 || { echo \"pnpm not found\" >&2; exit 1; }
+            command -v pm2 >/dev/null 2>&1 || { echo \"pm2 not found\" >&2; exit 1; }
+
+            pnpm install --frozen-lockfile --prod --filter @gaoge/app-api...
+            export DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"
+            pnpm --filter @gaoge/app-api db:generate
+          '"
+
+      - name: 执行生产迁移
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash -lc '
+            set -eo pipefail
+            export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
+            export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+            set -u
+
+            cd ${{ secrets.DEPLOY_PATH }}
+            export DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"
+            pnpm --filter @gaoge/app-api db:migrate:prod
+          '"
+
+      - name: 重启 PM2 服务
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash -lc '
+            set -eo pipefail
+            export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
+            export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+            set -u
+
+            cd ${{ secrets.DEPLOY_PATH }}/apps/api
+            if pm2 describe gaoge-api >/dev/null 2>&1; then
+              pm2 reload ecosystem.config.cjs --only gaoge-api --update-env
+            else
+              pm2 start ecosystem.config.cjs --only gaoge-api --update-env
+            fi
+            pm2 save
+          '"
+
+      - name: 输出 PM2 状态
+        if: always()
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash -lc '
+            export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
+            export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+
+            pm2 status gaoge-api
+            pm2 logs gaoge-api --lines 50 --nostream
+          '"
+
+      - name: 健康检查
+        run: |
+          for i in {1..12}; do
+            if curl -fsS ${{ secrets.HEALTH_URL }}; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1

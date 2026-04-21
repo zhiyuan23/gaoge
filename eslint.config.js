@@ -77,12 +77,6 @@ export default [
           order: ['route', 'script', 'template', 'style'],
         },
       ],
-      'vue/component-tags-order': [
-        'error',
-        {
-          order: ['script', 'template', 'style'],
-        },
-      ],
     },
   },
   eslintConfigPrettier,
