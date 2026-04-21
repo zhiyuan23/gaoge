@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { cn } from '@/utils'
 import { X } from 'lucide-vue-next'
 import {
   DialogClose,
@@ -11,6 +10,9 @@ import {
   useForwardPropsEmits,
 } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
+
+import { cn } from '@/utils'
+
 import { type SheetVariants, sheetVariants } from '.'
 
 interface SheetContentProps extends DialogContentProps {
@@ -33,7 +35,7 @@ const emits = defineEmits<
 >()
 
 const delegatedProps = computed(() => {
-  const { class: _, side, ...delegated } = props
+  const { class: _, ...delegated } = props
 
   return delegated
 })

@@ -6,6 +6,7 @@ meta:
 <script setup lang="ts">
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
+
 import 'animate.css'
 
 const animateList = ref([

@@ -1,9 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
-// eslint-disable-next-line ts/consistent-type-imports
 import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
-// eslint-disable-next-line ts/consistent-type-imports
+
 import { PrismaService } from '../prisma/prisma.service'
 
 export interface JwtPayload {

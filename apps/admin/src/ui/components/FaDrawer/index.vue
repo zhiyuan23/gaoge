@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
+
 import { cn } from '@/utils'
+
 import {
   Sheet,
   SheetContent,
@@ -14,54 +16,55 @@ defineOptions({
   name: 'FaDrawer',
 })
 
-const props = withDefaults(
-  defineProps<{
-    modelValue?: boolean
-    side?: 'top' | 'bottom' | 'left' | 'right'
-    title: string
-    description?: string
-    loading?: boolean
-    closable?: boolean
-    centered?: boolean
-    bordered?: boolean
-    overlay?: boolean
-    overlayBlur?: boolean
-    showConfirmButton?: boolean
-    showCancelButton?: boolean
-    confirmButtonText?: string
-    cancelButtonText?: string
-    confirmButtonDisabled?: boolean
-    confirmButtonLoading?: boolean
-    header?: boolean
-    footer?: boolean
-    closeOnClickOverlay?: boolean
-    closeOnPressEscape?: boolean
-    class?: HTMLAttributes['class']
-    headerClass?: HTMLAttributes['class']
-    contentClass?: HTMLAttributes['class']
-    footerClass?: HTMLAttributes['class']
-  }>(),
-  {
-    modelValue: false,
-    side: 'right',
-    loading: false,
-    closable: true,
-    centered: false,
-    bordered: true,
-    overlay: true,
-    overlayBlur: false,
-    showConfirmButton: true,
-    showCancelButton: false,
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    confirmButtonDisabled: false,
-    confirmButtonLoading: false,
-    header: true,
-    footer: true,
-    closeOnClickOverlay: true,
-    closeOnPressEscape: true,
-  },
-)
+const {
+  modelValue = false,
+  side = 'right',
+  title,
+  description = '',
+  loading = false,
+  closable = true,
+  centered = false,
+  bordered = true,
+  overlay = true,
+  overlayBlur = false,
+  showConfirmButton = true,
+  showCancelButton = false,
+  confirmButtonText = '确定',
+  cancelButtonText = '取消',
+  confirmButtonDisabled = false,
+  confirmButtonLoading = false,
+  header = true,
+  footer = true,
+  closeOnClickOverlay = true,
+  closeOnPressEscape = true,
+  headerClass = '',
+  contentClass = '',
+  footerClass = '',
+} = defineProps<{
+  modelValue?: boolean
+  side?: 'top' | 'bottom' | 'left' | 'right'
+  title: string
+  description?: string
+  loading?: boolean
+  closable?: boolean
+  centered?: boolean
+  bordered?: boolean
+  overlay?: boolean
+  overlayBlur?: boolean
+  showConfirmButton?: boolean
+  showCancelButton?: boolean
+  confirmButtonText?: string
+  cancelButtonText?: string
+  confirmButtonDisabled?: boolean
+  confirmButtonLoading?: boolean
+  header?: boolean
+  footer?: boolean
+  closeOnClickOverlay?: boolean
+  closeOnPressEscape?: boolean
+  headerClass?: HTMLAttributes['class']
+  contentClass?: HTMLAttributes['class']
+  footerClass?: HTMLAttributes['class']
+}>()
 
 const emits = defineEmits<{
   'update:modelValue': [value: boolean]
@@ -73,10 +76,10 @@ const emits = defineEmits<{
   cancel: []
 }>()
 
-const isOpen = ref(props.modelValue)
+const isOpen = ref(modelValue)
 
 watch(
-  () => props.modelValue,
+  () => modelValue,
   (newValue) => {
     isOpen.value = newValue
   },
@@ -108,13 +111,13 @@ function handleFocusOutside(e: Event) {
 }
 
 function handleClickOutside(e: Event) {
-  if (!props.closeOnClickOverlay) {
+  if (!closeOnClickOverlay) {
     e.preventDefault()
   }
 }
 
 function handleEscapeKeyDown(e: KeyboardEvent) {
-  if (!props.closeOnPressEscape) {
+  if (!closeOnPressEscape) {
     e.preventDefault()
   }
 }
@@ -129,12 +132,12 @@ function handleAnimationEnd() {
 </script>
 
 <template>
-  <Sheet :modal="props.overlay" :open="isOpen" @update:open="updateOpen">
+  <Sheet :modal="overlay" :open="isOpen" @update:open="updateOpen">
     <SheetContent
-      :closable="props.closable"
-      :overlay-blur="props.overlayBlur"
+      :closable="closable"
+      :overlay-blur="overlayBlur"
       class="flex w-full flex-col gap-0 p-0"
-      :side="props.side"
+      :side="side"
       @close-auto-focus="handleFocusOutside"
       @focus-outside="handleFocusOutside"
       @pointer-down-outside="handleClickOutside"
@@ -145,47 +148,49 @@ function handleAnimationEnd() {
       <SheetHeader
         v-if="header"
         :class="
-          cn('gap-y-1 p-4', props.headerClass, {
-            'border-b': props.bordered,
+          cn('gap-y-1 p-4', headerClass, {
+            'border-b': bordered,
           })
         "
       >
         <slot name="header">
-          <SheetTitle :class="{ 'text-center': props.centered }">
+          <SheetTitle :class="{ 'text-center': centered }">
             {{ title }}
           </SheetTitle>
-          <SheetDescription v-if="!!description" :class="{ 'text-center': props.centered }">
+          <SheetDescription v-if="!!description" :class="{ 'text-center': centered }">
             {{ description }}
           </SheetDescription>
         </slot>
       </SheetHeader>
       <div class="of-y-hidden m-0 flex-1">
         <FaScrollArea class="h-full">
-          <div class="p-4">
+          <div :class="cn('p-4', contentClass)">
             <slot />
           </div>
         </FaScrollArea>
-        <div
-          v-show="props.loading"
-          class="z-1000 flex-center bg-popover/75 absolute inset-0 size-full"
-        >
+        <div v-show="loading" class="z-1000 flex-center bg-popover/75 absolute inset-0 size-full">
           <FaIcon name="i-line-md:loading-twotone-loop" class="size-10" />
         </div>
       </div>
       <SheetFooter
         v-if="footer"
         :class="
-          cn('gap-y-2 p-2', props.footerClass, {
-            'sm:justify-center': props.centered,
-            'border-t': props.bordered,
+          cn('gap-y-2 p-2', footerClass, {
+            'sm:justify-center': centered,
+            'border-t': bordered,
           })
         "
       >
         <slot name="footer">
-          <FaButton variant="outline" @click="onCancel">
+          <FaButton v-if="showCancelButton" variant="outline" @click="onCancel">
             {{ cancelButtonText }}
           </FaButton>
-          <FaButton @click="onConfirm">
+          <FaButton
+            v-if="showConfirmButton"
+            :disabled="confirmButtonDisabled"
+            :loading="confirmButtonLoading"
+            @click="onConfirm"
+          >
             {{ confirmButtonText }}
           </FaButton>
         </slot>

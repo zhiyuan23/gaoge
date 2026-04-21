@@ -1,29 +1,30 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { cn } from '@/utils'
 import { useElementSize, useScroll } from '@vueuse/core'
+import type { HTMLAttributes } from 'vue'
+
+import { cn } from '@/utils'
+
 import { ScrollArea, ScrollBar } from './scroll-area'
 
 defineOptions({
   name: 'FaScrollArea',
 })
 
-const props = withDefaults(
-  defineProps<{
-    horizontal?: boolean
-    scrollbar?: boolean
-    mask?: boolean
-    gradientColor?: string
-    class?: HTMLAttributes['class']
-    contentClass?: HTMLAttributes['class']
-  }>(),
-  {
-    horizontal: false,
-    scrollbar: true,
-    mask: false,
-    gradientColor: 'hsl(var(--background))',
-  },
-)
+const {
+  horizontal = false,
+  scrollbar = true,
+  mask = false,
+  gradientColor = 'hsl(var(--background))',
+  class: className = '',
+  contentClass = '',
+} = defineProps<{
+  horizontal?: boolean
+  scrollbar?: boolean
+  mask?: boolean
+  gradientColor?: string
+  class?: HTMLAttributes['class']
+  contentClass?: HTMLAttributes['class']
+}>()
 
 const scrollAreaRef = useTemplateRef('scrollAreaRef')
 
@@ -34,20 +35,20 @@ const arrivedState = ref<{
   bottom: boolean
 }>()
 const showMaskStart = computed(() => {
-  if (props.horizontal) {
+  if (horizontal) {
     return !arrivedState.value?.left
   }
   return !arrivedState.value?.top
 })
 const showMaskEnd = computed(() => {
-  if (props.horizontal) {
+  if (horizontal) {
     return !arrivedState.value?.right
   }
   return !arrivedState.value?.bottom
 })
 
 function onWheel(event: WheelEvent) {
-  if (props.horizontal) {
+  if (horizontal) {
     scrollAreaRef.value?.el?.viewportElement?.scrollBy({
       left: event.deltaY || event.detail,
     })
@@ -84,7 +85,7 @@ onMounted(() => {
 })
 
 function scrollTo(scrollNumber: number) {
-  if (props.horizontal) {
+  if (horizontal) {
     scrollAreaRef.value?.el?.viewportElement?.scrollTo({
       left: scrollNumber,
       behavior: 'smooth',
@@ -111,34 +112,34 @@ defineExpose({
         'after:(pointer-events-none z-1 content-empty) before:(pointer-events-none z-1 content-empty) absolute relative flex overflow-hidden from-transparent to-[var(--mask-scroll-container-gradient-color)] opacity-0 transition-opacity',
         {
           'after:(bg-gradient-to-r end-0) before:(bg-gradient-to-l start-0) h-full w-12 rtl:bg-gradient-to-l rtl:bg-gradient-to-r':
-            props.horizontal,
+            horizontal,
           'after:(bg-gradient-to-b bottom-0) before:(bg-gradient-to-t w-full) h-12 w-full':
-            !props.horizontal,
-          'before:(opacity-100!)': props.mask && showMaskStart,
-          'after:(opacity-100!)': props.mask && showMaskEnd,
+            !horizontal,
+          'before:(opacity-100!)': mask && showMaskStart,
+          'after:(opacity-100!)': mask && showMaskEnd,
         },
-        props.class,
+        className,
       )
     "
     :style="
-      props.mask
+      mask
         ? {
-            '--mask-scroll-container-gradient-color': props.gradientColor,
+            '--mask-scroll-container-gradient-color': gradientColor,
           }
         : {}
     "
   >
     <ScrollArea
       ref="scrollAreaRef"
-      :class="cn('relative z-0 flex-1', props.contentClass)"
-      :scrollbar="props.scrollbar"
+      :class="cn('relative z-0 flex-1', contentClass)"
+      :scrollbar="scrollbar"
       :on-wheel="onWheel"
     >
       <slot />
       <ScrollBar
-        v-if="props.horizontal"
+        v-if="horizontal"
         orientation="horizontal"
-        :class="{ 'pointer-events-none opacity-0': !props.scrollbar }"
+        :class="{ 'pointer-events-none opacity-0': !scrollbar }"
       />
     </ScrollArea>
   </div>

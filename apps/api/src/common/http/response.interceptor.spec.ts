@@ -1,5 +1,6 @@
 import type { CallHandler, ExecutionContext } from '@nestjs/common'
 import { of } from 'rxjs'
+
 import { ResponseInterceptor } from './response.interceptor'
 
 describe('responseInterceptor', () => {

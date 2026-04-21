@@ -5,8 +5,10 @@ meta:
 
 <script setup lang="ts">
 import { Pane, Splitpanes } from 'splitpanes'
+
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
+
 import 'splitpanes/dist/splitpanes.css'
 
 function open(url: string) {

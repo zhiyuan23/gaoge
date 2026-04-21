@@ -1,7 +1,6 @@
 import { Buffer } from 'node:buffer'
 import * as crypto from 'node:crypto'
 import { Injectable, Logger } from '@nestjs/common'
-// eslint-disable-next-line ts/consistent-type-imports
 import { ConfigService } from '@nestjs/config'
 
 export interface WechatSession {

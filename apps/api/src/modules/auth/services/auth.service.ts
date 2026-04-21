@@ -1,12 +1,10 @@
-import type { AdminLoginDto, PhoneLoginDto, WechatLoginDto } from '../dto/login.dto'
 import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common'
-// eslint-disable-next-line ts/consistent-type-imports
 import { JwtService } from '@nestjs/jwt'
-// eslint-disable-next-line ts/consistent-type-imports
-import { PrismaService } from '../../../common/prisma/prisma.service'
-// eslint-disable-next-line ts/consistent-type-imports
-import { WechatService } from '../../../common/wechat/wechat.service'
+
 import { hashPassword, verifyPassword } from '../../../common/auth/password.util'
+import { PrismaService } from '../../../common/prisma/prisma.service'
+import { WechatService } from '../../../common/wechat/wechat.service'
+import type { AdminLoginDto, PhoneLoginDto, WechatLoginDto } from '../dto/login.dto'
 
 export interface LoginResponse {
   user: any

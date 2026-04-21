@@ -9,12 +9,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common'
+
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+
 import { CreatePlayerDto } from './dto/create-player.dto'
 import { UpdatePlayerDto } from './dto/update-player.dto'
-// eslint-disable-next-line ts/consistent-type-imports
 import { PlayersService } from './players.service'
 
 @Controller('players')

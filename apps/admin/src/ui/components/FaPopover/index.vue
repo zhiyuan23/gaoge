@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PopoverContentProps } from 'radix-vue'
 import type { HTMLAttributes } from 'vue'
+
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
 
 defineOptions({

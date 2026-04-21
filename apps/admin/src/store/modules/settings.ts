@@ -1,8 +1,10 @@
-import type { Settings } from '#/global'
+import { cloneDeep } from 'es-toolkit'
 import type { RouteMeta } from 'vue-router'
+
 import settingsDefault from '@/settings'
 import { merge } from '@/utils/object'
-import { cloneDeep } from 'es-toolkit'
+
+import type { Settings } from '#/global'
 
 const useSettingsStore = defineStore(
   // 唯一ID

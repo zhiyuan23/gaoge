@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import type { TableColumn } from '@/constants/modules/basic-data/types.ts'
 import type { PropType } from 'vue'
-import type { EsTableEmits, TableSize } from './types'
 import { computed, ref, watch } from 'vue'
+
+import type { TableColumn } from '@/constants/modules/basic-data/types.ts'
+
+import type { EsTableEmits, TableSize } from './types'
 
 defineOptions({
   name: 'EsTable',

@@ -1,11 +1,12 @@
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+
+import { PrismaService } from '@/common/prisma/prisma.service'
+
 import type {
   CreateTeamFundDto,
   QueryTeamFundDto,
   UpdateTeamFundDto,
 } from './dto/create-team-fund.dto'
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
-// eslint-disable-next-line ts/consistent-type-imports
-import { PrismaService } from '@/common/prisma/prisma.service'
 
 export interface FundSummary {
   totalIncome: number

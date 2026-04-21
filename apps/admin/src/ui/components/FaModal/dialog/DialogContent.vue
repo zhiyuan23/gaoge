@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { cn } from '@/utils'
 import { Maximize, Minimize, X } from 'lucide-vue-next'
 import {
   DialogClose,
@@ -11,6 +10,8 @@ import {
   useForwardPropsEmits,
 } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
+
+import { cn } from '@/utils'
 
 type DialogContentInstance = InstanceType<typeof DialogContent>
 

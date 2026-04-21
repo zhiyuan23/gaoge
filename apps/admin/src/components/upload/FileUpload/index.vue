@@ -6,28 +6,29 @@ defineOptions({
   name: 'FileUpload',
 })
 
-const props = withDefaults(
-  defineProps<{
-    action: UploadProps['action']
-    headers?: UploadProps['headers']
-    data?: UploadProps['data']
-    name?: UploadProps['name']
-    size?: number
-    max?: number
-    files?: UploadUserFile[]
-    notip?: boolean
-    ext?: string[]
-    httpRequest?: UploadProps['httpRequest']
-  }>(),
-  {
-    name: 'file',
-    size: 2,
-    max: 3,
-    files: () => [],
-    notip: false,
-    ext: () => ['zip', 'rar'],
-  },
-)
+const {
+  action,
+  headers = undefined,
+  data = undefined,
+  name = 'file',
+  size = 2,
+  max = 3,
+  files = [],
+  notip = false,
+  ext = ['zip', 'rar'],
+  httpRequest = undefined,
+} = defineProps<{
+  action: UploadProps['action']
+  headers?: UploadProps['headers']
+  data?: UploadProps['data']
+  name?: UploadProps['name']
+  size?: number
+  max?: number
+  files?: UploadUserFile[]
+  notip?: boolean
+  ext?: string[]
+  httpRequest?: UploadProps['httpRequest']
+}>()
 
 const emits = defineEmits<{
   onSuccess: [res: any, file: UploadUserFile, fileList: UploadUserFile[]]
@@ -36,13 +37,13 @@ const emits = defineEmits<{
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   const fileName = file.name.split('.')
   const fileExt = fileName.at(-1) ?? ''
-  const isTypeOk = props.ext.includes(fileExt)
-  const isSizeOk = file.size / 1024 / 1024 < props.size
+  const isTypeOk = ext.includes(fileExt)
+  const isSizeOk = file.size / 1024 / 1024 < size
   if (!isTypeOk) {
-    ElMessage.error(`上传文件只支持 ${props.ext.join(' / ')} 格式！`)
+    ElMessage.error(`上传文件只支持 ${ext.join(' / ')} 格式！`)
   }
   if (!isSizeOk) {
-    ElMessage.error(`上传文件大小不能超过 ${props.size}MB！`)
+    ElMessage.error(`上传文件大小不能超过 ${size}MB！`)
   }
   return isTypeOk && isSizeOk
 }

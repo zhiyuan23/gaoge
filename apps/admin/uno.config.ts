@@ -1,5 +1,4 @@
 import type { PresetOrFactory } from '@unocss/core'
-import type { Theme } from 'unocss/preset-uno'
 import { entriesToCss, toArray } from '@unocss/core'
 import presetLegacyCompat from '@unocss/preset-legacy-compat'
 import {
@@ -12,8 +11,10 @@ import {
   transformerDirectives,
   transformerVariantGroup,
 } from 'unocss'
+import type { Theme } from 'unocss/preset-uno'
 import { presetAnimations } from 'unocss-preset-animations'
 import { presetScrollbar } from 'unocss-preset-scrollbar'
+
 import { darkTheme, lightTheme } from './themes'
 
 export default defineConfig<Theme>({

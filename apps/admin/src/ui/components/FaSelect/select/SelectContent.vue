@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { cn } from '@/utils'
 import {
   SelectContent,
   type SelectContentEmits,
@@ -9,6 +8,9 @@ import {
   useForwardPropsEmits,
 } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
+
+import { cn } from '@/utils'
+
 import { SelectScrollDownButton, SelectScrollUpButton } from '.'
 
 defineOptions({
@@ -18,6 +20,7 @@ defineOptions({
 const props = withDefaults(
   defineProps<SelectContentProps & { class?: HTMLAttributes['class'] }>(),
   {
+    class: '',
     position: 'popper',
   },
 )

@@ -5,6 +5,7 @@ meta:
 
 <script setup lang="ts">
 import eventBus from '@/utils/eventBus'
+
 import Button from './components/button.vue'
 import Checkbox from './components/checkbox.vue'
 import Icon from './components/icon.vue'

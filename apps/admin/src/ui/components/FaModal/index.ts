@@ -1,4 +1,5 @@
 import type { HTMLAttributes } from 'vue'
+
 import Modal from './index.vue'
 
 export interface ModalProps {

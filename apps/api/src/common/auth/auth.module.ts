@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { Reflector } from '@nestjs/core'
 import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
-import { Reflector } from '@nestjs/core'
+
 import { PrismaModule } from '../prisma/prisma.module'
 import { WechatModule } from '../wechat/wechat.module'
+
 import { JwtStrategy } from './jwt.strategy'
 import { RolesGuard } from './roles.guard'
 

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import hotkeys from 'hotkeys-js'
+
 import useKeepAliveStore from '@/store/modules/keepAlive'
 import useMenuStore from '@/store/modules/menu'
 import useSettingsStore from '@/store/modules/settings'
 import eventBus from '@/utils/eventBus'
-import hotkeys from 'hotkeys-js'
+
 import AppSetting from './components/AppSetting/index.vue'
 import BackTop from './components/BackTop/index.vue'
 import Copyright from './components/Copyright/index.vue'

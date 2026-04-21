@@ -1,8 +1,10 @@
 <script lang="ts" setup>
 import type { LabelProps } from 'radix-vue'
 import type { HTMLAttributes } from 'vue'
+
 import { Label } from '@/ui/shadcn/ui/label'
 import { cn } from '@/utils'
+
 import { useFormField } from './useFormField'
 
 const props = defineProps<LabelProps & { class?: HTMLAttributes['class'] }>()

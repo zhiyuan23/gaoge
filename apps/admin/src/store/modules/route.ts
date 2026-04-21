@@ -1,10 +1,13 @@
-import type { Route } from '#/global'
+import { cloneDeep } from 'es-toolkit'
 import type { RouteRecordRaw } from 'vue-router'
+
 import apiApp from '@/api/modules/app'
 import { systemRoutes } from '@/router/routes'
 import { resolveRoutePath } from '@/utils'
-import { cloneDeep } from 'es-toolkit'
+
 import useSettingsStore from './settings'
+
+import type { Route } from '#/global'
 
 const backendViewModules = {
   ...import.meta.glob('../../views/{index,login,reload,[...all]}.vue'),

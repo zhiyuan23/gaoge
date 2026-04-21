@@ -5,6 +5,7 @@ meta:
 
 <script setup lang="ts">
 import * as Echarts from 'echarts'
+
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
 

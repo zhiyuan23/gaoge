@@ -1,7 +1,10 @@
-import type { Route } from '#/global'
 import type { RouteRecordRaw } from 'vue-router'
+
 import useSettingsStore from '@/store/modules/settings'
+
 import Gaoge from './modules/gaoge'
+
+import type { Route } from '#/global'
 
 // 固定路由（默认路由）
 const constantRoutes: RouteRecordRaw[] = [

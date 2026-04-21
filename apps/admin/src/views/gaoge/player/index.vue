@@ -4,13 +4,14 @@ meta:
 </route>
 
 <script setup lang="ts">
-import type { FormInstance, FormRules } from 'element-plus'
-import type { Player, PlayerPayload } from '@/api/modules/players'
-import type { TableColumn } from '@/constants/modules/basic-data/types'
 import dayjs from 'dayjs'
+import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onMounted, ref, watch } from 'vue'
+
+import type { Player, PlayerPayload } from '@/api/modules/players'
 import playersApi from '@/api/modules/players'
+import type { TableColumn } from '@/constants/modules/basic-data/types'
 import useUserStore from '@/store/modules/user'
 
 defineOptions({

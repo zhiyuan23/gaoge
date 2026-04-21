@@ -1,12 +1,15 @@
-import type { Menu, Route } from '#/global'
+import { cloneDeep } from 'es-toolkit'
 import type { RouteRecordRaw } from 'vue-router'
+
 import apiApp from '@/api/modules/app'
 import menu from '@/menu'
 import { resolveRoutePath } from '@/utils'
-import { cloneDeep } from 'es-toolkit'
+
 import useRouteStore from './route'
 import useSettingsStore from './settings'
 import useUserStore from './user'
+
+import type { Menu, Route } from '#/global'
 
 const useMenuStore = defineStore(
   // 唯一ID

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { cn } from '@/utils'
 import { Primitive, type PrimitiveProps, useForwardProps } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
+
+import { cn } from '@/utils'
 
 const props = defineProps<PrimitiveProps & { class?: HTMLAttributes['class'] }>()
 const delegatedProps = computed(() => {

@@ -5,6 +5,7 @@ meta:
 
 <script setup lang="ts">
 import { Column, Line, Pie, Radar } from '@antv/g2plot'
+
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
 

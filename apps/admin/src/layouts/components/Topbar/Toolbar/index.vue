@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import useSettingsStore from '@/store/modules/settings'
+
 import LeftSide from './leftSide.vue'
 import RightSide from './rightSide.vue'
 

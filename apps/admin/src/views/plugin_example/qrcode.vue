@@ -5,6 +5,7 @@ meta:
 
 <script setup lang="ts">
 import QRCode from 'qrcode'
+
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
 
@@ -21,7 +22,6 @@ onMounted(() => {
       url1.value = url
     })
     .catch((err: any) => {
-      // eslint-disable-next-line no-console
       console.log(err)
     })
   // 渲染成 canvas 标签
@@ -30,7 +30,6 @@ onMounted(() => {
       // 渲染成功
     })
     .catch((err: any) => {
-      // eslint-disable-next-line no-console
       console.log(err)
     })
   // 自定义颜色
@@ -44,7 +43,6 @@ onMounted(() => {
       url2.value = url
     })
     .catch((err: any) => {
-      // eslint-disable-next-line no-console
       console.log(err)
     })
   // 指定宽度
@@ -55,7 +53,6 @@ onMounted(() => {
       url3.value = url
     })
     .catch((err: any) => {
-      // eslint-disable-next-line no-console
       console.log(err)
     })
 })

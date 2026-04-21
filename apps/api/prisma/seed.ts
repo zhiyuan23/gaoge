@@ -8,6 +8,7 @@
 
 import type { Prisma } from '@prisma/client'
 import { PrismaClient } from '@prisma/client'
+
 import { hashPassword } from '../src/common/auth/password.util'
 
 const prisma = new PrismaClient()

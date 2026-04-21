@@ -11,9 +11,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common'
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+
 import { CreateTeamFundDto, QueryTeamFundDto, UpdateTeamFundDto } from './dto/create-team-fund.dto'
-// eslint-disable-next-line ts/consistent-type-imports
 import { TeamService } from './team.service'
 
 @Controller('team')

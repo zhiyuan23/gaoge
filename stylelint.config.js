@@ -3,7 +3,6 @@ export default {
     'stylelint-config-standard-scss',
     'stylelint-config-standard-vue/scss',
     'stylelint-config-recess-order',
-    '@stylistic/stylelint-config',
   ],
   plugins: ['stylelint-scss'],
   rules: {
@@ -25,9 +24,18 @@ export default {
       },
     ],
     'scss/double-slash-comment-empty-line-before': null,
+    'scss/at-if-closing-brace-newline-after': null,
+    'scss/at-if-closing-brace-space-after': null,
     'scss/no-global-function-names': null,
-    '@stylistic/max-line-length': null,
   },
   allowEmptyInput: true,
-  ignoreFiles: ['node_modules/**/*', 'dist*/**/*'],
+  ignoreFiles: [
+    'node_modules/**/*',
+    '**/dist/**',
+    'dist*/**/*',
+    'apps/admin/public/tinymce/**/*',
+    'apps/admin/src/iconify/*.json',
+    'apps/admin/src/views/example/**/*',
+    'apps/admin/src/views/plugin_example/**/*',
+  ],
 }

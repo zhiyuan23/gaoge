@@ -5,8 +5,10 @@ meta:
 
 <script setup lang="ts">
 import Cropper from 'cropperjs'
+
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
+
 import 'cropperjs/dist/cropper.css'
 
 let cropper: any = null

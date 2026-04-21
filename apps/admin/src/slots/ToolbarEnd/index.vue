@@ -2,6 +2,7 @@
 import useSettingsStore from '@/store/modules/settings'
 import useUserStore from '@/store/modules/user'
 import eventBus from '@/utils/eventBus'
+
 import Profile from './profile.vue'
 
 const router = useRouter()

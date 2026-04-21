@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { cn } from '@/utils'
 import {
   ScrollAreaCorner,
   ScrollAreaRoot,
@@ -7,6 +6,9 @@ import {
   ScrollAreaViewport,
 } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
+
+import { cn } from '@/utils'
+
 import ScrollBar from './ScrollBar.vue'
 
 const props = defineProps<
@@ -18,7 +20,7 @@ const props = defineProps<
 >()
 
 const delegatedProps = computed(() => {
-  const { class: _, onWheel, ...delegated } = props
+  const { class: _, ...delegated } = props
 
   return delegated
 })

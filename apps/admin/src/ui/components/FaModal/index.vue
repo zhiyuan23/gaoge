@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { ModalEmits, ModalProps } from '.'
-import { cn } from '@/utils'
 import { VisuallyHidden } from 'radix-vue'
+
+import { cn } from '@/utils'
+
+import type { ModalEmits, ModalProps } from '.'
 import {
   Dialog,
   DialogContent,

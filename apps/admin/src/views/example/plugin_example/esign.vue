@@ -6,6 +6,7 @@ meta:
 <script setup lang="ts">
 import VueEsign from 'vue-esign'
 import { toast } from 'vue-sonner'
+
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
 

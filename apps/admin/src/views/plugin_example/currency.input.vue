@@ -4,10 +4,11 @@ meta:
 </route>
 
 <script setup lang="ts">
-import type { CurrencyInputOptions } from 'vue-currency-input'
 import { createReusableTemplate, useClipboard } from '@vueuse/core'
+import type { CurrencyInputOptions } from 'vue-currency-input'
 import { useCurrencyInput } from 'vue-currency-input'
 import { toast } from 'vue-sonner'
+
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
 

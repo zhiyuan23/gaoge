@@ -1,22 +1,21 @@
 <script setup lang="ts">
 import type { RouteLocationRaw } from 'vue-router'
 
-const props = withDefaults(
-  defineProps<{
-    to?: RouteLocationRaw
-    replace?: boolean
-    separator?: string
-  }>(),
-  {
-    separator: '/',
-  },
-)
+const {
+  to = undefined,
+  replace = false,
+  separator = '/',
+} = defineProps<{
+  to?: RouteLocationRaw
+  replace?: boolean
+  separator?: string
+}>()
 
 const router = useRouter()
 
 function onClick() {
-  if (props.to) {
-    props.replace ? router.replace(props.to) : router.push(props.to)
+  if (to) {
+    replace ? router.replace(to) : router.push(to)
   }
 }
 </script>
@@ -29,7 +28,7 @@ function onClick() {
     <span
       class="text flex items-center opacity-60"
       :class="{
-        'is-link hover-opacity-100 cursor-pointer transition-opacity': !!props.to,
+        'is-link hover-opacity-100 cursor-pointer transition-opacity': !!to,
       }"
       @click="onClick"
     >

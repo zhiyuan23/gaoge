@@ -1,7 +1,7 @@
-import type { Menu } from '#/global'
 import MultilevelMenuExample from './modules/multilevel.menu.example'
-
 import PermissionExample from './modules/permission.example'
+
+import type { Menu } from '#/global'
 
 const menu: Menu.recordMainRaw[] = [
   {

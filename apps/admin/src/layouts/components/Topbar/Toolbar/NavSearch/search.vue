@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import type { Menu } from '@/types/global'
+import { cloneDeep } from 'es-toolkit'
+import hotkeys from 'hotkeys-js'
+
 import Breadcrumb from '@/layouts/components/Breadcrumb/index.vue'
 import BreadcrumbItem from '@/layouts/components/Breadcrumb/item.vue'
 import useMenuStore from '@/store/modules/menu'
 import useSettingsStore from '@/store/modules/settings'
+import type { Menu } from '@/types/global'
 import { resolveRoutePath } from '@/utils'
-import { cloneDeep } from 'es-toolkit'
-import hotkeys from 'hotkeys-js'
 
 defineOptions({
-  name: 'Search',
+  name: 'NavSearchPanel',
 })
 
 const isShow = defineModel<boolean>({

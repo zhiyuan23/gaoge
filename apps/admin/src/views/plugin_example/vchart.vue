@@ -5,6 +5,7 @@ meta:
 
 <script setup lang="ts">
 import VChart from '@visactor/vchart'
+
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
 

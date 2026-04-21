@@ -3,8 +3,8 @@
  * reference: https://github.com/vbenjs/vue-vben-admin/blob/main/packages/%40core/ui-kit/popup-ui/src/modal/use-modal-draggable.ts
  */
 
-import type { ComputedRef, Ref } from 'vue'
 import { unrefElement } from '@vueuse/core'
+import type { ComputedRef, Ref } from 'vue'
 
 export function useDraggable(
   targetRef: Ref<HTMLElement | undefined>,

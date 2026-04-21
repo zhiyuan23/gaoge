@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { cn } from '@/utils'
 import {
   PinInputRoot,
   type PinInputRootEmits,
@@ -8,7 +7,10 @@ import {
 } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
 
+import { cn } from '@/utils'
+
 const props = withDefaults(defineProps<PinInputRootProps & { class?: HTMLAttributes['class'] }>(), {
+  class: '',
   modelValue: () => [],
 })
 const emits = defineEmits<PinInputRootEmits>()

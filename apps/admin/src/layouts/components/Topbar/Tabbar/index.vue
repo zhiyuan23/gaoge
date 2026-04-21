@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import type { Tabbar } from '#/global'
-import { useSlots } from '@/slots'
-import useSettingsStore from '@/store/modules/settings'
-import useTabbarStore from '@/store/modules/tabbar'
 import { useMagicKeys } from '@vueuse/core'
 import hotkeys from 'hotkeys-js'
 import { toast } from 'vue-sonner'
+
+import { useSlots } from '@/slots'
+import useSettingsStore from '@/store/modules/settings'
+import useTabbarStore from '@/store/modules/tabbar'
+
+import type { Tabbar } from '#/global'
 
 defineOptions({
   name: 'Tabbar',

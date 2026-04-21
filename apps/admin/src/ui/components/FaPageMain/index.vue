@@ -1,33 +1,34 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
+
 import { cn } from '@/utils'
 
 defineOptions({
   name: 'FaPageMain',
 })
 
-const props = withDefaults(
-  defineProps<{
-    title?: string
-    collaspe?: boolean
-    height?: string
-    class?: HTMLAttributes['class']
-    titleClass?: HTMLAttributes['class']
-    mainClass?: HTMLAttributes['class']
-  }>(),
-  {
-    title: '',
-    collaspe: false,
-    height: '',
-  },
-)
+const {
+  title = '',
+  collaspe = false,
+  height = '',
+  class: className = '',
+  titleClass = '',
+  mainClass = '',
+} = defineProps<{
+  title?: string
+  collaspe?: boolean
+  height?: string
+  class?: HTMLAttributes['class']
+  titleClass?: HTMLAttributes['class']
+  mainClass?: HTMLAttributes['class']
+}>()
 
 const slots = defineSlots<{
   title?: () => VNode
   default?: () => VNode
 }>()
 
-const isCollaspe = ref(props.collaspe)
+const isCollaspe = ref(collaspe)
 function handleCollaspe() {
   isCollaspe.value = !isCollaspe.value
 }
@@ -41,13 +42,13 @@ function handleCollaspe() {
         {
           'overflow-hidden': collaspe,
         },
-        props.class,
+        className,
       )
     "
   >
     <div
       v-if="!!slots.title || title"
-      :class="cn('transition-border-color border-b px-5 py-4', props.titleClass)"
+      :class="cn('transition-border-color border-b px-5 py-4', titleClass)"
     >
       <slot name="title">
         {{ title }}
@@ -61,7 +62,7 @@ function handleCollaspe() {
             'overflow-hidden': collaspe,
             'after:(opacity-100)': isCollaspe,
           },
-          props.mainClass,
+          mainClass,
         )
       "
       :style="{

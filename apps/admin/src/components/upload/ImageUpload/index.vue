@@ -6,30 +6,31 @@ defineOptions({
   name: 'ImageUpload',
 })
 
-const props = withDefaults(
-  defineProps<{
-    action: UploadProps['action']
-    headers?: UploadProps['headers']
-    data?: UploadProps['data']
-    name?: UploadProps['name']
-    size?: number
-    width?: number
-    height?: number
-    placeholder?: string
-    notip?: boolean
-    ext?: string[]
-    httpRequest?: UploadProps['httpRequest']
-  }>(),
-  {
-    name: 'file',
-    size: 2,
-    width: 150,
-    height: 150,
-    placeholder: '',
-    notip: false,
-    ext: () => ['jpg', 'png', 'gif', 'bmp'],
-  },
-)
+const {
+  action,
+  headers = undefined,
+  data = undefined,
+  name = 'file',
+  size = 2,
+  width = 150,
+  height = 150,
+  placeholder = '',
+  notip = false,
+  ext = ['jpg', 'png', 'gif', 'bmp'],
+  httpRequest = undefined,
+} = defineProps<{
+  action: UploadProps['action']
+  headers?: UploadProps['headers']
+  data?: UploadProps['data']
+  name?: UploadProps['name']
+  size?: number
+  width?: number
+  height?: number
+  placeholder?: string
+  notip?: boolean
+  ext?: string[]
+  httpRequest?: UploadProps['httpRequest']
+}>()
 
 const emits = defineEmits<{
   onSuccess: [res: any]
@@ -62,13 +63,13 @@ function remove() {
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   const fileName = file.name.split('.')
   const fileExt = fileName.at(-1) ?? ''
-  const isTypeOk = props.ext.includes(fileExt)
-  const isSizeOk = file.size / 1024 / 1024 < props.size
+  const isTypeOk = ext.includes(fileExt)
+  const isSizeOk = file.size / 1024 / 1024 < size
   if (!isTypeOk) {
-    ElMessage.error(`上传图片只支持 ${props.ext.join(' / ')} 格式！`)
+    ElMessage.error(`上传图片只支持 ${ext.join(' / ')} 格式！`)
   }
   if (!isSizeOk) {
-    ElMessage.error(`上传图片大小不能超过 ${props.size}MB！`)
+    ElMessage.error(`上传图片大小不能超过 ${size}MB！`)
   }
   if (isTypeOk && isSizeOk) {
     uploadData.value.progress.preview = URL.createObjectURL(file)

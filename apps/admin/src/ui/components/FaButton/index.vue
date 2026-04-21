@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
+
 import type { ButtonVariants } from './button'
 import { Button } from './button'
 

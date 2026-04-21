@@ -6,12 +6,12 @@ meta:
 <script setup lang="ts">
 // import Swiper core and required modules
 import { A11y, Navigation, Pagination, Scrollbar } from 'swiper/modules'
-
 // Import Swiper Vue.js components
 import { Swiper, SwiperSlide } from 'swiper/vue'
 
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
+
 // Import Swiper styles
 import 'swiper/css'
 import 'swiper/css/navigation'

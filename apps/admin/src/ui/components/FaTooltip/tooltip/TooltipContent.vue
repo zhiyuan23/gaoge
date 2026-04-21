@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { cn } from '@/utils'
 import {
   TooltipContent,
   type TooltipContentEmits,
@@ -9,6 +8,8 @@ import {
 } from 'radix-vue'
 import { computed, type HTMLAttributes } from 'vue'
 
+import { cn } from '@/utils'
+
 defineOptions({
   inheritAttrs: false,
 })
@@ -16,6 +17,7 @@ defineOptions({
 const props = withDefaults(
   defineProps<TooltipContentProps & { class?: HTMLAttributes['class'] }>(),
   {
+    class: '',
     sideOffset: 4,
   },
 )

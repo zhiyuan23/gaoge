@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
+
 import { cn } from '@/utils'
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
 
 defineOptions({

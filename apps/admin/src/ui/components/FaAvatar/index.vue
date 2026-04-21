@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
+
 import type { AvatarVariants } from './avatar'
 import { Avatar, AvatarFallback, AvatarImage } from './avatar'
 
