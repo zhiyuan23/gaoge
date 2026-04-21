@@ -1,0 +1,8 @@
+{
+  "name": "@gaoge/config-prettier",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  }
+}

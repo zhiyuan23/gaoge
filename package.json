@@ -1,0 +1,30 @@
+{
+  "name": "gaoge",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.8.1",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "prettier --check . && eslint .",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf .turbo",
+    "prepare": "husky",
+    "cz": "pnpm dlx czg"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "eslint": "^9.25.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.1",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.3",
+    "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,tsx,json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

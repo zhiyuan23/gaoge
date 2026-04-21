@@ -1,0 +1,41 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/admin"
+    },
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/miniapp"
+    },
+    {
+      "path": "./packages/shared/types"
+    },
+    {
+      "path": "./packages/shared/constants"
+    },
+    {
+      "path": "./packages/shared/utils"
+    },
+    {
+      "path": "./packages/shared/schemas"
+    },
+    {
+      "path": "./packages/sdk/api-client"
+    },
+    {
+      "path": "./packages/sdk/openapi"
+    },
+    {
+      "path": "./packages/ui/tokens"
+    },
+    {
+      "path": "./packages/server/database"
+    }
+  ]
+}
