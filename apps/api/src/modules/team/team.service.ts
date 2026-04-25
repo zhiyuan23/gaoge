@@ -1,5 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 
+import type { TeamFundSummary } from '@gaoge/shared-types'
+
 import { PrismaService } from '@/common/prisma/prisma.service'
 
 import type {
@@ -8,18 +10,12 @@ import type {
   UpdateTeamFundDto,
 } from './dto/create-team-fund.dto'
 
-export interface FundSummary {
-  totalIncome: number
-  totalExpense: number
-  balance: number
-}
-
 @Injectable()
 export class TeamService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * 创建资金记录 (仅管理员)
+   * 创建资金记录
    */
   async create(dto: CreateTeamFundDto, creatorId: number) {
     return this.prisma.teamFund.create({
@@ -61,7 +57,7 @@ export class TeamService {
   /**
    * 获取资金汇总
    */
-  async getSummary(): Promise<FundSummary> {
+  async getSummary(): Promise<TeamFundSummary> {
     await this.prisma.teamFund.aggregate({
       _sum: { amount: true },
     })

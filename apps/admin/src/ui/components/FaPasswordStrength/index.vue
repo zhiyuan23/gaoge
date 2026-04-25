@@ -3,22 +3,17 @@ defineOptions({
   name: 'FaPasswordStrength',
 })
 
-const props = withDefaults(
-  defineProps<{
-    password?: string
-  }>(),
-  {
-    password: '',
-  },
-)
+const { password = '' } = defineProps<{
+  password?: string
+}>()
 
 const maxStrength = 5
 
-const hasLength = computed(() => props.password.length >= 8)
-const hasUppercase = computed(() => /[A-Z]/.test(props.password))
-const hasLowercase = computed(() => /[a-z]/.test(props.password))
-const hasNumber = computed(() => /\d/.test(props.password))
-const hasSpecialChar = computed(() => /[^A-Z0-9]/i.test(props.password))
+const hasLength = computed(() => password.length >= 8)
+const hasUppercase = computed(() => /[A-Z]/.test(password))
+const hasLowercase = computed(() => /[a-z]/.test(password))
+const hasNumber = computed(() => /\d/.test(password))
+const hasSpecialChar = computed(() => /[^A-Z0-9]/i.test(password))
 
 const strength = computed(() => {
   let score = 0

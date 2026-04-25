@@ -12,6 +12,9 @@ import {
   UseGuards,
 } from '@nestjs/common'
 
+import { Roles } from '@/common/auth/roles.decorator'
+import { RolesGuard } from '@/common/auth/roles.guard'
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 
 import { CreateTeamFundDto, QueryTeamFundDto, UpdateTeamFundDto } from './dto/create-team-fund.dto'
@@ -46,7 +49,7 @@ export class TeamController {
   }
 
   /**
-   * 创建资金记录 (需要管理员权限)
+   * 创建资金记录 (需登录)
    */
   @Post('fund')
   @UseGuards(JwtAuthGuard)
@@ -58,7 +61,8 @@ export class TeamController {
    * 更新资金记录 (需要管理员权限)
    */
   @Patch('fund/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTeamFundDto, @Req() req: any) {
     return this.teamService.update(id, dto, req.user.id, req.user.role)
   }
@@ -67,7 +71,8 @@ export class TeamController {
    * 删除资金记录 (需要管理员权限)
    */
   @Delete('fund/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     return this.teamService.remove(id, req.user.id, req.user.role)
   }

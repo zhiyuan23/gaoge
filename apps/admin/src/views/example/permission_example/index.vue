@@ -6,8 +6,8 @@ meta:
 <script setup lang="ts">
 import { toast } from 'vue-sonner'
 
-import useSettingsStore from '@/store/modules/settings'
-import useUserStore from '@/store/modules/user'
+import useSettingsStore from '@/store/settings'
+import useUserStore from '@/store/user'
 
 defineOptions({
   name: 'PermissionExample',

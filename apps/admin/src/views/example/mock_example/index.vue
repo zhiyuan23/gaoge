@@ -4,7 +4,7 @@ meta:
 </route>
 
 <script setup lang="ts">
-import useUserStore from '@/store/modules/user'
+import useUserStore from '@/store/user'
 import { useFaNotification } from '@/ui/components/FaNotification'
 
 const userStore = useUserStore()

@@ -19,7 +19,7 @@ export class BannerService {
   }
 
   /**
-   * 获取所有轮播图 (管理员)
+   * 获取所有轮播图
    */
   async findAllAdmin() {
     return this.prisma.banner.findMany({
@@ -39,7 +39,7 @@ export class BannerService {
   }
 
   /**
-   * 创建轮播图 (管理员)
+   * 创建轮播图
    */
   async create(dto: CreateBannerDto) {
     return this.prisma.banner.create({
@@ -54,7 +54,7 @@ export class BannerService {
   }
 
   /**
-   * 更新轮播图 (管理员)
+   * 更新轮播图
    */
   async update(id: number, dto: UpdateBannerDto) {
     await this.findOne(id)
@@ -65,7 +65,7 @@ export class BannerService {
   }
 
   /**
-   * 删除轮播图 (管理员)
+   * 删除轮播图
    */
   async remove(id: number) {
     await this.findOne(id)

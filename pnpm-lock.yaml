@@ -92,6 +92,9 @@ importers:
       '@bytemd/vue-next':
         specifier: ^1.22.0
         version: 1.22.0(vue@3.5.32(typescript@6.0.3))
+      '@gaoge/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared/types
       '@tinymce/tinymce-vue':
         specifier: ^6.3.0
         version: 6.3.0(tinymce@8.4.0)(vue@3.5.32(typescript@6.0.3))
@@ -420,6 +423,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@gaoge/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared/types
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.19(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)

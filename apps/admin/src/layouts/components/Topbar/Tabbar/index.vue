@@ -4,8 +4,8 @@ import hotkeys from 'hotkeys-js'
 import { toast } from 'vue-sonner'
 
 import { useSlots } from '@/slots'
-import useSettingsStore from '@/store/modules/settings'
-import useTabbarStore from '@/store/modules/tabbar'
+import useSettingsStore from '@/store/settings'
+import useTabbarStore from '@/store/tabbar'
 
 import type { Tabbar } from '#/global'
 

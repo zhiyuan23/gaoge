@@ -3,13 +3,13 @@ import type { HTMLAttributes } from 'vue'
 
 import { cn } from '@/utils'
 
-const props = defineProps<{
+const { class: className = '' } = defineProps<{
   class?: HTMLAttributes['class']
 }>()
 </script>
 
 <template>
-  <h3 :class="cn('text-2xl font-semibold leading-none tracking-tight', props.class)">
+  <h3 :class="cn('text-2xl font-semibold leading-none tracking-tight', className)">
     <slot />
   </h3>
 </template>

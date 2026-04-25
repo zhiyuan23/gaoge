@@ -3,24 +3,22 @@ defineOptions({
   name: 'ImagePreview',
 })
 
-const props = withDefaults(
-  defineProps<{
-    src: string
-    width?: number | string
-    height?: number | string
-  }>(),
-  {
-    width: 200,
-    height: 200,
-  },
-)
+const {
+  src,
+  width = 200,
+  height = 200,
+} = defineProps<{
+  src: string
+  width?: number | string
+  height?: number | string
+}>()
 
 const realWidth = computed(() => {
-  return typeof props.width === 'string' ? props.width : `${props.width}px`
+  return typeof width === 'string' ? width : `${width}px`
 })
 
 const realHeight = computed(() => {
-  return typeof props.height === 'string' ? props.height : `${props.height}px`
+  return typeof height === 'string' ? height : `${height}px`
 })
 </script>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import useSettingsStore from '@/store/modules/settings'
+import useSettingsStore from '@/store/settings'
 import { ua } from '@/utils/ua'
 
 import Provider from './ui/provider/index.vue'

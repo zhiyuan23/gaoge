@@ -1,6 +1,8 @@
 import { Type } from 'class-transformer'
 import { IsBoolean, IsDate, IsOptional, IsString } from 'class-validator'
 
+import type { PlayerStatus } from '@gaoge/shared-types'
+
 export class CreatePlayerDto {
   @IsString()
   openid: string
@@ -39,7 +41,7 @@ export class CreatePlayerDto {
 
   @IsOptional()
   @IsString()
-  status?: string
+  status?: PlayerStatus
 
   @IsOptional()
   @IsString()

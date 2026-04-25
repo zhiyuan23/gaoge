@@ -6,7 +6,7 @@ meta:
 <script setup lang="ts">
 import VxeUITable from 'vxe-table'
 
-import useSettingsStore from '@/store/modules/settings'
+import useSettingsStore from '@/store/settings'
 
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'

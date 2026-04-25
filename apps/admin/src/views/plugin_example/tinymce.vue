@@ -7,7 +7,7 @@ meta:
 import TinymceEditor from '@tinymce/tinymce-vue'
 import tinymce from 'tinymce/tinymce'
 
-import useSettingsStore from '@/store/modules/settings'
+import useSettingsStore from '@/store/settings'
 
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'

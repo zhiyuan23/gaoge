@@ -1,7 +1,21 @@
+import generatedRoutes from 'virtual:generated-pages'
+import { setupLayouts } from 'virtual:meta-layouts'
 import type { RouteRecordRaw } from 'vue-router'
 
-import useSettingsStore from '@/store/modules/settings'
+import useSettingsStore from '@/store/settings'
 
+import BreadcrumbExample from './modules/example/breadcrumb'
+import ComponentExample from './modules/example/component'
+import ExternalLinkExample from './modules/example/external-link'
+import FeatureExample from './modules/example/feature'
+import IconExample from './modules/example/icon'
+import JsxExample from './modules/example/jsx'
+import KeepAliveExample from './modules/example/keep-alive'
+import MockExample from './modules/example/mock'
+import MultilevelMenuExample from './modules/example/multilevel-menu'
+import PermissionExample from './modules/example/permission'
+import PluginExample from './modules/example/plugin'
+import TabExample from './modules/example/tab'
 import Gaoge from './modules/gaoge'
 
 import type { Route } from '#/global'
@@ -75,8 +89,44 @@ const asyncRoutes: Route.recordMainRaw[] = [
     },
     children: [Gaoge],
   },
+  {
+    meta: {
+      title: '演示',
+      icon: 'i-uim:box',
+    },
+    children: [
+      MultilevelMenuExample,
+      BreadcrumbExample,
+      KeepAliveExample,
+      TabExample,
+      ComponentExample,
+      IconExample,
+      FeatureExample,
+      PluginExample,
+      PermissionExample,
+      MockExample,
+      JsxExample,
+      ExternalLinkExample,
+    ],
+  },
 ]
 
-const asyncRoutesByFilesystem: RouteRecordRaw[] = []
+const constantRoutesByFilesystem = generatedRoutes.filter((item) => {
+  return item.meta?.enabled !== false && item.meta?.constant === true
+})
 
-export { asyncRoutes, asyncRoutesByFilesystem, constantRoutes, systemRoutes }
+const asyncRoutesByFilesystem = setupLayouts(
+  generatedRoutes.filter((item) => {
+    return (
+      item.meta?.enabled !== false && item.meta?.constant !== true && item.meta?.layout !== false
+    )
+  }),
+)
+
+export {
+  asyncRoutes,
+  asyncRoutesByFilesystem,
+  constantRoutes,
+  constantRoutesByFilesystem,
+  systemRoutes,
+}

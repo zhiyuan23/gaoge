@@ -1,10 +1,10 @@
-import apiUser from '@/api/modules/user'
+import apiUser from '@/api/user'
 import router from '@/router'
 
-import useMenuStore from './menu'
-import useRouteStore from './route'
-import useSettingsStore from './settings'
-import useTabbarStore from './tabbar'
+import useMenuStore from '../menu'
+import useRouteStore from '../route'
+import useSettingsStore from '../settings'
+import useTabbarStore from '../tabbar'
 
 const PLAYER_WRITE_PERMISSIONS = ['player:create', 'player:update', 'player:delete']
 
@@ -39,7 +39,6 @@ const useUserStore = defineStore(
       token.value = accessToken
       avatar.value = user.avatarUrl ?? ''
       role.value = user.role ?? ''
-      await getPermissions()
     }
 
     // 手动登出

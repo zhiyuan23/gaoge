@@ -1,24 +1,19 @@
 import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 
+import type { AuthLoginResponse, AuthUser, PermissionResponse, UserRole } from '@gaoge/shared-types'
+
 import { hashPassword, verifyPassword } from '../../../common/auth/password.util'
 import { PrismaService } from '../../../common/prisma/prisma.service'
 import { WechatService } from '../../../common/wechat/wechat.service'
 import type { AdminLoginDto, PhoneLoginDto, WechatLoginDto } from '../dto/login.dto'
-
-export interface LoginResponse {
-  user: any
-  accessToken: string
-  refreshToken: string
-  expiresIn: number
-}
 
 export interface JwtPayload {
   sub: number
   openid?: string | null
   account?: string | null
   phone?: string
-  role?: string
+  role?: UserRole
 }
 
 @Injectable()
@@ -33,7 +28,7 @@ export class AuthService {
 
   hashAdminPassword = (password: string) => hashPassword(password)
 
-  async adminLogin(loginDto: AdminLoginDto): Promise<LoginResponse> {
+  async adminLogin(loginDto: AdminLoginDto): Promise<AuthLoginResponse> {
     const user = await this.prisma.user.findFirst({
       where: {
         account: loginDto.account,
@@ -71,7 +66,7 @@ export class AuthService {
   /**
    * 微信登录
    */
-  async wechatLogin(loginDto: WechatLoginDto): Promise<LoginResponse> {
+  async wechatLogin(loginDto: WechatLoginDto): Promise<AuthLoginResponse> {
     try {
       // 1. 通过code获取openid和session_key
       const wechatSession = await this.wechatService.getSessionByCode(loginDto.code)
@@ -120,7 +115,7 @@ export class AuthService {
   /**
    * 手机号登录
    */
-  async phoneLogin(loginDto: PhoneLoginDto): Promise<LoginResponse> {
+  async phoneLogin(loginDto: PhoneLoginDto): Promise<AuthLoginResponse> {
     try {
       // 1. 通过code获取session_key
       const wechatSession = await this.wechatService.getSessionByCode(loginDto.code)
@@ -302,7 +297,7 @@ export class AuthService {
     return this.serializeUser(user)
   }
 
-  async getPermission(userId: number) {
+  async getPermission(userId: number): Promise<PermissionResponse> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     })
@@ -313,7 +308,7 @@ export class AuthService {
 
     return {
       permissions: this.buildPermissions(user.role),
-      role: user.role,
+      role: this.toUserRole(user.role),
     }
   }
 
@@ -325,7 +320,7 @@ export class AuthService {
     return []
   }
 
-  private serializeUser(user: any) {
+  private serializeUser(user: any): AuthUser {
     return {
       id: user.id,
       account: user.account ?? '',
@@ -333,9 +328,13 @@ export class AuthService {
       nickname: user.nickname,
       avatarUrl: user.avatarUrl,
       phone: user.phone,
-      role: user.role,
+      role: this.toUserRole(user.role),
       status: user.status,
-      lastLoginAt: user.lastLoginAt,
+      lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
     }
+  }
+
+  private toUserRole(role: string): UserRole {
+    return role === 'admin' ? 'admin' : 'user'
   }
 }

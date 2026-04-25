@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import hotkeys from 'hotkeys-js'
 
-import useKeepAliveStore from '@/store/modules/keepAlive'
-import useMenuStore from '@/store/modules/menu'
-import useSettingsStore from '@/store/modules/settings'
+import useKeepAliveStore from '@/store/keepAlive'
+import useMenuStore from '@/store/menu'
+import useSettingsStore from '@/store/settings'
 import eventBus from '@/utils/eventBus'
 
 import AppSetting from './components/AppSetting/index.vue'

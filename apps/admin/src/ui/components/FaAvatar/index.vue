@@ -4,7 +4,12 @@ import type { HTMLAttributes } from 'vue'
 import type { AvatarVariants } from './avatar'
 import { Avatar, AvatarFallback, AvatarImage } from './avatar'
 
-const props = defineProps<{
+const {
+  src,
+  fallback = '',
+  shape = undefined,
+  class: className = '',
+} = defineProps<{
   src: string
   fallback?: string
   shape?: AvatarVariants['shape']
@@ -13,7 +18,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <Avatar :shape :class="props.class">
+  <Avatar :shape :class="className">
     <AvatarImage :src="src" />
     <AvatarFallback class="inline-flex">
       <slot>

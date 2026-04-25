@@ -1,11 +1,11 @@
 import { useNProgress } from '@vueuse/integrations/useNProgress'
 import type { Router, RouteRecordRaw } from 'vue-router'
 
-import useKeepAliveStore from '@/store/modules/keepAlive'
-import useMenuStore from '@/store/modules/menu'
-import useRouteStore from '@/store/modules/route'
-import useSettingsStore from '@/store/modules/settings'
-import useUserStore from '@/store/modules/user'
+import useKeepAliveStore from '@/store/keepAlive'
+import useMenuStore from '@/store/menu'
+import useRouteStore from '@/store/route'
+import useSettingsStore from '@/store/settings'
+import useUserStore from '@/store/user'
 
 import { asyncRoutes, asyncRoutesByFilesystem } from './routes'
 
@@ -51,15 +51,26 @@ function setupRoutes(router: Router) {
           next()
         }
       } else {
+        let permissionsReady = true
+        if (settingsStore.settings.app.enablePermission) {
+          try {
+            await userStore.getPermissions()
+          } catch (error) {
+            permissionsReady = false
+            console.error('[Gaoge Admin] 获取权限或用户信息失败，继续尝试生成菜单', error)
+          }
+        }
+
         try {
-          // 获取用户权限
-          settingsStore.settings.app.enablePermission && (await userStore.getPermissions())
           // 生成动态路由
           switch (settingsStore.settings.app.routeBaseOn) {
             case 'frontend':
               routeStore.generateRoutesAtFront(asyncRoutes)
               break
             case 'backend':
+              if (!permissionsReady) {
+                throw new Error('后端路由模式依赖权限初始化成功后再生成路由')
+              }
               await routeStore.generateRoutesAtBack()
               break
             case 'filesystem':
@@ -89,7 +100,9 @@ function setupRoutes(router: Router) {
             })
           }
           routeStore.setCurrentRemoveRoutes(removeRoutes)
-        } catch {}
+        } catch (error) {
+          console.error('[Gaoge Admin] 动态路由生成失败', error)
+        }
         // 动态路由生成并注册后，重新进入当前路由
         next({
           path: to.path,

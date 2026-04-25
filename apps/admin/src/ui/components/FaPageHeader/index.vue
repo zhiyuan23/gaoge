@@ -7,7 +7,13 @@ defineOptions({
   name: 'FaPageHeader',
 })
 
-const props = defineProps<{
+const {
+  title = '',
+  description = '',
+  class: className = '',
+  mainClass = '',
+  defaultClass = '',
+} = defineProps<{
   title?: string
   description?: string
   class?: HTMLAttributes['class']
@@ -27,11 +33,11 @@ const slots = defineSlots<{
     :class="
       cn(
         'bg-background mb-4 flex flex-wrap items-center justify-between gap-5 border-b px-5 py-4 transition-[background-color,border-color]',
-        props.class,
+        className,
       )
     "
   >
-    <div :class="cn('flex-[1_1_70%]', props.mainClass)">
+    <div :class="cn('flex-[1_1_70%]', mainClass)">
       <div class="text-2xl">
         <slot name="title">
           {{ title }}
@@ -43,7 +49,7 @@ const slots = defineSlots<{
         </slot>
       </div>
     </div>
-    <div v-if="!!slots.default" :class="cn('ml-a flex-none', props.defaultClass)">
+    <div v-if="!!slots.default" :class="cn('ml-a flex-none', defaultClass)">
       <slot />
     </div>
   </div>

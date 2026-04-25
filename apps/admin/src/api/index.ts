@@ -2,7 +2,7 @@ import axios from 'axios'
 // import qs from 'qs'
 import { ElMessage } from 'element-plus'
 
-import useUserStore from '@/store/modules/user'
+import useUserStore from '@/store/user'
 import { getApiBaseUrl } from '@/utils/url'
 
 const api = axios.create({

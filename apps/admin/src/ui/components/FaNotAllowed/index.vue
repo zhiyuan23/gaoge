@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import useSettingsStore from '@/store/modules/settings'
-import useTabbarStore from '@/store/modules/tabbar'
+import useSettingsStore from '@/store/settings'
+import useTabbarStore from '@/store/tabbar'
 
 defineOptions({
   name: 'FaNotAllowed',

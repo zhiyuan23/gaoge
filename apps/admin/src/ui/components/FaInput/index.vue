@@ -9,7 +9,7 @@ defineOptions({
   name: 'FaInput',
 })
 
-const props = defineProps<{
+const { disabled = false, class: className = '' } = defineProps<{
   disabled?: boolean
   class?: HTMLAttributes['class']
 }>()
@@ -18,7 +18,7 @@ const value = defineModel<T>()
 </script>
 
 <template>
-  <Input v-model="value" :disabled autocomplete="off" :class="cn('w-[200px]', props.class)" />
+  <Input v-model="value" :disabled autocomplete="off" :class="cn('w-[200px]', className)" />
 </template>
 
 <style scoped>

@@ -7,7 +7,14 @@ defineOptions({
   name: 'FaCard',
 })
 
-const props = defineProps<{
+const {
+  title = '',
+  description = '',
+  class: className = '',
+  headerClass = '',
+  contentClass = '',
+  footerClass = '',
+} = defineProps<{
   title?: string
   description?: string
   class?: HTMLAttributes['class']
@@ -24,8 +31,8 @@ const slots = defineSlots<{
 </script>
 
 <template>
-  <Card :class="props.class">
-    <CardHeader v-if="!!slots.header || !!title || !!description" :class="props.headerClass">
+  <Card :class="className">
+    <CardHeader v-if="!!slots.header || !!title || !!description" :class="headerClass">
       <slot name="header">
         <CardTitle v-if="!!title">
           {{ title }}
@@ -35,10 +42,10 @@ const slots = defineSlots<{
         </CardDescription>
       </slot>
     </CardHeader>
-    <CardContent v-if="!!slots.default" :class="props.contentClass">
+    <CardContent v-if="!!slots.default" :class="contentClass">
       <slot />
     </CardContent>
-    <CardFooter v-if="!!slots.footer" :class="props.footerClass">
+    <CardFooter v-if="!!slots.footer" :class="footerClass">
       <slot name="footer" />
     </CardFooter>
   </Card>

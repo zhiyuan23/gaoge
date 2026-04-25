@@ -36,7 +36,7 @@ export class BannerController {
   }
 
   /**
-   * 创建轮播图 (管理员)
+   * 创建轮播图 (需登录)
    */
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -45,7 +45,7 @@ export class BannerController {
   }
 
   /**
-   * 更新轮播图 (管理员)
+   * 更新轮播图 (需登录)
    */
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
@@ -54,7 +54,7 @@ export class BannerController {
   }
 
   /**
-   * 删除轮播图 (管理员)
+   * 删除轮播图 (需登录)
    */
   @Delete(':id')
   @UseGuards(JwtAuthGuard)

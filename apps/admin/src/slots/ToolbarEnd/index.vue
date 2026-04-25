@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import useSettingsStore from '@/store/modules/settings'
-import useUserStore from '@/store/modules/user'
+import useSettingsStore from '@/store/settings'
+import useUserStore from '@/store/user'
 import eventBus from '@/utils/eventBus'
 
 import Profile from './profile.vue'

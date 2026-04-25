@@ -131,7 +131,7 @@ export default defineConfig<Theme>({
     }),
     presetTypography(),
     presetScrollbar({
-      noCompatible: false,
+      compatible: true,
     }),
     presetLegacyCompat({
       legacyColorSpace: true,

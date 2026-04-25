@@ -1,5 +1,5 @@
-import useSettingsStore from '@/store/modules/settings'
-import useUserStore from '@/store/modules/user'
+import useSettingsStore from '@/store/settings'
+import useUserStore from '@/store/user'
 
 export default function useAuth() {
   function hasPermission(permission: string) {

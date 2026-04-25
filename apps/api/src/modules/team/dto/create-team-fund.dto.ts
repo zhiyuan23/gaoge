@@ -1,9 +1,11 @@
 import { Type } from 'class-transformer'
 import { IsDate, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator'
 
+import type { TeamFundCategory, TeamFundStatus, TeamFundType } from '@gaoge/shared-types'
+
 export class CreateTeamFundDto {
   @IsIn(['income', 'expense'])
-  type: 'income' | 'expense'
+  type: TeamFundType
 
   @IsInt()
   @Min(1)
@@ -17,11 +19,11 @@ export class CreateTeamFundDto {
   description?: string
 
   @IsString()
-  category: string // game_fee / equipment / venue / activity / sponsor / other
+  category: TeamFundCategory
 
   @IsOptional()
   @IsIn(['pending', 'confirmed', 'cancelled'])
-  status?: 'pending' | 'confirmed' | 'cancelled'
+  status?: TeamFundStatus
 
   @Type(() => Date)
   @IsDate()
@@ -31,15 +33,15 @@ export class CreateTeamFundDto {
 export class QueryTeamFundDto {
   @IsOptional()
   @IsIn(['income', 'expense'])
-  type?: 'income' | 'expense'
+  type?: TeamFundType
 
   @IsOptional()
   @IsString()
-  category?: string
+  category?: TeamFundCategory
 
   @IsOptional()
   @IsIn(['pending', 'confirmed', 'cancelled'])
-  status?: 'pending' | 'confirmed' | 'cancelled'
+  status?: TeamFundStatus
 
   @IsOptional()
   @Type(() => Date)
@@ -55,7 +57,7 @@ export class QueryTeamFundDto {
 export class UpdateTeamFundDto {
   @IsOptional()
   @IsIn(['income', 'expense'])
-  type?: 'income' | 'expense'
+  type?: TeamFundType
 
   @IsOptional()
   @IsInt()
@@ -72,11 +74,11 @@ export class UpdateTeamFundDto {
 
   @IsOptional()
   @IsString()
-  category?: string
+  category?: TeamFundCategory
 
   @IsOptional()
   @IsIn(['pending', 'confirmed', 'cancelled'])
-  status?: 'pending' | 'confirmed' | 'cancelled'
+  status?: TeamFundStatus
 
   @IsOptional()
   @Type(() => Date)

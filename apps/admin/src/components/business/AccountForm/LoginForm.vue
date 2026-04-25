@@ -3,7 +3,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 
-import useUserStore from '@/store/modules/user'
+import useUserStore from '@/store/user'
 import { FormControl, FormField, FormItem, FormMessage } from '@/ui/shadcn/ui/form'
 
 defineOptions({

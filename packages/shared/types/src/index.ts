@@ -1,15 +1,5 @@
-export interface Pagination {
-  page: number
-  pageSize: number
-  total: number
-}
-
-export interface ApiEnvelope<T> {
-  data: T
-  requestId: string
-}
-
-export interface AppDescriptor {
-  name: string
-  runtime: 'node' | 'web' | 'miniapp'
-}
+export type * from './auth.js'
+export type * from './banner.js'
+export type * from './common.js'
+export type * from './player.js'
+export type * from './team.js'

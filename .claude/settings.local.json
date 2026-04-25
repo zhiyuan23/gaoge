@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm up:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx eslint:*)",
+      "Bash(turbo run:*)",
+      "Bash(git restore:*)"
+    ]
+  }
+}

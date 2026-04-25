@@ -3,13 +3,13 @@ import type { HTMLAttributes } from 'vue'
 
 import { cn } from '@/utils'
 
-const props = defineProps<{
+const { class: className = '' } = defineProps<{
   class?: HTMLAttributes['class']
 }>()
 </script>
 
 <template>
-  <p :class="cn('text-muted-foreground text-sm', props.class)">
+  <p :class="cn('text-muted-foreground text-sm', className)">
     <slot />
   </p>
 </template>

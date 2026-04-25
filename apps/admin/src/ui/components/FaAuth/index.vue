@@ -3,15 +3,15 @@ defineOptions({
   name: 'FaAuth',
 })
 
-const props = defineProps<{
+const { value, all = false } = defineProps<{
   value: string | string[]
   all?: boolean
 }>()
 
 const isCheck = computed(() => {
-  return props.all
-    ? useAuth().authAll(typeof props.value === 'string' ? [props.value] : props.value)
-    : useAuth().auth(props.value)
+  return all
+    ? useAuth().authAll(typeof value === 'string' ? [value] : value)
+    : useAuth().auth(value)
 })
 </script>
 

@@ -1,11 +1,11 @@
 import { cloneDeep } from 'es-toolkit'
 import type { RouteRecordRaw } from 'vue-router'
 
-import apiApp from '@/api/modules/app'
+import apiApp from '@/api/app'
 import { systemRoutes } from '@/router/routes'
 import { resolveRoutePath } from '@/utils'
 
-import useSettingsStore from './settings'
+import useSettingsStore from '../settings'
 
 import type { Route } from '#/global'
 

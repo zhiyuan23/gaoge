@@ -3,16 +3,10 @@ defineOptions({
   name: 'FaSearchBar',
 })
 
-withDefaults(
-  defineProps<{
-    showToggle?: boolean
-    background?: boolean
-  }>(),
-  {
-    showToggle: true,
-    background: false,
-  },
-)
+const { showToggle = true, background = false } = defineProps<{
+  showToggle?: boolean
+  background?: boolean
+}>()
 
 const emits = defineEmits<{
   toggle: [value: boolean]

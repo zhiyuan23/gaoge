@@ -9,7 +9,7 @@ defineOptions({
   name: 'FaIcon',
 })
 
-const props = defineProps<{
+const { name, class: className = '' } = defineProps<{
   name: string
   class?: HTMLAttributes['class']
 }>()
@@ -18,11 +18,11 @@ const outputType = computed(() => {
   const hasPathFeatures = (str: string) => {
     return /^\.{1,2}\//.test(str) || str.startsWith('/') || str.includes('/')
   }
-  if (/^https?:\/\//.test(props.name) || hasPathFeatures(props.name) || !props.name) {
+  if (/^https?:\/\//.test(name) || hasPathFeatures(name) || !name) {
     return 'img'
-  } else if (/i-[^:]+:[^:]+/.test(props.name)) {
+  } else if (/i-[^:]+:[^:]+/.test(name)) {
     return 'unocss'
-  } else if (props.name.includes(':')) {
+  } else if (name.includes(':')) {
     return 'iconify'
   } else {
     return 'svg'
@@ -35,7 +35,7 @@ const outputType = computed(() => {
     :class="
       cn(
         'flex-inline relative size-[1em] items-center justify-center fill-current leading-[1em]',
-        props.class,
+        className,
       )
     "
   >

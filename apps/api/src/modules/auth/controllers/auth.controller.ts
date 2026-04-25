@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Get,
+  Header,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
@@ -44,6 +54,10 @@ export class AuthController {
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
+  @Header('Surrogate-Control', 'no-store')
   profile(@Req() request: { user: { id: number } }) {
     return this.authService.getProfile(request.user.id)
   }
@@ -51,6 +65,10 @@ export class AuthController {
   @Get('permission')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  @Header('Pragma', 'no-cache')
+  @Header('Expires', '0')
+  @Header('Surrogate-Control', 'no-store')
   permission(@Req() request: { user: { id: number } }) {
     return this.authService.getPermission(request.user.id)
   }

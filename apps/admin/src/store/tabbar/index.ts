@@ -1,6 +1,6 @@
 import type { RouteLocationNormalized } from 'vue-router'
 
-import useKeepAliveStore from './keepAlive'
+import useKeepAliveStore from '../keepAlive'
 
 import type { Tabbar } from '#/global'
 

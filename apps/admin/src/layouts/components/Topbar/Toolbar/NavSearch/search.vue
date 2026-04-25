@@ -4,8 +4,8 @@ import hotkeys from 'hotkeys-js'
 
 import Breadcrumb from '@/layouts/components/Breadcrumb/index.vue'
 import BreadcrumbItem from '@/layouts/components/Breadcrumb/item.vue'
-import useMenuStore from '@/store/modules/menu'
-import useSettingsStore from '@/store/modules/settings'
+import useMenuStore from '@/store/menu'
+import useSettingsStore from '@/store/settings'
 import type { Menu } from '@/types/global'
 import { resolveRoutePath } from '@/utils'
 

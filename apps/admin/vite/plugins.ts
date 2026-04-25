@@ -19,6 +19,7 @@ import { vitePluginFakeServer } from 'vite-plugin-fake-server'
 import Pages from 'vite-plugin-pages'
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons'
 import VueDevTools from 'vite-plugin-vue-devtools'
+import Layouts from 'vite-plugin-vue-meta-layouts'
 
 export default function createVitePlugins(mode: string, isBuild = false) {
   const viteEnv = parseLoadedEnv(loadEnv(mode, process.cwd()))
@@ -71,20 +72,14 @@ export default function createVitePlugins(mode: string, isBuild = false) {
       enableProd: isBuild && viteEnv.VITE_BUILD_MOCK,
     }),
 
-    // 仅保留 <route> 自定义块解析，不再以文件系统路由作为运行时入口
+    // https://github.com/dishait/vite-plugin-vue-meta-layouts
+    Layouts({
+      defaultLayout: 'index',
+    }),
+
+    // https://github.com/hannoeru/vite-plugin-pages
     Pages({
-      dirs: [
-        {
-          dir: 'src/views',
-          baseRoute: '',
-          filePattern: '{index,login,reload,[...all]}.vue',
-        },
-        {
-          dir: 'src/views/gaoge',
-          baseRoute: 'gaoge',
-          filePattern: '**/*.vue',
-        },
-      ],
+      dirs: 'src/views',
       exclude: ['**/components/**/*.vue'],
     }),
 

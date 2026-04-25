@@ -3,8 +3,8 @@ import { useClipboard } from '@vueuse/core'
 import { toast } from 'vue-sonner'
 
 import settingsDefault from '@/settings.default'
-import useMenuStore from '@/store/modules/menu'
-import useSettingsStore from '@/store/modules/settings'
+import useMenuStore from '@/store/menu'
+import useSettingsStore from '@/store/settings'
 import eventBus from '@/utils/eventBus'
 import { diffTwoObj } from '@/utils/object'
 

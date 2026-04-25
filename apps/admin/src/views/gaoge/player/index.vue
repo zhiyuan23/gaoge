@@ -6,13 +6,14 @@ meta:
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import type { FormInstance, FormRules } from 'element-plus'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, ref, watch } from 'vue'
+import { ElMessage, ElMessageBox, ElOption, ElSelect } from 'element-plus'
+import { h } from 'vue'
 
-import type { Player, PlayerPayload } from '@/api/modules/players'
-import playersApi from '@/api/modules/players'
-import type { TableColumn } from '@/constants/modules/basic-data/types'
-import useUserStore from '@/store/modules/user'
+import type { Player, PlayerPayload } from '@/api/players'
+import playersApi from '@/api/players'
+import type { SearchField, SearchFormData, SearchOption } from '@/components/common/EsSearch/types'
+import type { TableColumn } from '@/constants/basic-data/types'
+import useUserStore from '@/store/user'
 
 defineOptions({
   name: 'GaogePlayer',
@@ -116,6 +117,90 @@ const customStatusOptions = computed(() =>
 )
 const canManagePlayers = computed(() => userStore.canManagePlayers)
 
+const SearchSelect = defineComponent({
+  name: 'PlayerSearchSelect',
+  props: {
+    modelValue: {
+      type: [String, Number],
+      default: '',
+    },
+    options: {
+      type: Array as PropType<SearchOption[]>,
+      default: () => [],
+    },
+    placeholder: {
+      type: String,
+      default: '全部',
+    },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit }) {
+    return () =>
+      h(
+        ElSelect,
+        {
+          modelValue: props.modelValue,
+          placeholder: props.placeholder,
+          clearable: true,
+          filterable: true,
+          style: 'width: 100%',
+          'onUpdate:modelValue': (value: string | number) => emit('update:modelValue', value),
+        },
+        () =>
+          props.options.map((item) =>
+            h(ElOption, {
+              key: item.value,
+              label: item.label,
+              value: item.value,
+              disabled: item.disabled,
+            }),
+          ),
+      )
+  },
+})
+
+const searchFields = computed<SearchField[]>(() => [
+  {
+    key: 'keyword',
+    label: '关键词',
+    type: 'input',
+    placeholder: '昵称 / 姓名 / OpenID / 位置',
+  },
+  {
+    key: 'subTeam',
+    label: '分队',
+    type: 'select',
+    placeholder: '全部',
+    component: SearchSelect,
+    componentProps: {
+      options: subTeamOptions.value.map((item) => ({ label: item, value: item })),
+      placeholder: '全部',
+    },
+  },
+  {
+    key: 'position',
+    label: '位置',
+    type: 'select',
+    placeholder: '全部',
+    component: SearchSelect,
+    componentProps: {
+      options: positionOptions.value.map((item) => ({ label: item, value: item })),
+      placeholder: '全部',
+    },
+  },
+  {
+    key: 'status',
+    label: '状态',
+    type: 'select',
+    placeholder: '全部',
+    component: SearchSelect,
+    componentProps: {
+      options: statusOptions.value.map((item) => ({ label: getStatusLabel(item), value: item })),
+      placeholder: '全部',
+    },
+  },
+])
+
 function createEmptyForm(): PlayerFormModel {
   return {
     openid: '',
@@ -207,7 +292,13 @@ function syncListItem(payload: Player) {
   playerData.value = [...playerData.value]
 }
 
-function handleSearch() {
+function handleSearchChange(formData: SearchFormData) {
+  search.value = {
+    keyword: String(formData.keyword ?? ''),
+    subTeam: String(formData.subTeam ?? ''),
+    position: String(formData.position ?? ''),
+    status: String(formData.status ?? ''),
+  }
   resetPage()
 }
 
@@ -335,67 +426,19 @@ onMounted(() => {
     <FaPageMain class="flex-1 overflow-auto" main-class="flex-1 flex flex-col overflow-auto">
       <FaSearchBar>
         <template #default>
-          <ElForm :model="search" label-width="90px">
-            <ElRow :gutter="16">
-              <ElCol :span="8">
-                <ElFormItem label="关键词">
-                  <ElInput
-                    v-model="search.keyword"
-                    placeholder="昵称 / 姓名 / OpenID / 位置"
-                    clearable
-                  />
-                </ElFormItem>
-              </ElCol>
-              <ElCol :span="5">
-                <ElFormItem label="分队">
-                  <ElSelect v-model="search.subTeam" placeholder="全部" clearable filterable>
-                    <ElOption
-                      v-for="item in subTeamOptions"
-                      :key="item"
-                      :label="item"
-                      :value="item"
-                    />
-                  </ElSelect>
-                </ElFormItem>
-              </ElCol>
-              <ElCol :span="5">
-                <ElFormItem label="位置">
-                  <ElSelect v-model="search.position" placeholder="全部" clearable filterable>
-                    <ElOption
-                      v-for="item in positionOptions"
-                      :key="item"
-                      :label="item"
-                      :value="item"
-                    />
-                  </ElSelect>
-                </ElFormItem>
-              </ElCol>
-              <ElCol :span="6">
-                <ElFormItem label="状态">
-                  <ElSelect v-model="search.status" placeholder="全部" clearable filterable>
-                    <ElOption
-                      v-for="item in statusOptions"
-                      :key="item"
-                      :label="getStatusLabel(item)"
-                      :value="item"
-                    />
-                  </ElSelect>
-                </ElFormItem>
-              </ElCol>
-            </ElRow>
-            <ElFormItem>
-              <ElButton type="primary" @click="handleSearch">
-                <template #icon>
-                  <FaIcon name="i-ep:search" />
-                </template>
-                查询
-              </ElButton>
-              <ElButton @click="handleReset"> 重置 </ElButton>
-              <ElButton v-if="canManagePlayers" type="primary" plain @click="handleAdd">
-                新增球员
-              </ElButton>
-            </ElFormItem>
-          </ElForm>
+          <EsSearch
+            v-model="search"
+            :fields="searchFields"
+            :columns="4"
+            :label-width="72"
+            :default-show-count="4"
+            :show-collapse="false"
+            @search="handleSearchChange"
+            @reset="handleReset"
+          />
+          <div v-if="canManagePlayers" class="search-extra-actions">
+            <ElButton type="primary" plain @click="handleAdd"> 新增球员 </ElButton>
+          </div>
         </template>
       </FaSearchBar>
 
@@ -570,5 +613,11 @@ onMounted(() => {
   flex: 1;
   min-height: 0;
   margin-top: 16px;
+}
+
+.search-extra-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
 }
 </style>

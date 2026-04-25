@@ -5,6 +5,7 @@ import { PrismaModule } from './common/prisma/prisma.module'
 import { WechatModule } from './common/wechat/wechat.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { BannerModule } from './modules/banner/banner.module'
+import { HealthModule } from './modules/health/health.module'
 import { PlayersModule } from './modules/players/players.module'
 import { TeamModule } from './modules/team/team.module'
 import { AppController } from './app.controller'
@@ -18,6 +19,7 @@ import { AppService } from './app.service'
     }),
     PrismaModule,
     WechatModule,
+    HealthModule,
     PlayersModule,
     AuthModule,
     TeamModule,

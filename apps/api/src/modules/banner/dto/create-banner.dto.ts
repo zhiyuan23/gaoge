@@ -1,5 +1,7 @@
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
 
+import type { BannerStatus } from '@gaoge/shared-types'
+
 export class CreateBannerDto {
   @IsString()
   title: string
@@ -19,7 +21,7 @@ export class CreateBannerDto {
 
   @IsOptional()
   @IsIn(['active', 'inactive'])
-  status?: 'active' | 'inactive'
+  status?: BannerStatus
 }
 
 export class UpdateBannerDto {
@@ -43,5 +45,5 @@ export class UpdateBannerDto {
 
   @IsOptional()
   @IsIn(['active', 'inactive'])
-  status?: 'active' | 'inactive'
+  status?: BannerStatus
 }

@@ -8,7 +8,13 @@ defineOptions({
   name: 'FaButton',
 })
 
-const props = defineProps<{
+const {
+  variant = undefined,
+  size = undefined,
+  class: className = '',
+  disabled = false,
+  loading = false,
+} = defineProps<{
   variant?: ButtonVariants['variant']
   size?: ButtonVariants['size']
   class?: HTMLAttributes['class']
@@ -18,7 +24,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <Button :variant :size :disabled="props.disabled || props.loading" :class="props.class">
+  <Button :variant :size :disabled="disabled || loading" :class="className">
     <FaIcon v-if="loading" name="i-line-md:loading-twotone-loop" />
     <slot />
   </Button>

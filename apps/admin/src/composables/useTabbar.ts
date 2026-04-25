@@ -1,7 +1,7 @@
 import type { RouteLocationRaw } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import useTabbarStore from '@/store/modules/tabbar'
+import useTabbarStore from '@/store/tabbar'
 
 export default function useTabbar() {
   const route = useRoute()

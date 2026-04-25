@@ -20,7 +20,7 @@ const props = defineProps<
 >()
 
 const delegatedProps = computed(() => {
-  const { class: _, ...delegated } = props
+  const { class: _, onWheel: _onWheel, ...delegated } = props
 
   return delegated
 })

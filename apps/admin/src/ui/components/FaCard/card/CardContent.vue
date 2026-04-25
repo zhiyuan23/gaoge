@@ -3,13 +3,13 @@ import type { HTMLAttributes } from 'vue'
 
 import { cn } from '@/utils'
 
-const props = defineProps<{
+const { class: className = '' } = defineProps<{
   class?: HTMLAttributes['class']
 }>()
 </script>
 
 <template>
-  <div :class="cn('p-6 pt-0', props.class)">
+  <div :class="cn('p-6 pt-0', className)">
     <slot />
   </div>
 </template>

@@ -1,5 +1,5 @@
-import useMenuStore from '@/store/modules/menu'
-import useSettingsStore from '@/store/modules/settings'
+import useMenuStore from '@/store/menu'
+import useSettingsStore from '@/store/settings'
 
 export default function useMenu() {
   const router = useRouter()

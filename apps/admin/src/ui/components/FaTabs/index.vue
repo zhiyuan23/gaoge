@@ -9,7 +9,11 @@ defineOptions({
   name: 'FaTabs',
 })
 
-const props = defineProps<{
+const {
+  modelValue = undefined,
+  list,
+  class: className = '',
+} = defineProps<{
   modelValue?: string | number
   list: {
     icon?: string
@@ -23,10 +27,10 @@ const emits = defineEmits<{
   'update:modelValue': [string | number]
 }>()
 
-const activeTab = ref(props.modelValue)
+const activeTab = ref(modelValue)
 
 watch(
-  () => props.modelValue,
+  () => modelValue,
   (newValue) => {
     activeTab.value = newValue
   },
@@ -41,7 +45,7 @@ function handleChange(value: string | number) {
 <template>
   <Tabs
     v-model="activeTab"
-    :class="cn('flex flex-col', props.class)"
+    :class="cn('flex flex-col', className)"
     @update:model-value="handleChange"
   >
     <TabsList class="flex items-center justify-center">

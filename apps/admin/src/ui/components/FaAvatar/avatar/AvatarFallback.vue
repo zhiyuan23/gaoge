@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { AvatarFallback, type AvatarFallbackProps } from 'radix-vue'
 
-const props = defineProps<AvatarFallbackProps>()
+const avatarFallbackProps = defineProps<AvatarFallbackProps>()
 </script>
 
 <template>
-  <AvatarFallback v-bind="props">
+  <AvatarFallback v-bind="avatarFallbackProps">
     <slot />
   </AvatarFallback>
 </template>

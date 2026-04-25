@@ -4,7 +4,7 @@ import { useForm } from 'vee-validate'
 import { toast } from 'vue-sonner'
 import * as z from 'zod'
 
-import useUserStore from '@/store/modules/user'
+import useUserStore from '@/store/user'
 import { FormControl, FormField, FormItem, FormMessage } from '@/ui/shadcn/ui/form'
 
 defineOptions({

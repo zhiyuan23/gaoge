@@ -42,3 +42,14 @@
 - VS Code 在保存时执行格式化，并应用 ESLint 自动修复
 - 代码风格参考 `gaoge-admin`：无分号、单引号、最多一个空行、`import` 排序、稳定的 Vue 区块顺序
 - `Stylelint` 负责 `CSS`、`SCSS` 与 Vue 样式块规范
+
+## 环境变量
+
+- `apps/admin` 使用多环境变量文件，仓库内保留：
+  - `.env.example`
+  - `.env.development.example`
+  - `.env.production.example`
+  - `.env.uat.example`
+- `apps/api` 保留 `.env.example`
+- 本地运行时请复制对应示例文件生成真实 `.env*` 文件；真实环境变量不提交到 git
+- 本次迁移后，已将原单仓库的本地环境变量复制到当前工作区，仅用于你当前机器上的运行，不会进入版本库

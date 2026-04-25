@@ -7,7 +7,7 @@ meta:
 </route>
 
 <script setup lang="ts">
-import useSettingsStore from '@/store/modules/settings'
+import useSettingsStore from '@/store/settings'
 
 const router = useRouter()
 

@@ -9,8 +9,6 @@ import Cropper from 'cropperjs'
 import Alert from './components/alert.vue'
 import Command from './components/command.vue'
 
-import 'cropperjs/dist/cropper.css'
-
 let cropper: any = null
 const imageRef = useTemplateRef('imageRef')
 const cropImage = ref('')
@@ -23,7 +21,7 @@ onMounted(() => {
     aspectRatio: 1,
     viewMode: 1,
     dragMode: 'move',
-  })
+  } as any)
 })
 
 function onCrop() {
