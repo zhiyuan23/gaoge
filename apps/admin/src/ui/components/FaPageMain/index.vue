@@ -57,10 +57,10 @@ function handleCollaspe() {
     <div
       :class="
         cn(
-          'main-container transition-height after:(pointer-events-none z-1 content-empty transition-opacity) group absolute relative bottom-0 left-0 h-12 max-h-full w-full bg-gradient-to-b from-transparent to-[hsl(var(--card))] p-5 opacity-0',
+          `main-container transition-height group absolute relative bottom-0 left-0 h-12 max-h-full w-full bg-gradient-to-b from-transparent to-[hsl(var(--card))] p-5 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-12 after:bg-gradient-to-b after:from-transparent after:to-[hsl(var(--card))] after:opacity-0 after:transition-opacity after:content-['']`,
           {
             'overflow-hidden': collaspe,
-            'after:(opacity-100)': isCollaspe,
+            'after:opacity-100': isCollaspe,
           },
           mainClass,
         )

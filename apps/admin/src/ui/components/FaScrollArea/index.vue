@@ -112,14 +112,14 @@ defineExpose({
     ref="scrollContainerRef"
     :class="
       cn(
-        'before:(pointer-events-none z-1 content-empty transition-opacity) after:(pointer-events-none z-1 content-empty transition-opacity) absolute relative flex size-full overflow-hidden from-transparent to-[var(--mask-scroll-container-gradient-color)] opacity-0',
+        `before:z-1 after:z-1 absolute relative flex size-full overflow-hidden from-transparent to-[var(--mask-scroll-container-gradient-color)] before:pointer-events-none before:absolute before:opacity-0 before:transition-opacity before:content-[''] after:pointer-events-none after:absolute after:opacity-0 after:transition-opacity after:content-['']`,
         {
-          'after:(end-0 bg-gradient-to-r) before:(start-0 bg-gradient-to-l) top-0 h-full w-12 rtl:before:bg-gradient-to-r rtl:after:bg-gradient-to-l':
+          'before:start-0 before:top-0 before:h-full before:w-12 before:bg-gradient-to-l after:end-0 after:top-0 after:h-full after:w-12 after:bg-gradient-to-r rtl:before:bg-gradient-to-r rtl:after:bg-gradient-to-l':
             props.horizontal,
-          'after:(bottom-0 bg-gradient-to-b) before:(left-0 bg-gradient-to-t) left-0 top-0 h-12 w-full':
+          'before:left-0 before:top-0 before:h-12 before:w-full before:bg-gradient-to-t after:bottom-0 after:left-0 after:h-12 after:w-full after:bg-gradient-to-b':
             !props.horizontal,
-          'before:(opacity-100!)': props.mask && showMaskStart,
-          'after:(opacity-100!)': props.mask && showMaskEnd,
+          'before:opacity-100': props.mask && showMaskStart,
+          'after:opacity-100': props.mask && showMaskEnd,
         },
         props.class,
       )
