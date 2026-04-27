@@ -57,7 +57,7 @@ function handleCollaspe() {
     <div
       :class="
         cn(
-          'main-container transition-height after:(pointer-events-none z-1 content-empty transition-opacity) group absolute relative bottom-0 left-0 h-12 h-[calc-size(auto,size)] max-h-full w-full bg-gradient-to-b from-transparent to-[hsl(var(--card))] p-5 opacity-0',
+          'main-container transition-height after:(pointer-events-none z-1 content-empty transition-opacity) group absolute relative bottom-0 left-0 h-12 max-h-full w-full bg-gradient-to-b from-transparent to-[hsl(var(--card))] p-5 opacity-0',
           {
             'overflow-hidden': collaspe,
             'after:(opacity-100)': isCollaspe,

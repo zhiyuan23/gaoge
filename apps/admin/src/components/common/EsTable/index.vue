@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { TableColumn } from '@/constants/basic-data/types.ts'
+import useAuth from '@/composables/useAuth'
 
-import type { EsTableEmits, TableSize } from './types'
+import type { EsTableEmits, TableAction, TableColumn, TableSize } from './types'
 
 defineOptions({
   name: 'EsTable',
@@ -89,6 +89,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits<EsTableEmits>()
+const { auth } = useAuth()
 
 // 当前页码
 const currentPage = ref(props.page)
@@ -145,6 +146,46 @@ function emitPaginationChange() {
     pageSize: internalPageSize.value,
   })
 }
+
+function isActionVisible(action: TableAction, row: any) {
+  const visible = typeof action.visible === 'function' ? action.visible(row) : action.visible
+  if (visible === false) {
+    return false
+  }
+
+  return action.auth ? auth(action.auth) : true
+}
+
+function isActionDisabled(action: TableAction, row: any) {
+  return typeof action.disabled === 'function' ? action.disabled(row) : Boolean(action.disabled)
+}
+
+function getColumnActions(col: TableColumn, row: any) {
+  return (col.actions ?? []).filter((action) => isActionVisible(action, row))
+}
+
+function getActionTextClass(type?: TableAction['type']) {
+  if (type === 'danger') {
+    return 'text-danger'
+  }
+
+  if (type === 'primary') {
+    return 'text-primary'
+  }
+
+  return ''
+}
+
+function handleActionClick(row: any, action: TableAction) {
+  if (isActionDisabled(action, row)) {
+    return
+  }
+
+  emit('actionClick', {
+    row,
+    action,
+  })
+}
 </script>
 
 <template>
@@ -164,8 +205,50 @@ function emitPaginationChange() {
       color="text-primary"
     >
       <template v-for="col in finalColumns" :key="col.prop">
+        <ElTableColumn v-if="col.actions?.length" v-bind="col">
+          <template #default="{ row, $index }">
+            <div class="flex-center">
+              <template v-if="getColumnActions(col, row).length === 1">
+                <ElButton
+                  :type="getColumnActions(col, row)[0]?.type ?? 'primary'"
+                  :disabled="isActionDisabled(getColumnActions(col, row)[0], row)"
+                  link
+                  @click="handleActionClick(row, getColumnActions(col, row)[0])"
+                >
+                  {{ getColumnActions(col, row)[0]?.label }}
+                </ElButton>
+              </template>
+              <template v-else-if="getColumnActions(col, row).length > 1">
+                <ElDropdown
+                  trigger="hover"
+                  @command="(action: TableAction) => handleActionClick(row, action)"
+                >
+                  <ElButton link class="table-action-trigger" aria-label="更多操作">
+                    <FaIcon name="i-ri:more-fill" class="size-4" />
+                  </ElButton>
+                  <template #dropdown>
+                    <ElDropdownMenu>
+                      <ElDropdownItem
+                        v-for="action in getColumnActions(col, row)"
+                        :key="`${action.key}-${$index}`"
+                        :command="action"
+                        :disabled="isActionDisabled(action, row)"
+                      >
+                        <span :class="getActionTextClass(action.type)">
+                          {{ action.label }}
+                        </span>
+                      </ElDropdownItem>
+                    </ElDropdownMenu>
+                  </template>
+                </ElDropdown>
+              </template>
+              <span v-else class="text-secondary">--</span>
+            </div>
+          </template>
+        </ElTableColumn>
+
         <!-- 自定义列插槽 -->
-        <ElTableColumn v-if="col.slot" v-bind="col">
+        <ElTableColumn v-else-if="col.slot" v-bind="col">
           <template #default="scope">
             <slot :name="col.slot" v-bind="{ ...scope, actionParams: col.actionParams }" />
           </template>
@@ -220,5 +303,14 @@ function emitPaginationChange() {
 
 :deep(.el-table-fixed-column--right) {
   padding: 0;
+}
+
+:deep(.table-action-trigger) {
+  color: rgb(var(--ui-muted-foreground));
+}
+
+:deep(.table-action-trigger:hover),
+:deep(.table-action-trigger:focus-visible) {
+  color: rgb(var(--ui-foreground));
 }
 </style>

@@ -15,7 +15,7 @@ const props = withDefaults(defineProps<SubMenuProps>(), {
 
 const index = props.menu.path ?? JSON.stringify(props.menu)
 const itemRef = useTemplateRef('itemRef')
-const subMenuRef = useTemplateRef('subMenuRef')
+const subMenuRef = useTemplateRef<HTMLElement>('subMenuRef')
 const rootMenu = inject(rootMenuInjectionKey)!
 
 const opened = computed(() => {
@@ -135,7 +135,7 @@ function handleMouseenter() {
       rootMenu.openMenu(index, props.uniqueKey)
       nextTick(() => {
         const el = itemRef.value?.ref
-        const subMenuEl = subMenuRef.value?.$el
+        const subMenuEl = subMenuRef.value
         if (!el || !subMenuEl) {
           return
         }
@@ -202,11 +202,9 @@ function handleMouseleave() {
   />
   <Teleport v-if="hasChildren" to="body" :disabled="!rootMenu.isMenuPopup">
     <Transition v-bind="transitionClass" v-on="transitionEvent">
-      <FaScrollArea
+      <div
         v-if="opened"
         ref="subMenuRef"
-        :scrollbar="false"
-        :mask="rootMenu.isMenuPopup"
         class="sub-menu static rounded-lg"
         :class="{
           'bg-[var(--g-sub-sidebar-bg)]': rootMenu.isMenuPopup,
@@ -223,7 +221,7 @@ function handleMouseleave() {
             :level="level + 1"
           />
         </template>
-      </FaScrollArea>
+      </div>
     </Transition>
   </Teleport>
 </template>

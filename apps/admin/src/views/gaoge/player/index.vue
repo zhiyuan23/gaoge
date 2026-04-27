@@ -17,7 +17,7 @@ import { PLAYER_STATUS_OPTIONS } from './schemas/form'
 import { createPlayerSearchFields, PLAYER_DEFAULT_SEARCH } from './schemas/search'
 import { PLAYER_TABLE_COLUMNS } from './schemas/table'
 import { createPlayerOptionList, mergePlayerStatusOptions } from './services/options'
-import { usePlayerAuth } from './auth'
+import { PLAYER_PERMISSIONS } from './auth'
 import {
   formatBirthDate,
   formatDateTime,
@@ -28,8 +28,6 @@ import {
 defineOptions({
   name: 'GaogePlayer',
 })
-
-const { canCreatePlayer, canUpdatePlayer, canDeletePlayer } = usePlayerAuth()
 
 const search = ref<PlayerSearch>({ ...PLAYER_DEFAULT_SEARCH })
 const tableData = ref<Player[]>([])
@@ -103,30 +101,29 @@ function handlePaginationChange(params: { page: number; pageSize: number }) {
 }
 
 function handleAdd() {
-  if (!canCreatePlayer.value) {
-    ElMessage.warning('当前账号没有新增球员权限')
-    return
-  }
   dialogMode.value = 'create'
   currentPlayer.value = null
   dialogVisible.value = true
 }
 
 function handleEdit(row: Player) {
-  if (!canUpdatePlayer.value) {
-    ElMessage.warning('当前账号没有编辑球员权限')
-    return
-  }
   dialogMode.value = 'edit'
   currentPlayer.value = row
   dialogVisible.value = true
 }
 
-async function handleDelete(row: Player) {
-  if (!canDeletePlayer.value) {
-    ElMessage.warning('当前账号没有删除球员权限')
+function handleTableAction(payload: { row: Player; action: { key: string } }) {
+  if (payload.action.key === 'edit') {
+    handleEdit(payload.row)
     return
   }
+
+  if (payload.action.key === 'delete') {
+    handleDelete(payload.row)
+  }
+}
+
+async function handleDelete(row: Player) {
   try {
     await ElMessageBox.confirm(`确定删除球员 ${row.nickname} 吗？`, '删除确认', {
       type: 'warning',
@@ -144,14 +141,6 @@ async function handleDelete(row: Player) {
 
 async function handleSubmit(payload: PlayerPayload) {
   const isCreate = dialogMode.value === 'create'
-  if (isCreate && !canCreatePlayer.value) {
-    ElMessage.warning('当前账号没有新增球员权限')
-    return
-  }
-  if (!isCreate && !canUpdatePlayer.value) {
-    ElMessage.warning('当前账号没有编辑球员权限')
-    return
-  }
 
   submitLoading.value = true
   try {
@@ -189,7 +178,7 @@ onMounted(() => {
             @search="handleSearch"
           >
             <template #actions>
-              <ElButton v-if="canCreatePlayer" type="primary" plain @click="handleAdd">
+              <ElButton v-auth="PLAYER_PERMISSIONS.create" type="primary" plain @click="handleAdd">
                 新增球员
               </ElButton>
             </template>
@@ -207,6 +196,7 @@ onMounted(() => {
           :loading="loading"
           :show-index="true"
           table-height="100%"
+          @action-click="handleTableAction"
           @pagination-change="handlePaginationChange"
         >
           <template #avatar="{ row }">
@@ -229,16 +219,6 @@ onMounted(() => {
           </template>
           <template #updatedAt="{ row }">
             {{ formatDateTime(row.updatedAt) }}
-          </template>
-          <template #actions="{ row }">
-            <div class="flex-center gap-2">
-              <ElButton v-if="canUpdatePlayer" type="primary" link @click="handleEdit(row)">
-                编辑
-              </ElButton>
-              <ElButton v-if="canDeletePlayer" type="danger" link @click="handleDelete(row)">
-                删除
-              </ElButton>
-            </div>
           </template>
         </EsTable>
       </div>

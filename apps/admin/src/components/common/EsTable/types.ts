@@ -1,3 +1,27 @@
+export interface TableAction {
+  key: string
+  label: string
+  auth?: string | string[]
+  type?: 'primary' | 'success' | 'warning' | 'info' | 'danger'
+  visible?: boolean | ((row: any) => boolean)
+  disabled?: boolean | ((row: any) => boolean)
+}
+
+export interface TableColumn {
+  prop?: string
+  label: string
+  width?: number
+  slot?: string
+  type?: string
+  link?: boolean | ((row: any) => string)
+  linkParams?: any
+  actionParams?: any
+  actions?: TableAction[]
+  fixed?: 'left' | 'right' | boolean
+  align?: 'left' | 'center' | 'right'
+  visible?: boolean
+}
+
 /**
  * 表格尺寸
  */
@@ -40,4 +64,5 @@ export interface EsTableEmits {
   (e: 'update:pageSize', pageSize: number): void
   (e: 'paginationChange', params: PaginationParams): void
   (e: 'linkClick', payload: any): void
+  (e: 'actionClick', payload: any): void
 }

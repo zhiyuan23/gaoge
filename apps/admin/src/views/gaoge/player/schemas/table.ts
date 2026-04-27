@@ -1,4 +1,6 @@
-import type { TableColumn } from '@/constants/basic-data/types'
+import type { TableColumn } from '@/components/common/EsTable/types'
+
+import { PLAYER_PERMISSIONS } from '../auth'
 
 export const PLAYER_TABLE_COLUMNS: TableColumn[] = [
   { label: '头像', prop: 'avatarUrl', width: 88, slot: 'avatar', align: 'center' },
@@ -13,5 +15,15 @@ export const PLAYER_TABLE_COLUMNS: TableColumn[] = [
   { label: '生日', prop: 'birthDate', width: 120, slot: 'birthDate', align: 'center' },
   { label: '更新时间', prop: 'updatedAt', width: 170, slot: 'updatedAt' },
   { label: '备注', prop: 'remark', width: 180 },
-  { label: '操作', prop: 'actions', width: 160, fixed: 'right', slot: 'actions', align: 'center' },
+  {
+    label: '操作',
+    prop: 'actions',
+    width: 96,
+    fixed: 'right',
+    align: 'center',
+    actions: [
+      { key: 'edit', label: '编辑', auth: PLAYER_PERMISSIONS.update, type: 'primary' },
+      { key: 'delete', label: '删除', auth: PLAYER_PERMISSIONS.delete, type: 'danger' },
+    ],
+  },
 ]
