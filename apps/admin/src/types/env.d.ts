@@ -14,11 +14,10 @@ interface ImportMetaEnv {
    */
   readonly VITE_APP_DISABLE_DEVTOOL: boolean
   readonly VITE_APP_DOC_PREFIX: string
-  readonly VITE_APP_IMAGE_PREFIX: string
   /**
    * 静态资源前缀
    */
-  readonly VITE_APP_PDF_PREFIX: string
+  readonly VITE_APP_IMAGE_PREFIX: string
   /**
    * 应用配置面板
    */
@@ -40,7 +39,6 @@ interface ImportMetaEnv {
    * ========================
    */
   readonly VITE_APP_SETTING: boolean
-  readonly VITE_APP_STATIC_RESOURCE_URL: string
   /**
    * 是否开启开发者工具
    */

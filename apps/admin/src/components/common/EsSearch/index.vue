@@ -1,292 +1,307 @@
 <script setup lang="ts">
-import type { EsSearchEmits, EsSearchProps, SearchField } from './types'
+import type { EsSearchEmits, EsSearchProps, SearchField, SearchOption } from './types'
+
+defineOptions({
+  name: 'EsSearch',
+})
 
 const {
+  fields,
+  modelValue = {},
+  columns = 4,
+  gutter = 16,
+  labelWidth = 72,
   showSearch = true,
   showReset = true,
-  searchText = '查询',
-  resetText = '重置',
-  defaultShowCount = 3,
+  showCollapse = true,
+  defaultVisibleCount = 3,
   autoSearch = false,
   searchDelay = 300,
-  columns = 4,
-  gap = 16,
-  labelWidth = 120,
-  labelPosition = 'left',
-  showCollapse = true,
-  fields,
+  searchText = '查询',
+  resetText = '重置',
 } = defineProps<EsSearchProps>()
 
 const emit = defineEmits<EsSearchEmits>()
+const slots = useSlots()
 
-// 内部状态
-const innerCollapsed = reactive({ value: true })
+const collapsed = ref(true)
+const form = ref<Record<string, any>>(createInitialForm(modelValue))
+let timer: ReturnType<typeof setTimeout> | undefined
+let syncingFromParent = false
 
-// 表单
-const form = reactive<Record<string, any>>({})
-
-// 初始化默认值
-function initForm() {
-  fields.forEach((field) => {
-    form[field.key] = field.defaultValue ?? (field.type.includes('range') ? [] : '')
-  })
-}
-initForm()
-
-// 可见字段
+const activeFields = computed(() => fields.filter((field) => !field.hidden))
+const needCollapse = computed(() => showCollapse && activeFields.value.length > defaultVisibleCount)
 const visibleFields = computed(() => {
-  if (!showCollapse || !innerCollapsed.value) {
-    return fields.filter((f) => !f.hidden)
+  if (!needCollapse.value || !collapsed.value) {
+    return activeFields.value
   }
-  return fields.slice(0, defaultShowCount)
+  return activeFields.value.slice(0, defaultVisibleCount)
 })
 
-// 是否需要折叠
-const needCollapse = computed(() => fields.length > defaultShowCount)
+// 统一生成各字段的初始值，保证 reset 和字段配置变化时行为一致。
+function getFieldDefaultValue(field: SearchField) {
+  if (field.defaultValue !== undefined) {
+    return cloneValue(field.defaultValue)
+  }
+  if (field.type === 'multiSelect' || field.type === 'dateRange' || field.type === 'numberRange') {
+    return []
+  }
+  if (field.type === 'switch') {
+    return false
+  }
+  return ''
+}
 
-// grid 布局
-const gridStyle = computed(() => ({
-  display: 'grid',
-  gridTemplateColumns: `repeat(${columns}, 1fr)`,
-  gap: `${gap}px`,
-}))
+function cloneValue(value: any) {
+  if (Array.isArray(value)) {
+    return [...value]
+  }
+  if (value && typeof value === 'object') {
+    return { ...value }
+  }
+  return value
+}
 
-const labelWidthStyle = computed(() =>
-  typeof labelWidth === 'number' ? `${labelWidth}px` : labelWidth,
+// modelValue 只覆盖已传入字段，其余字段回退到配置默认值。
+function createInitialForm(source: Record<string, any> = {}) {
+  return fields.reduce<Record<string, any>>((result, field) => {
+    result[field.key] =
+      source[field.key] !== undefined ? cloneValue(source[field.key]) : getFieldDefaultValue(field)
+    return result
+  }, {})
+}
+
+// options 支持静态数组和函数，便于页面传入响应式选项。
+function resolveOptions(field: SearchField): SearchOption[] {
+  if (!field.options) {
+    return []
+  }
+  return typeof field.options === 'function' ? field.options() : field.options
+}
+
+function getFieldSpan(field: SearchField) {
+  if (field.span) {
+    return field.span
+  }
+  return Math.max(1, Math.floor(24 / columns))
+}
+
+function emitModelValue() {
+  emit('update:modelValue', { ...form.value })
+}
+
+function handleSearch() {
+  emitModelValue()
+  emit('search', { ...form.value })
+}
+
+// reset 会恢复默认值并触发一次查询，列表页无需额外处理清空后的刷新。
+function handleReset() {
+  form.value = createInitialForm()
+  emitModelValue()
+  emit('reset', { ...form.value })
+  emit('search', { ...form.value })
+}
+
+function toggleCollapse() {
+  collapsed.value = !collapsed.value
+  emit('collapseChange', collapsed.value)
+}
+
+watch(
+  () => modelValue,
+  (value) => {
+    // 父级同步 v-model 时不触发 change/autoSearch，避免循环查询。
+    syncingFromParent = true
+    form.value = createInitialForm(value)
+    nextTick(() => {
+      syncingFromParent = false
+    })
+  },
+  { deep: true },
 )
 
-// select
-function handleSelect(e: any, field: SearchField) {
-  const index = e.detail.value
-  form[field.key] = field.options?.[index]?.value
-}
+watch(
+  () => fields,
+  () => {
+    syncingFromParent = true
+    form.value = createInitialForm(modelValue)
+    nextTick(() => {
+      syncingFromParent = false
+    })
+  },
+  { deep: true },
+)
 
-// label
-function getSelectLabel(field: SearchField) {
-  return field.options?.find((i) => i.value === form[field.key])?.label
-}
-
-// range
-function setRange(field: SearchField, idx: number, val: string) {
-  if (!form[field.key]) {
-    form[field.key] = []
-  }
-  form[field.key][idx] = val
-}
-
-// 查询
-function handleSearch() {
-  emit('update:modelValue', { ...form })
-  emit('search', { ...form })
-}
-
-// 重置
-function handleReset() {
-  initForm()
-  emit('reset', { ...form })
-  handleSearch()
-}
-
-// 折叠
-function toggleCollapse() {
-  innerCollapsed.value = !innerCollapsed.value
-  emit('collapseChange', innerCollapsed.value)
-}
-
-// autoSearch
-let timer: any = null
 watch(
   form,
   () => {
-    emit('change', { ...form })
-
+    if (syncingFromParent) {
+      return
+    }
+    emit('change', { ...form.value })
     if (autoSearch) {
       clearTimeout(timer)
-      timer = setTimeout(() => {
-        handleSearch()
-      }, searchDelay)
+      timer = setTimeout(handleSearch, searchDelay)
     }
   },
   { deep: true },
 )
+
+onBeforeUnmount(() => {
+  clearTimeout(timer)
+})
 </script>
 
 <template>
-  <view class="es-search">
-    <!-- 字段区域 -->
-    <view class="es-search__fields" :style="gridStyle">
-      <template v-for="field in visibleFields" :key="field.key">
-        <view class="es-search__item">
-          <!-- label -->
-          <view
-            v-if="labelPosition === 'left'"
-            class="es-search__label"
-            :style="{ width: labelWidthStyle }"
-          >
-            {{ field.label }}
-          </view>
-
-          <view class="es-search__control">
-            <!-- input -->
-            <input
-              v-if="field.type === 'input'"
-              v-model="form[field.key]"
-              :placeholder="field.placeholder"
-              class="es-input"
+  <div class="es-search">
+    <ElForm :model="form" :label-width="labelWidth">
+      <ElRow :gutter="gutter">
+        <ElCol v-for="field in visibleFields" :key="field.key" :span="getFieldSpan(field)">
+          <ElFormItem :label="field.label">
+            <slot
+              v-if="field.slot && slots[field.slot]"
+              :name="field.slot"
+              :field="field"
+              :form="form"
             />
 
-            <!-- number -->
-            <input
-              v-else-if="field.type === 'number'"
-              v-model="form[field.key]"
-              type="number"
-              class="es-input"
-            />
-
-            <!-- select -->
-            <picker
-              v-else-if="field.type === 'select'"
-              :range="field.options"
-              range-key="label"
-              @change="(e: any) => handleSelect(e, field)"
-            >
-              <view class="es-input">
-                {{ getSelectLabel(field) || field.placeholder || '请选择' }}
-              </view>
-            </picker>
-
-            <!-- switch -->
-            <ElSwitch v-else-if="field.type === 'switch'" v-model="form[field.key]" />
-
-            <!-- date -->
-            <picker
-              v-else-if="field.type === 'date'"
-              mode="date"
-              @change="(e: { detail: { value: any } }) => (form[field.key] = e.detail.value)"
-            >
-              <view class="es-input">
-                {{ form[field.key] || field.placeholder || '请选择日期' }}
-              </view>
-            </picker>
-
-            <!-- date-range -->
-            <view v-else-if="field.type === 'date-range'" class="range">
-              <picker
-                mode="date"
-                @change="(e: { detail: { value: string } }) => setRange(field, 0, e.detail.value)"
-              >
-                <view class="es-input small">
-                  {{ form[field.key]?.[0] || '开始' }}
-                </view>
-              </picker>
-              <text class="line"> - </text>
-              <picker
-                mode="date"
-                @change="(e: { detail: { value: string } }) => setRange(field, 1, e.detail.value)"
-              >
-                <view class="es-input small">
-                  {{ form[field.key]?.[1] || '结束' }}
-                </view>
-              </picker>
-            </view>
-
-            <!-- 自定义组件 -->
             <component
               :is="field.component"
-              v-else-if="field.component"
+              v-else-if="field.type === 'custom' && field.component"
               v-model="form[field.key]"
               v-bind="field.componentProps"
-              v-on="field.componentEvents"
+              v-on="field.componentEvents ?? {}"
             />
-          </view>
-        </view>
-      </template>
-    </view>
 
-    <!-- 操作区 -->
-    <view class="es-search__actions">
-      <view class="left">
-        <button v-if="showSearch" class="btn primary" @click="handleSearch">
-          {{ searchText }}
-        </button>
+            <ElInput
+              v-else-if="field.type === 'input'"
+              v-model="form[field.key]"
+              :placeholder="field.placeholder"
+              :clearable="field.clearable ?? true"
+              v-bind="field.props"
+            />
 
-        <button v-if="showReset" class="btn" @click="handleReset">
-          {{ resetText }}
-        </button>
-      </view>
+            <ElInputNumber
+              v-else-if="field.type === 'number'"
+              v-model="form[field.key]"
+              class="w-full"
+              v-bind="field.props"
+            />
 
-      <view v-if="showCollapse && needCollapse" class="toggle" @click="toggleCollapse">
-        {{ innerCollapsed ? '展开' : '收起' }}
-      </view>
-    </view>
-  </view>
+            <div v-else-if="field.type === 'numberRange'" class="es-search__range">
+              <ElInputNumber
+                v-model="form[field.key][0]"
+                class="flex-1"
+                :placeholder="field.placeholder || '最小值'"
+                v-bind="field.props"
+              />
+              <span class="es-search__range-separator">-</span>
+              <ElInputNumber
+                v-model="form[field.key][1]"
+                class="flex-1"
+                :placeholder="field.placeholder || '最大值'"
+                v-bind="field.props"
+              />
+            </div>
+
+            <ElSelect
+              v-else-if="field.type === 'select' || field.type === 'multiSelect'"
+              v-model="form[field.key]"
+              class="w-full"
+              :multiple="field.type === 'multiSelect'"
+              :placeholder="field.placeholder"
+              :clearable="field.clearable ?? true"
+              v-bind="field.props"
+            >
+              <ElOption
+                v-for="option in resolveOptions(field)"
+                :key="String(option.value)"
+                :label="option.label"
+                :value="option.value"
+                :disabled="option.disabled"
+              />
+            </ElSelect>
+
+            <ElDatePicker
+              v-else-if="field.type === 'date' || field.type === 'dateRange'"
+              v-model="form[field.key]"
+              class="w-full"
+              :type="field.type === 'dateRange' ? 'daterange' : 'date'"
+              :placeholder="field.type === 'date' ? field.placeholder : undefined"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              v-bind="field.props"
+            />
+
+            <ElSwitch
+              v-else-if="field.type === 'switch'"
+              v-model="form[field.key]"
+              v-bind="field.props"
+            />
+          </ElFormItem>
+        </ElCol>
+      </ElRow>
+
+      <div class="es-search__actions">
+        <div class="es-search__actions-left">
+          <ElButton v-if="showSearch" type="primary" @click="handleSearch">
+            <template #icon>
+              <FaIcon name="i-ep:search" />
+            </template>
+            {{ searchText }}
+          </ElButton>
+          <ElButton v-if="showReset" @click="handleReset">
+            <template #icon>
+              <FaIcon name="i-ep:refresh-left" />
+            </template>
+            {{ resetText }}
+          </ElButton>
+          <ElButton v-if="needCollapse" link type="primary" @click="toggleCollapse">
+            {{ collapsed ? '展开' : '收起' }}
+            <FaIcon :name="collapsed ? 'i-ep:arrow-down' : 'i-ep:arrow-up'" class="ms-1" />
+          </ElButton>
+        </div>
+        <div class="es-search__actions-right">
+          <slot name="actions" :form="form" />
+        </div>
+      </div>
+    </ElForm>
+  </div>
 </template>
 
-<style scoped lang="scss">
+<style scoped>
 .es-search {
-  padding: 20px;
-  background: #fff;
-  border-radius: 16px;
+  width: 100%;
 }
 
-.es-search__item {
+.es-search__range {
   display: flex;
+  gap: 8px;
   align-items: center;
+  width: 100%;
 }
 
-.es-search__label {
-  margin-right: 12px;
-  font-size: 24px;
-  color: #666;
-}
-
-.es-search__control {
-  flex: 1;
-}
-
-.es-input {
-  height: 64px;
-  padding: 0 16px;
-  font-size: 26px;
-  line-height: 64px;
-  background: #f5f7fa;
-  border-radius: 8px;
-}
-
-.range {
-  display: flex;
-  align-items: center;
-
-  .small {
-    flex: 1;
-  }
-
-  .line {
-    margin: 0 8px;
-  }
+.es-search__range-separator {
+  color: var(--el-text-color-secondary);
 }
 
 .es-search__actions {
   display: flex;
+  gap: 16px;
+  align-items: center;
   justify-content: space-between;
-  margin-top: 20px;
+}
 
-  .btn {
-    height: 64px;
-    padding: 0 24px;
-    margin-right: 12px;
-    background: #eee;
-    border-radius: 8px;
+.es-search__actions-left,
+.es-search__actions-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
-    &.primary {
-      color: #fff;
-      background: #1677ff;
-    }
-  }
-
-  .toggle {
-    font-size: 26px;
-    color: #1677ff;
-  }
+.es-search__actions-right {
+  margin-left: auto;
 }
 </style>

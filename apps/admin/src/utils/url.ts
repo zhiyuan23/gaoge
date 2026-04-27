@@ -17,15 +17,12 @@ export function getApiBaseUrl(): string {
  */
 export function getResourceUrl(type: 'pdf' | 'image' | 'doc'): string {
   // 获取环境变量配置
-  const baseUrl = import.meta.env.VITE_APP_STATIC_RESOURCE_URL
-  const pdfPrefix = import.meta.env.VITE_APP_PDF_PREFIX
+  const baseUrl = import.meta.env.VITE_APP_BASE_URL
   const imagePrefix = import.meta.env.VITE_APP_IMAGE_PREFIX
   const docPrefix = import.meta.env.VITE_APP_DOC_PREFIX
 
   // 根据资源类型构建URL
   switch (type) {
-    case 'pdf':
-      return `${baseUrl.replace(/\/$/, '')}${pdfPrefix}`
     case 'image':
       return `${baseUrl.replace(/\/$/, '')}${imagePrefix}`
     case 'doc':

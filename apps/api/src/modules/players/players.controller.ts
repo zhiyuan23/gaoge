@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 
@@ -30,8 +31,8 @@ export class PlayersController {
   }
 
   @Get()
-  findAll() {
-    return this.playersService.findAll()
+  findAll(@Query() query: Record<string, string | undefined>) {
+    return this.playersService.findAll(query)
   }
 
   @Get(':id')

@@ -47,7 +47,7 @@ function onScroll() {
   <FaSmartFixedBlock position="bottom">
     <div ref="actionBarRef">
       <div
-        class="z-4 bg-background before:(pointer-events-none z-1 content-empty -top-1px -translate-y-full) absolute relative bottom-0 left-0 h-12 w-full border-t bg-gradient-to-b from-transparent to-[var(--g-main-area-bg)] p-5 text-center opacity-0 transition transition-opacity"
+        class="z-4 bg-background before:(pointer-events-none -top-1px z-1 content-empty transition-opacity) absolute relative left-0 h-12 w-full -translate-y-full border-t bg-gradient-to-b from-transparent to-[var(--g-main-area-bg)] p-5 text-center opacity-0"
         :class="{ 'before:(opacity-100)': !isBottom }"
       >
         <slot />

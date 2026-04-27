@@ -1,4 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
+import type { Prisma } from '@prisma/client'
+
+import type { PlayerListParams } from '@gaoge/shared-types'
 
 import { PrismaService } from '@/common/prisma/prisma.service'
 
@@ -13,10 +16,24 @@ export class PlayersService {
     return this.prisma.player.create({ data: dto })
   }
 
-  findAll() {
-    return this.prisma.player.findMany({
-      orderBy: { createdAt: 'desc' },
-    })
+  async findAll(params: PlayerListParams = {}) {
+    const page = normalizePositiveInteger(params.page, 1)
+    const pageSize = normalizePositiveInteger(params.pageSize, 15)
+    const where = buildPlayerWhere(params)
+    const [list, total] = await this.prisma.$transaction([
+      this.prisma.player.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.player.count({ where }),
+    ])
+
+    return {
+      list,
+      total,
+    }
   }
 
   async findOne(id: number) {
@@ -36,4 +53,47 @@ export class PlayersService {
     await this.findOne(id)
     return this.prisma.player.delete({ where: { id } })
   }
+}
+
+function normalizePositiveInteger(value: unknown, fallback: number) {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+}
+
+function normalizeText(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined
+}
+
+// 列表筛选条件集中构造，便于后续继续扩展更多查询字段。
+function buildPlayerWhere(params: PlayerListParams) {
+  const keyword = normalizeText(params.keyword)
+  const subTeam = normalizeText(params.subTeam)
+  const position = normalizeText(params.position)
+  const status = normalizeText(params.status)
+  const where: Prisma.PlayerWhereInput = {}
+
+  if (keyword) {
+    const fuzzyCondition = {
+      contains: keyword,
+      mode: 'insensitive',
+    } satisfies Prisma.StringFilter
+    where.OR = [
+      { nickname: fuzzyCondition },
+      { realName: fuzzyCondition },
+      { openid: fuzzyCondition },
+      { position: fuzzyCondition },
+      { subTeam: fuzzyCondition },
+    ]
+  }
+  if (subTeam) {
+    where.subTeam = subTeam
+  }
+  if (position) {
+    where.position = position
+  }
+  if (status) {
+    where.status = status
+  }
+
+  return where
 }

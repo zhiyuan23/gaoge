@@ -6,8 +6,6 @@ import useRouteStore from '../route'
 import useSettingsStore from '../settings'
 import useTabbarStore from '../tabbar'
 
-const PLAYER_WRITE_PERMISSIONS = ['player:create', 'player:update', 'player:delete']
-
 const useUserStore = defineStore(
   // 唯一ID
   'user',
@@ -23,9 +21,6 @@ const useUserStore = defineStore(
     const role = ref(localStorage.role ?? '')
     const permissions = ref<string[]>([])
     const isLogin = computed(() => Boolean(token.value))
-    const canManagePlayers = computed(() =>
-      PLAYER_WRITE_PERMISSIONS.every((permission) => permissions.value.includes(permission)),
-    )
 
     // 登录
     async function login(data: { account: string; password: string }) {
@@ -119,7 +114,6 @@ const useUserStore = defineStore(
       role,
       permissions,
       isLogin,
-      canManagePlayers,
       login,
       logout,
       requestLogout,

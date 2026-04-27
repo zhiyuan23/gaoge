@@ -66,3 +66,17 @@ export interface PlayerPayload {
   status?: PlayerStatus
   remark?: string
 }
+
+export interface PlayerListParams {
+  page?: number
+  pageSize?: number
+  keyword?: string
+  subTeam?: string
+  position?: string
+  status?: string
+}
+
+export interface PlayerListResponse {
+  list: Player[]
+  total: number
+}

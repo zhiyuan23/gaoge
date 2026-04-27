@@ -8,6 +8,8 @@ import useSettingsStore from '@/store/settings'
 import eventBus from '@/utils/eventBus'
 import { diffTwoObj } from '@/utils/object'
 
+import type { Settings } from '#/global'
+
 defineOptions({
   name: 'AppSetting',
 })
@@ -37,6 +39,29 @@ onMounted(() => {
 })
 
 const { copy, copied, isSupported } = useClipboard()
+
+const radiusOptions: Array<{ label: number; value: NonNullable<Settings.app['radius']> }> = [
+  { label: 0, value: 0 },
+  { label: 0.25, value: 0.25 },
+  { label: 0.5, value: 0.5 },
+  { label: 0.75, value: 0.75 },
+  { label: 1, value: 1 },
+]
+
+const mainMenuClickModeOptions: Array<{
+  label: string
+  value: NonNullable<Settings.menu['mainMenuClickMode']>
+}> = [
+  { label: '切换', value: 'switch' },
+  { label: '跳转', value: 'jump' },
+  { label: '智能选择', value: 'smart' },
+]
+
+const topbarModeOptions: Array<{ label: string; value: NonNullable<Settings.topbar['mode']> }> = [
+  { label: '静止', value: 'static' },
+  { label: '固定', value: 'fixed' },
+  { label: '粘性', value: 'sticky' },
+]
 
 watch(copied, (val) => {
   if (val) {
@@ -79,18 +104,12 @@ function handleCopy() {
         <div class="label">圆角系数</div>
         <div class="flex-center-start gap-1">
           <FaButton
-            v-for="(item, index) in [
-              { label: 0, value: 0 },
-              { label: 0.25, value: 0.25 },
-              { label: 0.5, value: 0.5 },
-              { label: 0.75, value: 0.75 },
-              { label: 1, value: 1 },
-            ]"
+            v-for="(item, index) in radiusOptions"
             :key="index"
             :variant="settingsStore.settings.app.radius === item.value ? 'default' : 'outline'"
             size="sm"
             class="w-12"
-            @click="settingsStore.settings.app.radius = item.value as any"
+            @click="settingsStore.settings.app.radius = item.value"
           >
             {{ item.label }}
           </FaButton>
@@ -140,17 +159,13 @@ function handleCopy() {
         </div>
         <div class="flex-center-start gap-1">
           <FaButton
-            v-for="(item, index) in [
-              { label: '切换', value: 'switch' },
-              { label: '跳转', value: 'jump' },
-              { label: '智能选择', value: 'smart' },
-            ]"
+            v-for="(item, index) in mainMenuClickModeOptions"
             :key="index"
             :variant="
               settingsStore.settings.menu.mainMenuClickMode === item.value ? 'default' : 'outline'
             "
             size="sm"
-            @click="settingsStore.settings.menu.mainMenuClickMode = item.value as any"
+            @click="settingsStore.settings.menu.mainMenuClickMode = item.value"
           >
             {{ item.label }}
           </FaButton>
@@ -187,15 +202,11 @@ function handleCopy() {
         <div class="label">模式</div>
         <div class="flex-center-start gap-1">
           <FaButton
-            v-for="(item, index) in [
-              { label: '静止', value: 'static' },
-              { label: '固定', value: 'fixed' },
-              { label: '粘性', value: 'sticky' },
-            ]"
+            v-for="(item, index) in topbarModeOptions"
             :key="index"
             :variant="settingsStore.settings.topbar.mode === item.value ? 'default' : 'outline'"
             size="sm"
-            @click="settingsStore.settings.topbar.mode = item.value as any"
+            @click="settingsStore.settings.topbar.mode = item.value"
           >
             {{ item.label }}
           </FaButton>

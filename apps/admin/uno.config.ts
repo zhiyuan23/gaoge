@@ -1,3 +1,5 @@
+import fs from 'node:fs'
+import path from 'node:path'
 import type { PresetOrFactory } from '@unocss/core'
 import { entriesToCss, toArray } from '@unocss/core'
 import presetLegacyCompat from '@unocss/preset-legacy-compat'
@@ -17,12 +19,41 @@ import { presetScrollbar } from 'unocss-preset-scrollbar'
 
 import { darkTheme, lightTheme } from './themes'
 
+function collectSourceFiles(dir: string, files: string[] = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      collectSourceFiles(fullPath, files)
+      continue
+    }
+    if (/\.(vue|ts|js|tsx|jsx)$/.test(entry.name)) {
+      files.push(fullPath)
+    }
+  }
+  return files
+}
+
+function collectIconSafelist() {
+  const iconNames = new Set<string>()
+  const sourceRoot = path.resolve(__dirname, 'src')
+
+  for (const file of collectSourceFiles(sourceRoot)) {
+    const content = fs.readFileSync(file, 'utf8')
+    for (const match of content.matchAll(/\bi-[a-z0-9-]+:[a-z0-9-]+\b/gi)) {
+      iconNames.add(match[0])
+    }
+  }
+
+  return [...iconNames]
+}
+
 export default defineConfig<Theme>({
   content: {
     pipeline: {
       include: [/\.(vue|svelte|[jt]sx|mdx?|astro|elm|php|phtml|html)($|\?)/, 'src/**/*.{js,ts}'],
     },
   },
+  safelist: collectIconSafelist(),
   shortcuts: [
     [
       /^flex-?(col)?-(start|end|center|baseline|stretch)-?(start|end|center|between|around|evenly|left|right)?$/,
