@@ -112,11 +112,11 @@ defineExpose({
     ref="scrollContainerRef"
     :class="
       cn(
-        'after:(pointer-events-none z-1 content-empty) before:(pointer-events-none z-1 content-empty) absolute relative flex overflow-hidden from-transparent to-[var(--mask-scroll-container-gradient-color)] opacity-0 transition-opacity',
+        'before:(pointer-events-none z-1 content-empty transition-opacity) after:(pointer-events-none z-1 content-empty transition-opacity) absolute relative flex size-full overflow-hidden from-transparent to-[var(--mask-scroll-container-gradient-color)] opacity-0',
         {
-          'after:(bg-gradient-to-r end-0) before:(bg-gradient-to-l start-0) h-full w-12 rtl:bg-gradient-to-l rtl:bg-gradient-to-r':
+          'after:(end-0 bg-gradient-to-r) before:(start-0 bg-gradient-to-l) top-0 h-full w-12 rtl:before:bg-gradient-to-r rtl:after:bg-gradient-to-l':
             props.horizontal,
-          'after:(bg-gradient-to-b bottom-0) before:(bg-gradient-to-t w-full) h-12 w-full':
+          'after:(bottom-0 bg-gradient-to-b) before:(left-0 bg-gradient-to-t) left-0 top-0 h-12 w-full':
             !props.horizontal,
           'before:(opacity-100!)': props.mask && showMaskStart,
           'after:(opacity-100!)': props.mask && showMaskEnd,
