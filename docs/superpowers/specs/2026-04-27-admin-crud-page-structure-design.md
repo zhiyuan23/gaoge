@@ -1,65 +1,65 @@
-# Admin CRUD Page Structure Design
+# Admin CRUD 页面结构设计
 
-Date: 2026-04-27
+日期：2026-04-27
 
-## Goal
+## 目标
 
-Define a standard frontend structure for CRUD pages in `apps/admin`, using the player page as the first concrete example.
+为 `apps/admin` 内的增删改查页面定义一套统一的前端结构，并以 `player` 页面作为第一个具体落地样例。
 
-This design focuses only on the admin project. It does not attempt to create a cross-app abstraction for `web` or `miniapp`.
+本设计只面向 admin 项目，不尝试抽象为 `web` 或 `miniapp` 可共用的跨应用方案。
 
-## Why This Work
+## 为什么要做这件事
 
-The current player page has already moved in the right direction by separating page orchestration from some business details, but two issues remain:
+当前 `player` 页面已经开始把页面编排和部分业务细节拆开，但仍有两个明显问题：
 
-- Page-level concerns are not separated consistently. Search config, table config, form model factories, and row-to-form mapping are still mixed in `constants.ts`.
-- The create/edit dialog is still implemented as one business component that combines dialog shell, form rendering, validation, and payload building.
+- 页面级职责拆分还不稳定。搜索配置、表格配置、表单默认值工厂、行数据到表单数据的映射仍混在 `constants.ts` 里。
+- 新增/编辑弹窗仍是一个混合型业务组件，同时承担弹窗壳、表单渲染、校验和 payload 组装。
 
-If this structure is copied into more modules as-is, the admin app will end up with repeated but slightly different CRUD page patterns. That would make later extraction harder, not easier.
+如果后续其他模块照着现在的写法继续复制，admin 项目会逐渐出现一批结构相似但边界不一致的 CRUD 页面。那样后面再抽象，只会更难，不会更容易。
 
-## Scope
+## 范围
 
-Included:
+包含：
 
-- Define a standard directory layout for admin CRUD pages.
-- Define naming rules for business form components and dialog components.
-- Define which concerns should move into `schemas`, `model`, `components`, and page orchestration.
-- Define a lightweight reusable CRUD page behavior layer for admin list pages.
-- Define which generic components should exist now and which should not.
+- 定义 admin CRUD 页面的标准目录结构。
+- 定义业务表单组件和弹窗组件的命名规则。
+- 定义哪些职责应放入 `schemas`、`model`、`components` 和页面编排层。
+- 定义一个轻量级、可复用的 CRUD 页面行为层。
+- 定义哪些通用组件现在应该做，哪些现在不应该做。
 
-Not included:
+不包含：
 
-- Build a fully schema-driven `CrudPage` renderer.
-- Build a generic form renderer equivalent to `EsSearch`.
-- Define cross-platform abstractions for `web` or `miniapp`.
-- Refactor every existing admin page in this round.
+- 构建一个完全 schema 驱动的 `CrudPage` 渲染器。
+- 构建一个与 `EsSearch` 对应的通用表单渲染器。
+- 定义 `web` 或 `miniapp` 的跨端抽象。
+- 在这一轮里重构所有 admin 页面。
 
-## Design Principles
+## 设计原则
 
-### Reuse Behavior, Not Business Shape
+### 复用行为，不复用业务形状
 
-CRUD pages in admin share behavior more reliably than they share field structure. Search, pagination, dialog open-close flow, submit loading, and refresh-after-submit are stable patterns. Table columns, form layout, validation, and field-level interaction are more business-specific.
+admin 后台的 CRUD 页面，共性更稳定的是行为，而不是字段结构。搜索、分页、弹窗开关、提交 loading、提交后刷新，这些是稳定模式；表格列、表单布局、校验规则、字段交互，则更偏业务差异。
 
-The design therefore standardizes page orchestration and folder boundaries first, while keeping business schema and form UI inside each module.
+因此，本设计优先标准化页面编排方式和目录边界，同时把业务 schema 和业务表单 UI 继续保留在各自模块内部。
 
-### Prefer Clear Boundaries Over Maximum Configurability
+### 优先保证边界清晰，而不是最大可配置
 
-The goal is not to build a low-code engine. The goal is to make the next admin CRUD page easy to add, easy to read, and easy to evolve.
+目标不是做一个低代码引擎，而是让下一个 admin CRUD 页面更容易新增、更容易理解、更容易演进。
 
-This means:
+这意味着：
 
-- `index.vue` should assemble a page, not define all details inline.
-- Config files should stay declarative.
-- Mapping logic should be isolated instead of hidden inside constants.
-- Generic components should stay thin and predictable.
+- `index.vue` 负责组装页面，而不是把所有细节都写在里面。
+- 配置文件保持声明式。
+- 映射逻辑单独隔离，而不是藏在常量文件里。
+- 通用组件保持轻、薄、可预测。
 
-### Admin-Only Optimization
+### 只为 admin 项目优化
 
-This structure is allowed to align directly with `apps/admin` conventions, Vue 3, and Element Plus. It does not need to preserve compatibility with other frontend runtimes.
+这套结构可以直接贴着 `apps/admin` 现有约定、Vue 3 和 Element Plus 来做，不需要为了兼容其他前端运行时而保留额外抽象层。
 
-## Standard Module Structure
+## 标准模块结构
 
-Each admin CRUD module should use the following layout:
+每个 admin CRUD 模块应采用如下结构：
 
 ```text
 views/<domain>/<module>/
@@ -80,7 +80,7 @@ views/<domain>/<module>/
   formatters.ts
 ```
 
-Example for `player`:
+以 `player` 为例：
 
 ```text
 views/gaoge/player/
@@ -101,13 +101,13 @@ views/gaoge/player/
   formatters.ts
 ```
 
-## Directory Responsibilities
+## 目录职责
 
 ### `index.vue`
 
-`index.vue` is the page assembler. It should coordinate page state, wire API calls, connect reusable components, and render page-level slots.
+`index.vue` 是页面装配层，负责协调页面状态、串联 API 调用、连接通用组件，并渲染页面级插槽。
 
-It should own:
+它应该持有：
 
 - `search`
 - `page`
@@ -120,239 +120,239 @@ It should own:
 - `dialogMode`
 - `currentRow`
 
-It should call:
+它应该负责：
 
-- list fetch
-- delete action
-- create or update submit
-- permission guards
+- 列表请求
+- 删除动作
+- 创建或更新提交
+- 权限拦截
 
-It should not define:
+它不应该直接定义：
 
-- large field schema objects
-- table column arrays
-- form default factories
-- row-to-form or form-to-payload conversion logic
+- 大段字段 schema
+- 表格列数组
+- 表单默认值工厂
+- 行数据到表单数据或表单数据到 payload 的转换逻辑
 
 ### `components/`
 
-`<Entity>Form.vue` is the business form body.
+`<Entity>Form.vue` 是业务表单体。
 
-Responsibilities:
+职责：
 
-- render form items
-- own form validation rules if they are tightly coupled to fields
-- expose or emit validated form data
-- receive business options as props
+- 渲染表单项
+- 持有与字段强耦合的校验规则
+- 对外暴露或发出校验后的表单数据
+- 接收业务选项数据作为 props
 
-`<Entity>FormDialog.vue` is the business dialog container.
+`<Entity>FormDialog.vue` 是业务弹窗容器。
 
-Responsibilities:
+职责：
 
-- dialog title
-- dialog open-close bridge
-- submit button area
-- loading state bridge
-- compose dialog shell with `<Entity>Form.vue`
+- 维护弹窗标题
+- 连接打开/关闭状态
+- 承接提交按钮区域
+- 连接 loading 状态
+- 组合通用弹窗壳与 `<Entity>Form.vue`
 
-This split avoids coupling the business form to one presentation shell. If the same form later needs drawer or full-page editing, the form body remains reusable.
+这样拆分后，业务表单不再绑定到某一种承载形式。如果后续要从弹窗切成抽屉或整页编辑，表单体可以直接复用。
 
 ### `schemas/`
 
-This folder contains declarative configuration only.
+这个目录只放声明式配置。
 
-`search.ts`:
+`search.ts`：
 
-- search default values
-- search field config factory
+- 搜索默认值
+- 搜索字段配置工厂
 
-`table.ts`:
+`table.ts`：
 
-- table column config
+- 表格列配置
 
-`form.ts`:
+`form.ts`：
 
-- form default values
-- static field option constants
-- form-only declarative metadata if needed
+- 表单默认值
+- 静态字段选项常量
+- 必要时放表单自己的声明式元数据
 
-`schemas/*` should not contain API calls, mutable page state, or row-to-payload transformation code.
+`schemas/*` 不应包含 API 调用、可变页面状态，或行数据到 payload 的转换逻辑。
 
 ### `model/`
 
-This folder isolates page-level business data transformation.
+这个目录用于隔离页面级业务数据转换。
 
-`types.ts`:
+`types.ts`：
 
-- page-internal types that do not belong in shared packages
+- 不适合放入共享包的页面内部类型
 
-`mapper.ts`:
+`mapper.ts`：
 
 - `createEmptyForm()`
 - `createFormFromRow()`
 - `buildPayload()`
-- field normalization helpers
+- 字段归一化辅助函数
 
-If a module does not need a dedicated `types.ts`, it may omit that file. If the mapping logic stays non-trivial, `mapper.ts` should still exist.
+如果某个模块暂时不需要单独的 `types.ts`，可以省略；但只要映射逻辑不再是非常简单的直传，`mapper.ts` 就应该存在。
 
 ### `services/`
 
-This folder contains page-local service helpers that are not the primary REST API client.
+这个目录放页面局部服务辅助逻辑，而不是主 REST API 客户端。
 
-Typical examples:
+典型场景包括：
 
-- option list preparation
-- dictionary normalization
-- remote select option loading
+- 下拉选项准备
+- 字典归一化
+- 远程选项加载
 
-`services/options.ts` is the default starting point for CRUD pages that need dynamic select data. If a module has no local service helpers yet, this folder may be omitted until needed.
+`services/options.ts` 是 CRUD 页面对动态选项数据的默认起点。如果某个模块暂时没有这类逻辑，这个目录可以先不创建。
 
 ### `auth.ts`
 
-This file defines module-local permission constants and helpers such as `usePlayerAuth()`.
+这个文件用于定义模块内的权限常量和辅助函数，例如 `usePlayerAuth()`。
 
-Permission naming and visibility logic should stay close to the module instead of leaking into generic user-store APIs.
+权限命名和可见性判断应尽量贴近业务模块，而不是继续堆进通用的用户 store API 里。
 
 ### `formatters.ts`
 
-This file holds display-only logic:
+这个文件只放展示逻辑：
 
-- label mapping
-- tag type mapping
-- date formatting
-- other presentation helpers
+- 标签文案映射
+- tag type 映射
+- 日期格式化
+- 其他展示辅助函数
 
-It should not contain form normalization or API payload logic.
+它不应承载表单归一化或 API payload 拼装逻辑。
 
-## Naming Rules
+## 命名规则
 
-### Business Components
+### 业务组件
 
-Use explicit business names:
+业务组件采用显式业务命名：
 
 - `PlayerForm.vue`
 - `PlayerFormDialog.vue`
 
-This is preferred over keeping everything inside a single `PlayerFormDialog.vue`.
+这比继续把所有内容都塞进一个 `PlayerFormDialog.vue` 更合适。
 
-Reason:
+原因是：
 
-- `PlayerForm.vue` describes business content.
-- `PlayerFormDialog.vue` describes business content plus shell choice.
+- `PlayerForm.vue` 表达的是业务内容。
+- `PlayerFormDialog.vue` 表达的是业务内容加具体承载方式。
 
-That gives a clean upgrade path if the shell changes later.
+这样后续如果承载方式变化，命名和结构都还能成立。
 
-### Generic Components
+### 通用组件
 
-Current generic components may keep their existing names temporarily:
+现有通用组件在当前阶段可以暂时保留现名：
 
 - `EsSearch`
 - `EsTable`
 
-They are already referenced broadly enough that immediate renaming would create churn without enough architectural payoff.
+它们已经有足够多的引用，现阶段立刻全局改名，只会增加迁移成本，但不会带来足够大的架构收益。
 
-However, the design formally treats them as admin CRUD foundation components rather than one-off helpers. If the naming is revisited later, the target direction should be role-based names such as:
+不过在设计层面，应正式把它们视为 admin CRUD 的基础组件，而不是临时工具组件。未来如果要统一更名，方向应收敛到“角色命名”，例如：
 
-- `CrudSearch` or `AdminSearchForm`
-- `CrudTable` or `AdminDataTable`
+- `CrudSearch` 或 `AdminSearchForm`
+- `CrudTable` 或 `AdminDataTable`
 
-That rename is intentionally deferred until the CRUD pattern stabilizes across more than one module.
+这个重命名动作暂时延后，等 CRUD 模式在多个模块上稳定后再统一处理。
 
-## Reusable Component Strategy
+## 通用组件策略
 
-### Keep `EsSearch`
+### 保留 `EsSearch`
 
-`EsSearch` remains the standard search area renderer for admin CRUD pages.
+`EsSearch` 继续作为 admin CRUD 页面的标准查询区域渲染组件。
 
-Why it is a good generic component:
+它适合作为通用组件的原因：
 
-- search fields are comparatively shallow
-- interactions are uniform
-- layout is predictable
-- field differences are manageable through schema
+- 搜索字段相对扁平
+- 交互模式统一
+- 布局相对稳定
+- 字段差异可以通过 schema 承载
 
-### Keep `EsTable`
+### 保留 `EsTable`
 
-`EsTable` remains the standard table and pagination renderer for admin CRUD pages.
+`EsTable` 继续作为 admin CRUD 页面的标准表格与分页渲染组件。
 
-Why it is a good generic component:
+它适合作为通用组件的原因：
 
-- column rendering and pagination are stable concerns
-- business-specific rendering already fits naturally into slots
+- 列渲染和分页是稳定职责
+- 业务差异自然可以落在插槽中处理
 
-### Add A Thin Dialog Shell
+### 增加一个很薄的弹窗表单壳
 
-Add a lightweight reusable dialog-form shell, with a name such as:
+增加一个轻量的通用弹窗壳，命名可选：
 
 - `EsFormDialogShell`
-- or `EsDialogForm`
+- 或 `EsDialogForm`
 
-Recommended responsibility:
+推荐职责：
 
-- standard title area
-- standard footer buttons
-- standard confirm/cancel handling
-- loading binding
-- `modelValue` binding
-- content slot for business form body
+- 统一标题区
+- 统一 footer 按钮
+- 统一确认/取消交互
+- 统一 loading 绑定
+- 统一 `modelValue` 绑定
+- 提供表单内容插槽
 
-This component should not know business fields, validation rules, or payload shapes.
+这个组件不应知道业务字段、校验规则或 payload 结构。
 
-### Do Not Add A Generic `EsForm` Yet
+### 暂不增加通用 `EsForm`
 
-Do not build a full schema-driven form renderer in this phase.
+这一阶段不应直接构建一个完整的 schema 驱动表单渲染器。
 
-Reason:
+原因是：
 
-- business edit forms vary more than search forms
-- validation coupling is stronger
-- field linkage is more common
-- custom layout needs are higher
+- 业务编辑表单的差异远大于搜索表单
+- 校验和字段耦合更强
+- 字段联动更多
+- 自定义布局需求更高
 
-Creating a generic admin form renderer now would likely overfit the current player page and slow down later modules that need exceptions.
+现在如果直接做一个通用 admin 表单渲染器，很容易过拟合 `player` 页面，并拖慢后续真正有特例的业务模块。
 
-The correct current boundary is:
+因此当前最合适的边界是：
 
-- generic search renderer
-- generic table renderer
-- generic dialog shell
-- business form body per module
+- 通用查询渲染器
+- 通用表格渲染器
+- 通用弹窗壳
+- 每个模块自己的业务表单体
 
-## Lightweight CRUD Behavior Layer
+## 轻量 CRUD 行为层
 
-Admin CRUD pages should share a thin behavior abstraction, preferably a composable such as `useCrudPage` or `useCrudListPage`.
+admin CRUD 页面应共享一层很薄的行为抽象，优先以 composable 形式存在，例如 `useCrudPage` 或 `useCrudListPage`。
 
-This composable should unify common list-page behavior, not full business definition.
+这个 composable 只复用列表页流程，不接管完整业务定义。
 
-Recommended responsibilities:
+推荐职责：
 
-- hold `page`, `pageSize`, `loading`, `submitLoading`
-- hold `dialogVisible`, `dialogMode`, `currentRow`
-- expose `handleSearch`
-- expose `handlePaginationChange`
-- expose `openCreate`
-- expose `openEdit`
-- expose refresh-after-submit flow
-- optionally expose empty-page-after-delete correction
+- 持有 `page`、`pageSize`、`loading`、`submitLoading`
+- 持有 `dialogVisible`、`dialogMode`、`currentRow`
+- 暴露 `handleSearch`
+- 暴露 `handlePaginationChange`
+- 暴露 `openCreate`
+- 暴露 `openEdit`
+- 暴露提交成功后的刷新流程
+- 必要时暴露删除后空页自动回退逻辑
 
-It should not:
+它不应负责：
 
-- own search schema
-- own table columns
-- own business form schema
-- decide API payload shape
-- decide permission rules
+- 搜索 schema
+- 表格列定义
+- 业务表单 schema
+- API payload 结构
+- 权限规则
 
-This keeps the abstraction at the workflow layer, which is the part most likely to remain stable across modules.
+这样可以把抽象稳定在“页面工作流”这一层，而不是过早把业务细节也推进通用层。
 
-## Player Page Refactor Direction
+## Player 页面重构方向
 
-The player page should evolve from:
+`player` 页面应从：
 
-- one large `constants.ts`
-- one mixed `PlayerFormDialog.vue`
+- 一个大而杂的 `constants.ts`
+- 一个混合型的 `PlayerFormDialog.vue`
 
-to:
+演进为：
 
 - `schemas/search.ts`
 - `schemas/table.ts`
@@ -361,109 +361,101 @@ to:
 - `components/PlayerForm.vue`
 - `components/PlayerFormDialog.vue`
 
-Concrete migration guidance:
+具体迁移建议如下。
 
-### Move Search Definitions
+### 拆分搜索定义
 
-Move:
+把以下内容移入 `schemas/search.ts`：
 
 - `PlayerSearch`
 - `PLAYER_DEFAULT_SEARCH`
 - `createPlayerSearchFields()`
 
-into `schemas/search.ts`.
+### 拆分表格定义
 
-### Move Table Definitions
-
-Move:
+把以下内容移入 `schemas/table.ts`：
 
 - `PLAYER_TABLE_COLUMNS`
 
-into `schemas/table.ts`.
+### 拆分表单默认值和静态选项
 
-### Move Form Defaults And Static Options
-
-Move:
+把以下内容移入 `schemas/form.ts`：
 
 - `PLAYER_STATUS_OPTIONS`
-- form default values
+- 表单默认值
 
-into `schemas/form.ts`.
+### 拆分映射逻辑
 
-### Move Mapping Logic
-
-Move:
+把以下内容移入 `model/mapper.ts`：
 
 - `createEmptyPlayerForm()`
 - `createPlayerFormFromRow()`
-- payload normalization logic
+- payload 归一化逻辑
 
-into `model/mapper.ts`.
+payload 构建逻辑不应再继续留在弹窗组件中。
 
-Payload-building logic should no longer live inside the dialog component.
+### 拆分表单与弹窗
 
-### Split Form And Dialog
-
-Create:
+新增：
 
 - `components/PlayerForm.vue`
 - `components/PlayerFormDialog.vue`
 
-`PlayerForm.vue` should render the actual form and expose validated submission data.
+`PlayerForm.vue` 负责渲染实际表单并输出校验后的表单数据。
 
-`PlayerFormDialog.vue` should coordinate dialog shell concerns and emit the final `submit` event to the page.
+`PlayerFormDialog.vue` 负责承接弹窗壳相关职责，并把最终 `submit` 事件抛给页面。
 
-## Expected Benefits
+## 预期收益
 
-For developers:
+对开发者来说：
 
-- faster onboarding into each CRUD module
-- lower chance of page logic collapsing back into `index.vue`
-- clearer search/table/form ownership
-- easier future extraction of a shared CRUD behavior composable
+- 更快理解每个 CRUD 模块结构
+- 降低页面逻辑重新塌回 `index.vue` 的概率
+- 更清晰地划分 search、table、form 的职责
+- 为后续抽取共享 CRUD 行为 composable 打下稳定基础
 
-For the codebase:
+对代码库来说：
 
-- less repeated ad hoc CRUD structure
-- less pressure to prematurely introduce a heavy schema engine
-- cleaner path from one example page to a scalable admin convention
+- 降低随手式 CRUD 结构复制
+- 避免过早引入过重的 schema 引擎
+- 为 admin 后台形成可扩展的一致模式
 
-## Trade-Offs
+## 取舍说明
 
-### Why Not Build A Full `CrudPage`
+### 为什么不直接做完整 `CrudPage`
 
-Because it would force unstable business differences into a common API too early. That would optimize for generation speed at the cost of clarity and changeability.
+因为那会把尚未稳定的业务差异硬塞进统一接口，表面上提升生成速度，实际上会损害可读性和可维护性。
 
-### Why Add More Files
+### 为什么要增加文件数
 
-Because the current coupling problem is not caused by too many files. It is caused by too many responsibilities per file. The proposed split creates smaller units with clearer reasons to change.
+当前问题不是文件太多，而是单个文件承担了过多职责。拆分后的收益来自“每个文件只有更明确的变化原因”，而不是“文件越少越好”。
 
-### Why Delay Renaming `EsSearch` And `EsTable`
+### 为什么暂缓重命名 `EsSearch` 和 `EsTable`
 
-Because the value of renaming is semantic clarity, not behavior. That clarity matters, but not enough to justify immediate broad churn while the pattern is still being proven.
+因为改名带来的主要收益是语义清晰，而不是行为改进。这个收益存在，但还不足以支撑当前阶段做一次全局迁移。
 
-## Implementation Guidance
+## 实施建议
 
-The implementation plan for this design should focus on the player page first and use it as the admin CRUD reference module.
+后续 implementation plan 应以 `player` 页面为第一落地点，把它作为 admin CRUD 的参考模块。
 
-Suggested order:
+推荐顺序：
 
-1. Split `player/constants.ts` into `schemas/*` and `model/mapper.ts`.
-2. Extract `PlayerForm.vue` from `PlayerFormDialog.vue`.
-3. Introduce a thin dialog shell if the split reveals repeated dialog footer/title behavior worth standardizing immediately.
-4. Evaluate whether player page state flow is ready to move into a `useCrudPage` composable after the structural split is complete.
+1. 把 `player/constants.ts` 拆分到 `schemas/*` 和 `model/mapper.ts`。
+2. 从 `PlayerFormDialog.vue` 中抽出 `PlayerForm.vue`。
+3. 如果拆分过程中已经暴露出明显重复的标题区和 footer 区，再补一个很薄的通用弹窗壳。
+4. 等结构拆稳后，再评估是否把 player 页的状态流下沉到 `useCrudPage` composable。
 
-The plan should not try to solve all admin CRUD modules in one implementation pass.
+这一轮 implementation plan 不应试图一次性解决所有 admin CRUD 页面。
 
-## Final Decision
+## 最终决策
 
-Use a standard admin CRUD module structure built around:
+为 `apps/admin` 采用一套标准 CRUD 模块结构，核心由以下部分组成：
 
-- page assembly in `index.vue`
-- declarative schema files
-- dedicated mapping layer
-- business form body plus business dialog wrapper
-- thin reusable CRUD foundation components
-- optional lightweight CRUD page composable for workflow reuse
+- `index.vue` 负责页面装配
+- `schemas/*` 负责声明式配置
+- `model/*` 负责数据映射
+- 业务表单体与业务弹窗容器分离
+- 通用基础组件保持轻量
+- 视情况补一层轻量 CRUD 页面行为 composable
 
-This is the preferred design because it improves consistency and scalability for `apps/admin` without over-abstracting current business pages.
+这是当前阶段的最优解，因为它能在不提前过度抽象的前提下，提高 `apps/admin` 的一致性、扩展性和后续复用质量。
