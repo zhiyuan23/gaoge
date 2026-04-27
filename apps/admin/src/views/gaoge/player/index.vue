@@ -6,25 +6,24 @@ meta:
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import type { Player, PlayerListParams, PlayerPayload } from '@/api/players'
+import type { Player, PlayerPayload } from '@/api/players'
 import playersApi from '@/api/players'
-import type { SearchFormData, SearchOption } from '@/components/common/EsSearch/types'
+import type { SearchFormData } from '@/components/common/EsSearch/types'
 
+import PlayerFormDialog from './components/PlayerFormDialog.vue'
+import { buildPlayerListParams } from './model/mapper'
+import type { PlayerSearch } from './model/types'
+import { PLAYER_STATUS_OPTIONS } from './schemas/form'
+import { createPlayerSearchFields, PLAYER_DEFAULT_SEARCH } from './schemas/search'
+import { PLAYER_TABLE_COLUMNS } from './schemas/table'
+import { createPlayerOptionList, mergePlayerStatusOptions } from './services/options'
 import { usePlayerAuth } from './auth'
-import {
-  createPlayerSearchFields,
-  PLAYER_DEFAULT_SEARCH,
-  PLAYER_STATUS_OPTIONS,
-  PLAYER_TABLE_COLUMNS,
-  type PlayerSearch,
-} from './constants'
 import {
   formatBirthDate,
   formatDateTime,
   getPlayerStatusLabel,
   getPlayerStatusTagType,
 } from './formatters'
-import PlayerFormDialog from './PlayerFormDialog.vue'
 
 defineOptions({
   name: 'GaogePlayer',
@@ -43,17 +42,17 @@ const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const currentPlayer = ref<Player | null>(null)
 
-const subTeamOptions = computed(() => createOptions(tableData.value.map((item) => item.subTeam)))
-const positionOptions = computed(() => createOptions(tableData.value.map((item) => item.position)))
+const subTeamOptions = computed(() =>
+  createPlayerOptionList(tableData.value.map((item) => item.subTeam)),
+)
+const positionOptions = computed(() =>
+  createPlayerOptionList(tableData.value.map((item) => item.position)),
+)
 const statusOptions = computed(() => {
-  const dynamicOptions = createOptions(tableData.value.map((item) => item.status))
-  const options = [...PLAYER_STATUS_OPTIONS]
-  dynamicOptions.forEach((item) => {
-    if (!options.some((option) => option.value === item.value)) {
-      options.push(item)
-    }
-  })
-  return options
+  return mergePlayerStatusOptions(
+    PLAYER_STATUS_OPTIONS,
+    createPlayerOptionList(tableData.value.map((item) => item.status)),
+  )
 })
 
 const searchFields = computed(() =>
@@ -64,26 +63,9 @@ const searchFields = computed(() =>
   }),
 )
 
-// 当前页数据用于生成筛选下拉选项，后续可替换为独立字典接口。
-function createOptions(values: Array<string | null | undefined>): SearchOption[] {
-  return Array.from(
-    new Set(values.filter((value): value is string => Boolean(value && value.trim()))),
-  ).map((value) => ({
-    label: value,
-    value,
-  }))
-}
-
 // 列表请求参数统一从页面状态生成，保证搜索和分页使用同一套条件。
-function buildListParams(): PlayerListParams {
-  return {
-    page: page.value,
-    pageSize: pageSize.value,
-    keyword: search.value.keyword || undefined,
-    subTeam: search.value.subTeam || undefined,
-    position: search.value.position || undefined,
-    status: search.value.status || undefined,
-  }
+function buildListParams() {
+  return buildPlayerListParams(search.value, page.value, pageSize.value)
 }
 
 // 服务端分页后，当前页被删空时自动回退到最后一页。
