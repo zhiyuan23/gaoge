@@ -1,11 +1,18 @@
 import { Type } from 'class-transformer'
-import { IsBoolean, IsDate, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsDate, IsInt, IsOptional, IsString, Max, Min } from 'class-validator'
 
 import type { PlayerStatus } from '@gaoge/shared-types'
 
 export class CreatePlayerDto {
+  @IsOptional()
   @IsString()
-  openid: string
+  openid?: string
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  playerNumber: number
 
   @IsString()
   nickname: string

@@ -48,7 +48,12 @@ defineExpose({
     <ElRow :gutter="16">
       <ElCol :span="12">
         <ElFormItem label="OpenID" prop="openid">
-          <ElInput v-model="model.openid" placeholder="请输入 OpenID" />
+          <ElInput v-model="model.openid" placeholder="请输入 OpenID（非必填）" />
+        </ElFormItem>
+      </ElCol>
+      <ElCol :span="12">
+        <ElFormItem label="球员号码" prop="playerNumber">
+          <ElInputNumber v-model="model.playerNumber" :min="0" :max="100" class="w-full" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">

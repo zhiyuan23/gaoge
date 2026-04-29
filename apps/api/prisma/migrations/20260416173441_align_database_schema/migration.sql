@@ -1,0 +1,2 @@
+-- This migration folder existed without a SQL file, which breaks Prisma deploy/migrate status.
+-- Keep it as an explicit no-op so the historical migration chain remains deployable.

@@ -1,11 +1,9 @@
 import type { SearchField, SearchOption } from '@/components/common/EsSearch/types'
 
-import { getPlayerStatusLabel, PLAYER_STATUS_OPTIONS } from './form'
+import { PLAYER_STATUS_OPTIONS } from './form'
 
 export interface PlayerSearchFieldContext {
   subTeamOptions: () => SearchOption[]
-  positionOptions: () => SearchOption[]
-  statusOptions: () => SearchOption[]
 }
 
 export function createPlayerOptionList(values: Array<string | null | undefined>): SearchOption[] {
@@ -35,7 +33,7 @@ export function createPlayerSearchFields(ctx: PlayerSearchFieldContext): SearchF
       key: 'keyword',
       label: '关键词',
       type: 'input',
-      placeholder: '昵称 / 姓名 / OpenID / 位置',
+      placeholder: '昵称 / 号码',
     },
     {
       key: 'subTeam',
@@ -43,30 +41,6 @@ export function createPlayerSearchFields(ctx: PlayerSearchFieldContext): SearchF
       type: 'select',
       placeholder: '全部',
       options: ctx.subTeamOptions,
-      props: {
-        filterable: true,
-      },
-    },
-    {
-      key: 'position',
-      label: '位置',
-      type: 'select',
-      placeholder: '全部',
-      options: ctx.positionOptions,
-      props: {
-        filterable: true,
-      },
-    },
-    {
-      key: 'status',
-      label: '状态',
-      type: 'select',
-      placeholder: '全部',
-      options: () =>
-        ctx.statusOptions().map((item) => ({
-          ...item,
-          label: getPlayerStatusLabel(String(item.value)),
-        })),
       props: {
         filterable: true,
       },

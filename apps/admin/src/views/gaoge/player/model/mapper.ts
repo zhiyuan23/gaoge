@@ -7,7 +7,8 @@ import type { PlayerFormModel, PlayerSearch } from './types'
 export function createPlayerFormFromRow(row: Player): PlayerFormModel {
   return {
     id: row.id,
-    openid: row.openid,
+    openid: row.openid ?? '',
+    playerNumber: row.playerNumber ?? null,
     nickname: row.nickname,
     realName: row.realName ?? '',
     avatarUrl: row.avatarUrl ?? '',
@@ -28,7 +29,8 @@ function normalizeText(value: string) {
 
 export function buildPlayerPayload(model: PlayerFormModel): PlayerPayload {
   return {
-    openid: model.openid.trim(),
+    openid: normalizeText(model.openid),
+    playerNumber: Number(model.playerNumber),
     nickname: model.nickname.trim(),
     realName: normalizeText(model.realName),
     avatarUrl: normalizeText(model.avatarUrl),
@@ -52,7 +54,5 @@ export function buildPlayerListParams(
     pageSize,
     keyword: search.keyword || undefined,
     subTeam: search.subTeam || undefined,
-    position: search.position || undefined,
-    status: search.status || undefined,
   }
 }

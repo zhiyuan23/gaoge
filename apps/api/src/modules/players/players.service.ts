@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client'
 
 import type { PlayerListParams } from '@gaoge/shared-types'
 
-import { PrismaService } from '@/common/prisma/prisma.service'
+import { PrismaService } from '../../common/prisma/prisma.service'
 
 import type { CreatePlayerDto } from './dto/create-player.dto'
 import type { UpdatePlayerDto } from './dto/update-player.dto'
@@ -64,35 +64,36 @@ function normalizeText(value: unknown) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
+function normalizeKeywordNumber(value: unknown) {
+  if (typeof value !== 'string' || !/^\d+$/.test(value.trim())) {
+    return undefined
+  }
+
+  const parsed = Number(value.trim())
+  return Number.isInteger(parsed) ? parsed : undefined
+}
+
 // 列表筛选条件集中构造，便于后续继续扩展更多查询字段。
 function buildPlayerWhere(params: PlayerListParams) {
   const keyword = normalizeText(params.keyword)
   const subTeam = normalizeText(params.subTeam)
-  const position = normalizeText(params.position)
-  const status = normalizeText(params.status)
   const where: Prisma.PlayerWhereInput = {}
 
   if (keyword) {
-    const fuzzyCondition = {
+    const nicknameCondition = {
       contains: keyword,
       mode: 'insensitive',
     } satisfies Prisma.StringFilter
-    where.OR = [
-      { nickname: fuzzyCondition },
-      { realName: fuzzyCondition },
-      { openid: fuzzyCondition },
-      { position: fuzzyCondition },
-      { subTeam: fuzzyCondition },
-    ]
+    const playerNumber = normalizeKeywordNumber(keyword)
+
+    where.OR = [{ nickname: nicknameCondition }]
+
+    if (typeof playerNumber === 'number') {
+      where.OR.push({ playerNumber })
+    }
   }
   if (subTeam) {
     where.subTeam = subTeam
-  }
-  if (position) {
-    where.position = position
-  }
-  if (status) {
-    where.status = status
   }
 
   return where

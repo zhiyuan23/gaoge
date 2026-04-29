@@ -17,17 +17,12 @@ import { PLAYER_PERMISSIONS } from '@/views/gaoge/player/auth'
 import { PLAYER_DEFAULT_SEARCH } from '@/views/gaoge/player/model/defaults'
 import { buildPlayerListParams } from '@/views/gaoge/player/model/mapper'
 import type { PlayerSearch } from '@/views/gaoge/player/model/types'
-import { getPlayerStatusLabel, getPlayerStatusTagType } from '@/views/gaoge/player/schemas/form'
 import {
   createPlayerOptionList,
   createPlayerSearchFields,
   mergePlayerStatusOptions,
 } from '@/views/gaoge/player/schemas/search'
-import {
-  formatBirthDate,
-  formatDateTime,
-  PLAYER_TABLE_COLUMNS,
-} from '@/views/gaoge/player/schemas/table'
+import { PLAYER_TABLE_COLUMNS } from '@/views/gaoge/player/schemas/table'
 
 import PlayerStandardFormDialog from './components/PlayerStandardFormDialog.vue'
 import PlayerStandardFormDrawer from './components/PlayerStandardFormDrawer.vue'
@@ -74,8 +69,6 @@ const statusOptions = computed<SearchOption[]>(() =>
 const searchFields = computed(() =>
   createPlayerSearchFields({
     subTeamOptions: () => subTeamOptions.value,
-    positionOptions: () => positionOptions.value,
-    statusOptions: () => statusOptions.value,
   }),
 )
 
@@ -283,22 +276,6 @@ onMounted(() => {
             <ElAvatar :src="row.avatarUrl || undefined" :size="32">
               {{ (row.nickname || '?').slice(0, 1) }}
             </ElAvatar>
-          </template>
-          <template #status="{ row }">
-            <ElTag :type="getPlayerStatusTagType(row.status)" effect="light">
-              {{ getPlayerStatusLabel(row.status) }}
-            </ElTag>
-          </template>
-          <template #isAdmin="{ row }">
-            <ElTag :type="row.isAdmin ? 'danger' : 'info'" effect="light">
-              {{ row.isAdmin ? '是' : '否' }}
-            </ElTag>
-          </template>
-          <template #birthDate="{ row }">
-            {{ formatBirthDate(row.birthDate) }}
-          </template>
-          <template #updatedAt="{ row }">
-            {{ formatDateTime(row.updatedAt) }}
           </template>
         </EsTable>
       </div>

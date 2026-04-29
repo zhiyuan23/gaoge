@@ -41,23 +41,25 @@ model User {
 // 球员表（足球队员）
 // ============================================
 model Player {
-  id          Int        @id @default(autoincrement())
-  openid      String     @unique // 微信openid，必填唯一
-  nickname    String     @unique // 昵称，必填唯一
-  realName    String?    // 真实姓名，非必填
-  avatarUrl   String?    // 头像，非必填
-  subTeam     String?    // 子球队：real/inter/united，多选存储为逗号分隔字符串
-  birthDate   DateTime?  // 出生年月日，非必填
-  isAdmin     Boolean    @default(false) // 是否管理员
-  position    String?    // 足球位置，非必填
-  jerseySize  String?    // 球衣尺码，非必填
-  status      String     @default("active") // active / inactive
-  remark      String?    // 备注
-  userId      Int?       @unique // 绑定的用户ID
+  id           Int        @id @default(autoincrement())
+  openid       String?    @unique // 微信openid，非必填唯一
+  playerNumber Int?       @unique // 球员号码，业务上新增/编辑必填，范围 0~100
+  nickname     String     @unique // 昵称，必填唯一
+  realName     String?    // 真实姓名，非必填
+  avatarUrl    String?    // 头像，非必填
+  subTeam      String?    // 当前分队字段仍保留为文本，后续再迁移为关联模型
+  birthDate    DateTime?  // 出生年月日，非必填
+  isAdmin      Boolean    @default(false) // 是否管理员
+  position     String?    // 足球位置，非必填
+  jerseySize   String?    // 球衣尺码，非必填
+  status       String     @default("active") // active / inactive
+  remark       String?    // 备注
+  userId       Int?       @unique // 绑定的用户ID
 
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
+  @@index([playerNumber])
   @@index([openid])
   @@index([nickname])
   @@index([subTeam])

@@ -8,6 +8,7 @@ export type PlayerStatus = string
  *
  * @property id 球员记录 ID。
  * @property openid 微信 openid，当前作为球员唯一标识之一。
+ * @property playerNumber 球员号码，当前业务要求全局唯一，范围 0~100。
  * @property nickname 昵称，当前作为球员唯一标识之一。
  * @property realName 真实姓名。
  * @property avatarUrl 头像 URL。
@@ -23,7 +24,8 @@ export type PlayerStatus = string
  */
 export interface Player {
   id: number
-  openid: string
+  openid: string | null
+  playerNumber: number | null
   nickname: string
   realName: string | null
   avatarUrl: string | null
@@ -42,6 +44,7 @@ export interface Player {
  * 创建或更新球员时的提交参数。
  *
  * @property openid 微信 openid。
+ * @property playerNumber 球员号码。
  * @property nickname 昵称。
  * @property realName 真实姓名。
  * @property avatarUrl 头像 URL。
@@ -54,7 +57,8 @@ export interface Player {
  * @property remark 备注。
  */
 export interface PlayerPayload {
-  openid: string
+  openid?: string
+  playerNumber: number
   nickname: string
   realName?: string
   avatarUrl?: string
@@ -72,8 +76,6 @@ export interface PlayerListParams {
   pageSize?: number
   keyword?: string
   subTeam?: string
-  position?: string
-  status?: string
 }
 
 export interface PlayerListResponse {

@@ -30,6 +30,18 @@ export function getPlayerStatusLabel(status: string) {
 }
 
 export const PLAYER_FORM_RULES: FormRules<PlayerFormModel> = {
-  openid: [{ required: true, message: '请输入 OpenID', trigger: 'blur' }],
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  playerNumber: [
+    { required: true, message: '请输入球员号码', trigger: 'blur' },
+    {
+      validator: (_rule, value: number | null, callback) => {
+        if (!Number.isInteger(value) || value === null || value < 0 || value > 100) {
+          callback(new Error('球员号码需为 0 到 100 的整数'))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur',
+    },
+  ],
 }
