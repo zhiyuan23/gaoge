@@ -30,6 +30,10 @@ export class CreatePlayerDto {
   subTeam?: string // real/inter/united，多选用逗号分隔
 
   @IsOptional()
+  @IsString()
+  jerseyName?: string
+
+  @IsOptional()
   @Type(() => Date)
   @IsDate()
   birthDate?: Date

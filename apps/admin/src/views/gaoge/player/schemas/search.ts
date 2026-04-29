@@ -2,6 +2,12 @@ import type { SearchField, SearchOption } from '@/components/common/EsSearch/typ
 
 import { PLAYER_STATUS_OPTIONS } from './form'
 
+export const PLAYER_SUB_TEAM_OPTIONS: SearchOption[] = [
+  { label: '皇家高歌', value: '皇家高歌' },
+  { label: '高歌国际', value: '高歌国际' },
+  { label: '高歌联', value: '高歌联' },
+]
+
 export interface PlayerSearchFieldContext {
   subTeamOptions: () => SearchOption[]
 }
@@ -43,6 +49,7 @@ export function createPlayerSearchFields(ctx: PlayerSearchFieldContext): SearchF
       options: ctx.subTeamOptions,
       props: {
         filterable: true,
+        clearable: true,
       },
     },
   ]

@@ -13,6 +13,7 @@ export function createEmptyPlayerForm(): PlayerFormModel {
     realName: '',
     avatarUrl: '',
     subTeam: '',
+    jerseyName: '',
     birthDate: '',
     isAdmin: false,
     position: '',

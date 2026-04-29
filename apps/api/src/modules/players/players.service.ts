@@ -25,7 +25,7 @@ export class PlayersService {
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { playerNumber: 'asc' },
       }),
       this.prisma.player.count({ where }),
     ])

@@ -13,6 +13,7 @@ export type PlayerStatus = string
  * @property realName 真实姓名。
  * @property avatarUrl 头像 URL。
  * @property subTeam 子球队，多个值用逗号分隔。
+ * @property jerseyName 球衣名称。
  * @property birthDate 出生日期，接口传输时使用 ISO 字符串。
  * @property isAdmin 是否为球队管理员。
  * @property position 足球位置。
@@ -30,6 +31,7 @@ export interface Player {
   realName: string | null
   avatarUrl: string | null
   subTeam: string | null
+  jerseyName: string | null
   birthDate: DateTimeString | null
   isAdmin: boolean
   position: string | null
@@ -49,6 +51,7 @@ export interface Player {
  * @property realName 真实姓名。
  * @property avatarUrl 头像 URL。
  * @property subTeam 子球队，多个值用逗号分隔。
+ * @property jerseyName 球衣名称。
  * @property birthDate 出生日期，接口传输时使用 ISO 字符串。
  * @property isAdmin 是否为球队管理员。
  * @property position 足球位置。
@@ -63,6 +66,7 @@ export interface PlayerPayload {
   realName?: string
   avatarUrl?: string
   subTeam?: string
+  jerseyName?: string
   birthDate?: DateTimeString
   isAdmin?: boolean
   position?: string

@@ -13,6 +13,7 @@ export interface PlayerFormModel {
   realName: string
   avatarUrl: string
   subTeam: string
+  jerseyName: string
   birthDate: string
   isAdmin: boolean
   position: string

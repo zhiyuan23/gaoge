@@ -8,7 +8,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 import type { Player, PlayerPayload } from '@/api/players'
 import playersApi from '@/api/players'
-import type { SearchFormData } from '@/components/common/EsSearch/types'
+import type { SearchFormData , SearchOption } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
 import { useListPage } from '@/composables/useListPage'
 
@@ -17,11 +17,11 @@ import { PLAYER_DEFAULT_SEARCH } from './model/defaults'
 import { buildPlayerListParams } from './model/mapper'
 import type { PlayerSearch } from './model/types'
 import {
-  createPlayerOptionList,
   createPlayerSearchFields,
   mergePlayerStatusOptions,
+  PLAYER_SUB_TEAM_OPTIONS,
 } from './schemas/search'
-import { PLAYER_TABLE_COLUMNS } from './schemas/table'
+import { formatDateTime, PLAYER_TABLE_COLUMNS } from './schemas/table'
 import { PLAYER_PERMISSIONS } from './auth'
 
 defineOptions({
@@ -61,15 +61,25 @@ const {
   openEdit,
 } = useCrudDialog<Player>()
 
-const subTeamOptions = computed(() =>
-  createPlayerOptionList(tableData.value.map((item) => item.subTeam)),
-)
+const subTeamOptions = computed<SearchOption[]>(() => PLAYER_SUB_TEAM_OPTIONS)
 const positionOptions = computed(() =>
-  createPlayerOptionList(tableData.value.map((item) => item.position)),
+  Array.from(
+    new Set(
+      tableData.value
+        .map((item) => item.position)
+        .filter((value): value is string => Boolean(value && value.trim())),
+    ),
+  ).map((value) => ({
+    label: value,
+    value,
+  })),
 )
 const statusOptions = computed(() => {
   return mergePlayerStatusOptions(
-    createPlayerOptionList(tableData.value.map((item) => item.status)),
+    Array.from(new Set(tableData.value.map((item) => item.status))).map((value) => ({
+      label: value,
+      value,
+    })),
   )
 })
 
@@ -153,7 +163,7 @@ watch(tableData, () => {
         v-model="search"
         :fields="searchFields"
         :columns="4"
-        :default-visible-count="1"
+        :default-visible-count="2"
         @search="handleSearch"
       >
       </EsSearch>
@@ -174,8 +184,6 @@ watch(tableData, () => {
           :data="tableData"
           :total="total"
           :loading="loading"
-          :show-index="true"
-          :show-selection="true"
           table-height="100%"
           @action-click="handleTableAction"
           @pagination-change="handlePaginationChange"
@@ -185,6 +193,12 @@ watch(tableData, () => {
             <ElAvatar :src="row.avatarUrl || undefined" :size="32">
               {{ (row.nickname || '?').slice(0, 1) }}
             </ElAvatar>
+          </template>
+          <template #createdAt="{ row }">
+            {{ formatDateTime(row.createdAt) }}
+          </template>
+          <template #updatedAt="{ row }">
+            {{ formatDateTime(row.updatedAt) }}
           </template>
         </EsTable>
       </div>

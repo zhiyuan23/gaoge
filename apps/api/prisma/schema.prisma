@@ -48,6 +48,7 @@ model Player {
   realName     String?    // 真实姓名，非必填
   avatarUrl    String?    // 头像，非必填
   subTeam      String?    // 当前分队字段仍保留为文本，后续再迁移为关联模型
+  jerseyName   String?    // 球衣名称，非必填
   birthDate    DateTime?  // 出生年月日，非必填
   isAdmin      Boolean    @default(false) // 是否管理员
   position     String?    // 足球位置，非必填

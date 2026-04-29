@@ -56,4 +56,18 @@ describe('PlayersService', () => {
       }),
     )
   })
+
+  it('orders the list by player number ascending', async () => {
+    const { prisma, service } = createService()
+
+    await service.findAll()
+
+    expect(prisma.player.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: {
+          playerNumber: 'asc',
+        },
+      }),
+    )
+  })
 })

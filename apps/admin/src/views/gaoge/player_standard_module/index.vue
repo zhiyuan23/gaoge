@@ -18,11 +18,11 @@ import { PLAYER_DEFAULT_SEARCH } from '@/views/gaoge/player/model/defaults'
 import { buildPlayerListParams } from '@/views/gaoge/player/model/mapper'
 import type { PlayerSearch } from '@/views/gaoge/player/model/types'
 import {
-  createPlayerOptionList,
   createPlayerSearchFields,
   mergePlayerStatusOptions,
+  PLAYER_SUB_TEAM_OPTIONS,
 } from '@/views/gaoge/player/schemas/search'
-import { PLAYER_TABLE_COLUMNS } from '@/views/gaoge/player/schemas/table'
+import { formatDateTime, PLAYER_TABLE_COLUMNS } from '@/views/gaoge/player/schemas/table'
 
 import PlayerStandardFormDialog from './components/PlayerStandardFormDialog.vue'
 import PlayerStandardFormDrawer from './components/PlayerStandardFormDrawer.vue'
@@ -57,14 +57,26 @@ const isRouterMode = computed(() => formMode.value === 'router')
 const isModalMode = computed(() => formMode.value === 'modal')
 const isDrawerMode = computed(() => formMode.value === 'drawer')
 
-const subTeamOptions = computed<SearchOption[]>(() =>
-  createPlayerOptionList(tableData.value.map((item) => item.subTeam)),
-)
+const subTeamOptions = computed<SearchOption[]>(() => PLAYER_SUB_TEAM_OPTIONS)
 const positionOptions = computed<SearchOption[]>(() =>
-  createPlayerOptionList(tableData.value.map((item) => item.position)),
+  Array.from(
+    new Set(
+      tableData.value
+        .map((item) => item.position)
+        .filter((value): value is string => Boolean(value && value.trim())),
+    ),
+  ).map((value) => ({
+    label: value,
+    value,
+  })),
 )
 const statusOptions = computed<SearchOption[]>(() =>
-  mergePlayerStatusOptions(createPlayerOptionList(tableData.value.map((item) => item.status))),
+  mergePlayerStatusOptions(
+    Array.from(new Set(tableData.value.map((item) => item.status))).map((value) => ({
+      label: value,
+      value,
+    })),
+  ),
 )
 const searchFields = computed(() =>
   createPlayerSearchFields({
@@ -276,6 +288,12 @@ onMounted(() => {
             <ElAvatar :src="row.avatarUrl || undefined" :size="32">
               {{ (row.nickname || '?').slice(0, 1) }}
             </ElAvatar>
+          </template>
+          <template #createdAt="{ row }">
+            {{ formatDateTime(row.createdAt) }}
+          </template>
+          <template #updatedAt="{ row }">
+            {{ formatDateTime(row.updatedAt) }}
           </template>
         </EsTable>
       </div>

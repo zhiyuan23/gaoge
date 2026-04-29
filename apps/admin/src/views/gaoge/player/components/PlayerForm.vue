@@ -73,14 +73,7 @@ defineExpose({
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="分队">
-          <ElSelect
-            v-model="model.subTeam"
-            placeholder="请输入或选择分队"
-            clearable
-            filterable
-            allow-create
-            default-first-option
-          >
+          <ElSelect v-model="model.subTeam" placeholder="请选择分队" clearable filterable>
             <ElOption
               v-for="item in subTeamOptions"
               :key="String(item.value)"
@@ -88,6 +81,11 @@ defineExpose({
               :value="item.value"
             />
           </ElSelect>
+        </ElFormItem>
+      </ElCol>
+      <ElCol :span="12">
+        <ElFormItem label="球衣名称">
+          <ElInput v-model="model.jerseyName" placeholder="请输入球衣名称" />
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
