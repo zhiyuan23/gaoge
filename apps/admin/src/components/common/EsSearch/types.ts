@@ -45,14 +45,11 @@ export interface EsSearchProps {
   fields: SearchField[]
   modelValue?: SearchFormData
   columns?: number
-  gutter?: number
-  labelWidth?: number | string
+  minItemWidth?: number | string
   showSearch?: boolean
   showReset?: boolean
   showCollapse?: boolean
   defaultVisibleCount?: number
-  autoSearch?: boolean
-  searchDelay?: number
   searchText?: string
   resetText?: string
 }

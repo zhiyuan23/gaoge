@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import type { Player, PlayerPayload } from '@/api/players'
 import type { SearchOption } from '@/components/common/EsSearch/types'
-
-import { createEmptyPlayerForm } from '../model/defaults'
-import { buildPlayerPayload, createPlayerFormFromRow } from '../model/mapper'
-import type { PlayerFormModel } from '../model/types'
-
-import PlayerForm from './PlayerForm.vue'
+import PlayerForm from '@/views/gaoge/player/components/PlayerForm.vue'
+import { createEmptyPlayerForm } from '@/views/gaoge/player/model/defaults'
+import { buildPlayerPayload, createPlayerFormFromRow } from '@/views/gaoge/player/model/mapper'
+import type { PlayerFormModel } from '@/views/gaoge/player/model/types'
 
 defineOptions({
-  name: 'PlayerFormDialog',
+  name: 'PlayerStandardFormDialog',
 })
 
 const props = defineProps<{
@@ -74,7 +72,12 @@ watch(visible, (value) => {
 </script>
 
 <template>
-  <ElDialog v-model="visible" :title="mode === 'create' ? '新增球员' : '编辑球员'" width="640px">
+  <ElDialog
+    v-model="visible"
+    :title="mode === 'create' ? '新增球员' : '编辑球员'"
+    width="640px"
+    destroy-on-close
+  >
     <PlayerForm
       ref="formRef"
       v-model:model="formModel"

@@ -4,22 +4,6 @@ import type { Player, PlayerListParams, PlayerPayload } from '@/api/players'
 
 import type { PlayerFormModel, PlayerSearch } from './types'
 
-export function createEmptyPlayerForm(): PlayerFormModel {
-  return {
-    openid: '',
-    nickname: '',
-    realName: '',
-    avatarUrl: '',
-    subTeam: '',
-    birthDate: '',
-    isAdmin: false,
-    position: '',
-    jerseySize: '',
-    status: 'active',
-    remark: '',
-  }
-}
-
 export function createPlayerFormFromRow(row: Player): PlayerFormModel {
   return {
     id: row.id,

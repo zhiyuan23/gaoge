@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import FaLabel from '@/ui/components/FaLabel/index.vue'
+
 import type { EsSearchEmits, EsSearchProps, SearchField, SearchOption } from './types'
 
 defineOptions({
@@ -8,16 +10,12 @@ defineOptions({
 const {
   fields,
   modelValue = {},
-  columns = 4,
-  gutter = 16,
-  labelWidth = 72,
+  minItemWidth = 280,
   showSearch = true,
   showReset = true,
   showCollapse = true,
-  defaultVisibleCount = 3,
-  autoSearch = false,
-  searchDelay = 300,
-  searchText = '查询',
+  defaultVisibleCount = 2,
+  searchText = '筛选',
   resetText = '重置',
 } = defineProps<EsSearchProps>()
 
@@ -26,7 +24,6 @@ const slots = useSlots()
 
 const collapsed = ref(true)
 const form = ref<Record<string, any>>(createInitialForm(modelValue))
-let timer: ReturnType<typeof setTimeout> | undefined
 let syncingFromParent = false
 
 const activeFields = computed(() => fields.filter((field) => !field.hidden))
@@ -37,8 +34,21 @@ const visibleFields = computed(() => {
   }
   return activeFields.value.slice(0, defaultVisibleCount)
 })
+const gridStyle = computed(() => ({
+  '--es-search-item-min-width':
+    typeof minItemWidth === 'number' ? `${minItemWidth}px` : minItemWidth,
+}))
 
-// 统一生成各字段的初始值，保证 reset 和字段配置变化时行为一致。
+function cloneValue(value: any) {
+  if (Array.isArray(value)) {
+    return [...value]
+  }
+  if (value && typeof value === 'object') {
+    return { ...value }
+  }
+  return value
+}
+
 function getFieldDefaultValue(field: SearchField) {
   if (field.defaultValue !== undefined) {
     return cloneValue(field.defaultValue)
@@ -52,17 +62,6 @@ function getFieldDefaultValue(field: SearchField) {
   return ''
 }
 
-function cloneValue(value: any) {
-  if (Array.isArray(value)) {
-    return [...value]
-  }
-  if (value && typeof value === 'object') {
-    return { ...value }
-  }
-  return value
-}
-
-// modelValue 只覆盖已传入字段，其余字段回退到配置默认值。
 function createInitialForm(source: Record<string, any> = {}) {
   return fields.reduce<Record<string, any>>((result, field) => {
     result[field.key] =
@@ -71,19 +70,11 @@ function createInitialForm(source: Record<string, any> = {}) {
   }, {})
 }
 
-// options 支持静态数组和函数，便于页面传入响应式选项。
 function resolveOptions(field: SearchField): SearchOption[] {
   if (!field.options) {
     return []
   }
   return typeof field.options === 'function' ? field.options() : field.options
-}
-
-function getFieldSpan(field: SearchField) {
-  if (field.span) {
-    return field.span
-  }
-  return Math.max(1, Math.floor(24 / columns))
 }
 
 function emitModelValue() {
@@ -95,7 +86,6 @@ function handleSearch() {
   emit('search', { ...form.value })
 }
 
-// reset 会恢复默认值并触发一次查询，列表页无需额外处理清空后的刷新。
 function handleReset() {
   form.value = createInitialForm()
   emitModelValue()
@@ -111,7 +101,6 @@ function toggleCollapse() {
 watch(
   () => modelValue,
   (value) => {
-    // 父级同步 v-model 时不触发 change/autoSearch，避免循环查询。
     syncingFromParent = true
     form.value = createInitialForm(value)
     nextTick(() => {
@@ -139,26 +128,24 @@ watch(
     if (syncingFromParent) {
       return
     }
+    emitModelValue()
     emit('change', { ...form.value })
-    if (autoSearch) {
-      clearTimeout(timer)
-      timer = setTimeout(handleSearch, searchDelay)
-    }
   },
   { deep: true },
 )
-
-onBeforeUnmount(() => {
-  clearTimeout(timer)
-})
 </script>
 
 <template>
-  <div class="es-search">
-    <ElForm :model="form" :label-width="labelWidth">
-      <ElRow :gutter="gutter">
-        <ElCol v-for="field in visibleFields" :key="field.key" :span="getFieldSpan(field)">
-          <ElFormItem :label="field.label">
+  <div>
+    <FaSearchBar :show-toggle="false">
+      <template #default>
+        <div class="es-search__grid" :style="gridStyle">
+          <FaLabel
+            v-for="field in visibleFields"
+            :key="field.key"
+            :label="field.label"
+            class="es-search__field"
+          >
             <slot
               v-if="field.slot && slots[field.slot]"
               :name="field.slot"
@@ -179,7 +166,10 @@ onBeforeUnmount(() => {
               v-model="form[field.key]"
               :placeholder="field.placeholder"
               :clearable="field.clearable ?? true"
+              class="min-w-0 flex-1"
               v-bind="field.props"
+              @keydown.enter="handleSearch"
+              @clear="handleSearch"
             />
 
             <ElInputNumber
@@ -208,7 +198,7 @@ onBeforeUnmount(() => {
             <ElSelect
               v-else-if="field.type === 'select' || field.type === 'multiSelect'"
               v-model="form[field.key]"
-              class="w-full"
+              class="min-w-0 flex-1"
               :multiple="field.type === 'multiSelect'"
               :placeholder="field.placeholder"
               :clearable="field.clearable ?? true"
@@ -240,40 +230,44 @@ onBeforeUnmount(() => {
               v-model="form[field.key]"
               v-bind="field.props"
             />
-          </ElFormItem>
-        </ElCol>
-      </ElRow>
+          </FaLabel>
 
-      <div class="es-search__actions">
-        <div class="es-search__actions-left">
-          <ElButton v-if="showSearch" type="primary" @click="handleSearch">
-            <template #icon>
-              <FaIcon name="i-ep:search" />
-            </template>
-            {{ searchText }}
-          </ElButton>
-          <ElButton v-if="showReset" @click="handleReset">
-            <template #icon>
-              <FaIcon name="i-ep:refresh-left" />
-            </template>
-            {{ resetText }}
-          </ElButton>
-          <ElButton v-if="needCollapse" link type="primary" @click="toggleCollapse">
-            {{ collapsed ? '展开' : '收起' }}
-            <FaIcon :name="collapsed ? 'i-ep:arrow-down' : 'i-ep:arrow-up'" class="ms-1" />
-          </ElButton>
+          <div class="flex flex-wrap items-center justify-end gap-2 md:col-end-[-1]">
+            <FaButton v-if="showReset" variant="outline" @click="handleReset">
+              {{ resetText }}
+            </FaButton>
+            <FaButton v-if="showSearch" @click="handleSearch">
+              <FaIcon name="i-ri:search-line" />
+              {{ searchText }}
+            </FaButton>
+            <slot name="actions" :form="form" />
+            <FaButton v-if="needCollapse" variant="ghost" @click="toggleCollapse">
+              {{ collapsed ? '展开' : '收起' }}
+              <FaIcon :name="collapsed ? 'i-ep:caret-bottom' : 'i-ep:caret-top'" />
+            </FaButton>
+          </div>
         </div>
-        <div class="es-search__actions-right">
-          <slot name="actions" :form="form" />
-        </div>
-      </div>
-    </ElForm>
+      </template>
+    </FaSearchBar>
+
+    <div class="border-t-dashed mx--4 my-4 border-t" />
   </div>
 </template>
 
 <style scoped>
-.es-search {
+.es-search__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--es-search-item-min-width), 1fr));
+  gap: 12px 32px;
+}
+
+.es-search__field {
   width: 100%;
+}
+
+.es-search__field :deep(.el-input__wrapper),
+.es-search__field :deep(.el-select__wrapper) {
+  min-height: 36px;
 }
 
 .es-search__range {
@@ -285,23 +279,5 @@ onBeforeUnmount(() => {
 
 .es-search__range-separator {
   color: var(--el-text-color-secondary);
-}
-
-.es-search__actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.es-search__actions-left,
-.es-search__actions-right {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.es-search__actions-right {
-  margin-left: auto;
 }
 </style>

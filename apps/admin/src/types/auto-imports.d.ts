@@ -70,12 +70,14 @@ declare global {
   const useAttrs: typeof import('vue').useAttrs
   const useAuth: typeof import('../composables/useAuth').default
   const useConditionConverter: typeof import('../composables/useConditionConverter').useConditionConverter
+  const useCrudDialog: typeof import('../composables/useCrudDialog').useCrudDialog
   const useCssModule: typeof import('vue').useCssModule
   const useCssVars: typeof import('vue').useCssVars
   const useDataTypeTips: typeof import('../composables/useDataTypeTips').useDataTypeTips
   const useGlobalProperties: typeof import('../composables/useGlobalProperties').default
   const useId: typeof import('vue').useId
   const useLink: typeof import('vue-router').useLink
+  const useListPage: typeof import('../composables/useListPage').useListPage
   const useMainPage: typeof import('../composables/useMainPage').default
   const useMenu: typeof import('../composables/useMenu').default
   const useModel: typeof import('vue').useModel
@@ -95,4 +97,10 @@ declare global {
   // @ts-ignore
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, ShallowRef, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
+  // @ts-ignore
+  export type { CrudDialogMode, UseCrudDialogOptions } from '../composables/useCrudDialog'
+  import('../composables/useCrudDialog')
+  // @ts-ignore
+  export type { ListPageRequestResult, UseListPageOptions } from '../composables/useListPage'
+  import('../composables/useListPage')
 }

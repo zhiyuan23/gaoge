@@ -1,0 +1,30 @@
+<script setup lang="ts">
+defineOptions({
+  name: 'EsListToolbar',
+})
+
+const {
+  selectedCount = 0,
+  showSelectionSummary = true,
+  summaryLabel = '已选择',
+  summaryUnit = '项',
+} = defineProps<{
+  selectedCount?: number
+  showSelectionSummary?: boolean
+  summaryLabel?: string
+  summaryUnit?: string
+}>()
+</script>
+
+<template>
+  <div class="flex items-center justify-between gap-3 rounded-xl px-4">
+    <div v-if="showSelectionSummary" class="text-sm text-[rgb(var(--ui-muted-foreground))]">
+      {{ summaryLabel }}
+      <span class="text-primary font-semibold">{{ selectedCount }}</span>
+      {{ summaryUnit }}
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <slot name="actions" />
+    </div>
+  </div>
+</template>

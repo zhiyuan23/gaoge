@@ -18,6 +18,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  // 是否显示多选列
+  showSelection: {
+    type: Boolean,
+    default: false,
+  },
   // 表格数据
   data: {
     type: Array,
@@ -98,6 +103,18 @@ const internalPageSize = ref(props.pageSize)
 
 // 最终列配置（加上序号列）
 const finalColumns = computed(() => {
+  const prefixColumns: TableColumn[] = []
+
+  if (props.showSelection) {
+    prefixColumns.push({
+      type: 'selection',
+      width: 48,
+      align: 'center',
+      fixed: true,
+      label: 'selection',
+    })
+  }
+
   const indexCol: TableColumn = {
     label: '序号',
     type: 'index',
@@ -106,7 +123,11 @@ const finalColumns = computed(() => {
     fixed: true,
   }
 
-  return props.showIndex ? [indexCol, ...props.columns] : props.columns
+  if (props.showIndex) {
+    prefixColumns.push(indexCol)
+  }
+
+  return [...prefixColumns, ...props.columns]
 })
 
 // 监听外部传入的页码变化
@@ -164,16 +185,39 @@ function getColumnActions(col: TableColumn, row: any) {
   return (col.actions ?? []).filter((action) => isActionVisible(action, row))
 }
 
-function getActionTextClass(type?: TableAction['type']) {
-  if (type === 'danger') {
-    return 'text-danger'
+function getPrimaryAction(col: TableColumn, row: any) {
+  return getColumnActions(col, row)[0]
+}
+
+function getSecondaryActions(col: TableColumn, row: any) {
+  return getColumnActions(col, row).slice(1)
+}
+
+function getActionIcon(action: TableAction) {
+  if (action.icon) {
+    return action.icon
   }
 
-  if (type === 'primary') {
-    return 'text-primary'
+  if (action.key === 'edit') {
+    return 'i-ri:edit-line'
   }
 
-  return ''
+  if (action.key === 'delete') {
+    return 'i-ri:delete-bin-line'
+  }
+
+  return 'i-ri:more-line'
+}
+
+function getDropdownItems(col: TableColumn, row: any) {
+  return [
+    getSecondaryActions(col, row).map((action) => ({
+      label: action.label,
+      icon: getActionIcon(action),
+      disabled: isActionDisabled(action, row),
+      handle: () => handleActionClick(row, action),
+    })),
+  ]
 }
 
 function handleActionClick(row: any, action: TableAction) {
@@ -185,6 +229,10 @@ function handleActionClick(row: any, action: TableAction) {
     row,
     action,
   })
+}
+
+function handleSelectionChange(rows: any[]) {
+  emit('selectionChange', rows)
 }
 </script>
 
@@ -203,44 +251,37 @@ function handleActionClick(row: any, action: TableAction) {
       :class="tableSize ? '' : 'table-wrap'"
       v-bind="$attrs"
       color="text-primary"
+      @selection-change="handleSelectionChange"
     >
-      <template v-for="col in finalColumns" :key="col.prop">
-        <ElTableColumn v-if="col.actions?.length" v-bind="col">
-          <template #default="{ row, $index }">
-            <div class="flex-center">
-              <template v-if="getColumnActions(col, row).length === 1">
-                <ElButton
-                  :type="getColumnActions(col, row)[0]?.type ?? 'primary'"
-                  :disabled="isActionDisabled(getColumnActions(col, row)[0], row)"
-                  link
-                  @click="handleActionClick(row, getColumnActions(col, row)[0])"
+      <template v-for="col in finalColumns" :key="col.prop || col.type || col.label">
+        <ElTableColumn v-if="col.type === 'selection' || col.type === 'index'" v-bind="col" />
+
+        <ElTableColumn v-else-if="col.actions?.length" v-bind="col">
+          <template #default="{ row }">
+            <div class="flex-center gap-2">
+              <template v-if="getColumnActions(col, row).length">
+                <FaButton
+                  variant="outline"
+                  size="icon"
+                  class="table-action-icon-button"
+                  :disabled="isActionDisabled(getPrimaryAction(col, row), row)"
+                  @click="handleActionClick(row, getPrimaryAction(col, row))"
                 >
-                  {{ getColumnActions(col, row)[0]?.label }}
-                </ElButton>
-              </template>
-              <template v-else-if="getColumnActions(col, row).length > 1">
-                <ElDropdown
-                  trigger="hover"
-                  @command="(action: TableAction) => handleActionClick(row, action)"
+                  <FaIcon :name="getActionIcon(getPrimaryAction(col, row))" class="size-4" />
+                </FaButton>
+                <FaDropdown
+                  v-if="getSecondaryActions(col, row).length"
+                  :items="getDropdownItems(col, row)"
                 >
-                  <ElButton link class="table-action-trigger" aria-label="更多操作">
-                    <FaIcon name="i-ri:more-fill" class="size-4" />
-                  </ElButton>
-                  <template #dropdown>
-                    <ElDropdownMenu>
-                      <ElDropdownItem
-                        v-for="action in getColumnActions(col, row)"
-                        :key="`${action.key}-${$index}`"
-                        :command="action"
-                        :disabled="isActionDisabled(action, row)"
-                      >
-                        <span :class="getActionTextClass(action.type)">
-                          {{ action.label }}
-                        </span>
-                      </ElDropdownItem>
-                    </ElDropdownMenu>
-                  </template>
-                </ElDropdown>
+                  <FaButton
+                    variant="outline"
+                    size="icon"
+                    class="table-action-icon-button"
+                    aria-label="更多操作"
+                  >
+                    <FaIcon name="i-ri:more-line" class="size-4" />
+                  </FaButton>
+                </FaDropdown>
               </template>
               <span v-else class="text-secondary">--</span>
             </div>
@@ -305,12 +346,9 @@ function handleActionClick(row: any, action: TableAction) {
   padding: 0;
 }
 
-:deep(.table-action-trigger) {
-  color: rgb(var(--ui-muted-foreground));
-}
-
-:deep(.table-action-trigger:hover),
-:deep(.table-action-trigger:focus-visible) {
-  color: rgb(var(--ui-foreground));
+:deep(.table-action-icon-button) {
+  width: 32px;
+  height: 32px;
+  padding: 0;
 }
 </style>

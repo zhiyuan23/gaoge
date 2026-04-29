@@ -38,10 +38,7 @@ function handleCollaspe() {
   <div
     :class="
       cn(
-        'bg-card m-4 flex flex-col rounded-lg border transition-[background-color,border-color]',
-        {
-          'overflow-hidden': collaspe,
-        },
+        'bg-card m-4 flex flex-col overflow-hidden rounded-lg border transition-[background-color,border-color]',
         className,
       )
     "
@@ -57,7 +54,7 @@ function handleCollaspe() {
     <div
       :class="
         cn(
-          `main-container transition-height group absolute relative bottom-0 left-0 h-12 max-h-full w-full bg-gradient-to-b from-transparent to-[hsl(var(--card))] p-5 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-12 after:bg-gradient-to-b after:from-transparent after:to-[hsl(var(--card))] after:opacity-0 after:transition-opacity after:content-['']`,
+          `main-container transition-height group absolute relative bottom-0 left-0 max-h-full min-h-12 w-full bg-gradient-to-b from-transparent to-[hsl(var(--card))] p-5 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-12 after:bg-gradient-to-b after:from-transparent after:to-[hsl(var(--card))] after:opacity-0 after:transition-opacity after:content-['']`,
           {
             'overflow-hidden': collaspe,
             'after:opacity-100': isCollaspe,

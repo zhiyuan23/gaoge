@@ -1,6 +1,22 @@
+import dayjs from 'dayjs'
+
 import type { TableColumn } from '@/components/common/EsTable/types'
 
 import { PLAYER_PERMISSIONS } from '../auth'
+
+export function formatDateTime(value: string | null) {
+  if (!value) {
+    return '-'
+  }
+  return dayjs(value).format('YYYY-MM-DD HH:mm')
+}
+
+export function formatBirthDate(value: string | null) {
+  if (!value) {
+    return '-'
+  }
+  return dayjs(value).format('YYYY-MM-DD')
+}
 
 export const PLAYER_TABLE_COLUMNS: TableColumn[] = [
   { label: '头像', prop: 'avatarUrl', width: 88, slot: 'avatar', align: 'center' },

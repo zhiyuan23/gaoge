@@ -3,9 +3,8 @@ import type { FormInstance } from 'element-plus'
 
 import type { SearchOption } from '@/components/common/EsSearch/types'
 
-import { getPlayerStatusLabel } from '../formatters'
 import type { PlayerFormModel } from '../model/types'
-import { PLAYER_FORM_RULES, PLAYER_STATUS_OPTIONS } from '../schemas/form'
+import { getPlayerStatusLabel, PLAYER_FORM_RULES, PLAYER_STATUS_OPTIONS } from '../schemas/form'
 
 defineOptions({
   name: 'PlayerForm',

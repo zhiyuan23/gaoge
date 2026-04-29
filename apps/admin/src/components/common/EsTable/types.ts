@@ -2,6 +2,7 @@ export interface TableAction {
   key: string
   label: string
   auth?: string | string[]
+  icon?: string
   type?: 'primary' | 'success' | 'warning' | 'info' | 'danger'
   visible?: boolean | ((row: any) => boolean)
   disabled?: boolean | ((row: any) => boolean)
@@ -42,6 +43,7 @@ export interface EsTableProps {
   columns: any[]
   data?: any[]
   showIndex?: boolean
+  showSelection?: boolean
   showPagination?: boolean
   total?: number
   page?: number
@@ -63,6 +65,7 @@ export interface EsTableEmits {
   (e: 'update:page', page: number): void
   (e: 'update:pageSize', pageSize: number): void
   (e: 'paginationChange', params: PaginationParams): void
+  (e: 'selectionChange', rows: any[]): void
   (e: 'linkClick', payload: any): void
   (e: 'actionClick', payload: any): void
 }

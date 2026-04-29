@@ -50,6 +50,14 @@ const routes: RouteRecordRaw = {
         title: '球员信息',
       },
     },
+    {
+      path: 'player-standard',
+      name: 'playerStandardModule',
+      component: () => import('@/views/gaoge/player_standard_module/index.vue'),
+      meta: {
+        title: '球员标准模块',
+      },
+    },
   ],
 }
 

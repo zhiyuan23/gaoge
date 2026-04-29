@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import type { Player, PlayerPayload } from '@/api/players'
 import type { SearchOption } from '@/components/common/EsSearch/types'
-
-import { createEmptyPlayerForm } from '../model/defaults'
-import { buildPlayerPayload, createPlayerFormFromRow } from '../model/mapper'
-import type { PlayerFormModel } from '../model/types'
-
-import PlayerForm from './PlayerForm.vue'
+import PlayerForm from '@/views/gaoge/player/components/PlayerForm.vue'
+import { createEmptyPlayerForm } from '@/views/gaoge/player/model/defaults'
+import { buildPlayerPayload, createPlayerFormFromRow } from '@/views/gaoge/player/model/mapper'
+import type { PlayerFormModel } from '@/views/gaoge/player/model/types'
 
 defineOptions({
-  name: 'PlayerFormDialog',
+  name: 'PlayerStandardFormDrawer',
 })
 
 const props = defineProps<{
@@ -74,17 +72,24 @@ watch(visible, (value) => {
 </script>
 
 <template>
-  <ElDialog v-model="visible" :title="mode === 'create' ? '新增球员' : '编辑球员'" width="640px">
-    <PlayerForm
-      ref="formRef"
-      v-model:model="formModel"
-      :sub-team-options="subTeamOptions"
-      :position-options="positionOptions"
-      :status-options="statusOptions"
-    />
-    <template #footer>
-      <ElButton @click="visible = false">取消</ElButton>
-      <ElButton type="primary" :loading="loading" @click="handleSubmit">保存</ElButton>
-    </template>
-  </ElDialog>
+  <FaDrawer
+    v-model="visible"
+    :title="mode === 'create' ? '新增球员' : '编辑球员'"
+    :footer="false"
+    content-class="pb-0"
+  >
+    <div class="flex flex-col gap-4">
+      <PlayerForm
+        ref="formRef"
+        v-model:model="formModel"
+        :sub-team-options="subTeamOptions"
+        :position-options="positionOptions"
+        :status-options="statusOptions"
+      />
+      <div class="flex justify-end gap-3 border-t pt-4">
+        <FaButton variant="outline" @click="visible = false">取消</FaButton>
+        <FaButton :loading="loading" @click="handleSubmit">保存</FaButton>
+      </div>
+    </div>
+  </FaDrawer>
 </template>

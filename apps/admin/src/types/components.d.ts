@@ -12,6 +12,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    EsListToolbar: typeof import('./../components/common/EsListToolbar/index.vue')['default']
     EsSearch: typeof import('./../components/common/EsSearch/index.vue')['default']
     EsTable: typeof import('./../components/common/EsTable/index.vue')['default']
     FaAuth: typeof import('./../ui/components/FaAuth/index.vue')['default']
@@ -27,6 +28,7 @@ declare module 'vue' {
     FaIcon: typeof import('./../ui/components/FaIcon/index.vue')['default']
     FaInput: typeof import('./../ui/components/FaInput/index.vue')['default']
     FaKbd: typeof import('./../ui/components/FaKbd/index.vue')['default']
+    FaLabel: typeof import('./../ui/components/FaLabel/index.vue')['default']
     FaModal: typeof import('./../ui/components/FaModal/index.vue')['default']
     FaNotAllowed: typeof import('./../ui/components/FaNotAllowed/index.vue')['default']
     FaNotification: typeof import('./../ui/components/FaNotification/index.vue')['default']
@@ -55,6 +57,7 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const EsListToolbar: typeof import('./../components/common/EsListToolbar/index.vue')['default']
   const EsSearch: typeof import('./../components/common/EsSearch/index.vue')['default']
   const EsTable: typeof import('./../components/common/EsTable/index.vue')['default']
   const FaAuth: typeof import('./../ui/components/FaAuth/index.vue')['default']
@@ -70,6 +73,7 @@ declare global {
   const FaIcon: typeof import('./../ui/components/FaIcon/index.vue')['default']
   const FaInput: typeof import('./../ui/components/FaInput/index.vue')['default']
   const FaKbd: typeof import('./../ui/components/FaKbd/index.vue')['default']
+  const FaLabel: typeof import('./../ui/components/FaLabel/index.vue')['default']
   const FaModal: typeof import('./../ui/components/FaModal/index.vue')['default']
   const FaNotAllowed: typeof import('./../ui/components/FaNotAllowed/index.vue')['default']
   const FaNotification: typeof import('./../ui/components/FaNotification/index.vue')['default']

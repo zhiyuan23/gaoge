@@ -9,6 +9,26 @@ export const PLAYER_STATUS_OPTIONS: SearchOption[] = [
   { label: '停用', value: 'inactive' },
 ]
 
+export function getPlayerStatusTagType(status: string) {
+  if (status === 'active') {
+    return 'success'
+  }
+  if (status === 'inactive') {
+    return 'info'
+  }
+  return 'warning'
+}
+
+export function getPlayerStatusLabel(status: string) {
+  if (status === 'active') {
+    return '正常'
+  }
+  if (status === 'inactive') {
+    return '停用'
+  }
+  return status || '-'
+}
+
 export const PLAYER_FORM_RULES: FormRules<PlayerFormModel> = {
   openid: [{ required: true, message: '请输入 OpenID', trigger: 'blur' }],
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
