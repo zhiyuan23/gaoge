@@ -105,6 +105,61 @@ model TeamFund {
 }
 
 // ============================================
+// 球队信息表
+// ============================================
+model Team {
+  id           Int                @id @default(autoincrement())
+  code         String             @unique // 由后端生成的只读编码，后台不展示不编辑
+  name         String             @unique
+  slogan       String?
+  sponsorName  String?
+  sort         Int                @default(0)
+
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  matchResults MatchRoundResult[]
+
+  @@index([sort])
+}
+
+// ============================================
+// 比赛轮次表
+// ============================================
+model MatchRound {
+  id        Int                @id @default(autoincrement())
+  matchDate DateTime
+  venue     String?
+  remark    String?
+
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  results   MatchRoundResult[]
+
+  @@index([matchDate])
+}
+
+// ============================================
+// 比赛轮次结果表
+// ============================================
+model MatchRoundResult {
+  id           Int        @id @default(autoincrement())
+  matchRoundId Int
+  teamId       Int
+  rank         Int        // 业务约束仅允许 1 / 2 / 3，数据库级 CHECK 见迁移
+  points       Int        // 按名次换算后的积分快照：1=>2, 2=>1, 3=>0
+  createdAt    DateTime   @default(now())
+
+  matchRound   MatchRound @relation(fields: [matchRoundId], references: [id], onDelete: Cascade)
+  team         Team       @relation(fields: [teamId], references: [id], onDelete: Restrict)
+
+  @@unique([matchRoundId, teamId])
+  @@unique([matchRoundId, rank])
+  @@index([teamId])
+}
+
+// ============================================
 // 轮播图表
 // ============================================
 model Banner {

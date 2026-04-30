@@ -51,6 +51,22 @@ const routes: RouteRecordRaw = {
       },
     },
     {
+      path: 'team',
+      name: 'team',
+      component: () => import('@/views/gaoge/team/index.vue'),
+      meta: {
+        title: '球队信息',
+      },
+    },
+    {
+      path: 'match-round',
+      name: 'matchRound',
+      component: () => import('@/views/gaoge/match_round/index.vue'),
+      meta: {
+        title: '比赛信息',
+      },
+    },
+    {
       path: 'player-standard',
       name: 'playerStandardModule',
       component: () => import('@/views/gaoge/player_standard_module/index.vue'),
