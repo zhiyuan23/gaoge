@@ -8,26 +8,30 @@ defineOptions({
 const settingsStore = useSettingsStore()
 
 function toggleColorScheme(event: MouseEvent) {
+  if (!settingsStore.currentColorScheme) {
+    return
+  }
+
+  const nextColorScheme = settingsStore.currentColorScheme === 'dark' ? 'light' : 'dark'
+  const isDark = nextColorScheme === 'dark'
   const { startViewTransition } = useViewTransition(() => {
-    settingsStore.currentColorScheme &&
-      settingsStore.setColorScheme(settingsStore.currentColorScheme === 'dark' ? 'light' : 'dark')
+    settingsStore.setColorScheme(nextColorScheme)
   })
   startViewTransition()?.ready.then(() => {
     const x = event.clientX
     const y = event.clientY
     const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
-    const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
+    const startClipPath = `circle(0px at ${x}px ${y}px)`
+    const endClipPath = `circle(${endRadius}px at ${x}px ${y}px)`
     document.documentElement.animate(
       {
-        clipPath: settingsStore.settings.app.colorScheme !== 'dark' ? clipPath : clipPath.reverse(),
+        clipPath: isDark ? [endClipPath, startClipPath] : [startClipPath, endClipPath],
       },
       {
         duration: 300,
         easing: 'ease-out',
-        pseudoElement:
-          settingsStore.settings.app.colorScheme !== 'dark'
-            ? '::view-transition-new(root)'
-            : '::view-transition-old(root)',
+        fill: 'forwards',
+        pseudoElement: isDark ? '::view-transition-old(root)' : '::view-transition-new(root)',
       },
     )
   })

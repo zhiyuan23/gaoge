@@ -1,8 +1,7 @@
-import { randomBytes } from 'node:crypto'
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import type { Prisma } from '@prisma/client'
 
-import type { TeamListParams } from '@gaoge/shared-types'
+import type { TeamCode, TeamListParams } from '@gaoge/shared-types'
 
 import { PrismaService } from '../../common/prisma/prisma.service'
 
@@ -15,10 +14,7 @@ export class TeamsService {
 
   create(dto: CreateTeamDto) {
     return this.prisma.team.create({
-      data: {
-        ...normalizeTeamPayload(dto),
-        code: generateTeamCode(),
-      },
+      data: normalizeCreateTeamPayload(dto),
     })
   }
 
@@ -56,7 +52,7 @@ export class TeamsService {
     await this.findOne(id)
     return this.prisma.team.update({
       where: { id },
-      data: normalizeTeamPayload(dto),
+      data: normalizeUpdateTeamPayload(dto),
     })
   }
 
@@ -88,9 +84,27 @@ function normalizeNullableText(value: string | null | undefined) {
   return normalized ? normalized : null
 }
 
-function normalizeTeamPayload<T extends CreateTeamDto | UpdateTeamDto>(dto: T): T {
+function normalizeCreateTeamPayload(dto: CreateTeamDto) {
+  const normalizedName = dto.name.trim()
   return {
     ...dto,
+    name: normalizedName,
+    code: mapTeamCode(normalizedName),
+    avatarUrl: normalizeNullableText(dto.avatarUrl),
+    slogan: normalizeNullableText(dto.slogan),
+    sponsorName: normalizeNullableText(dto.sponsorName),
+  }
+}
+
+function normalizeUpdateTeamPayload(dto: UpdateTeamDto) {
+  const normalizedName = typeof dto.name === 'string' ? dto.name.trim() : undefined
+
+  return {
+    ...dto,
+    ...(normalizedName !== undefined
+      ? { name: normalizedName, code: mapTeamCode(normalizedName) }
+      : {}),
+    avatarUrl: normalizeNullableText(dto.avatarUrl),
     slogan: normalizeNullableText(dto.slogan),
     sponsorName: normalizeNullableText(dto.sponsorName),
   }
@@ -110,6 +124,18 @@ function buildTeamWhere(params: TeamListParams) {
   return where
 }
 
-function generateTeamCode() {
-  return `team_${Date.now().toString(36)}_${randomBytes(4).toString('hex')}`
+function mapTeamCode(name: string): TeamCode {
+  if (name === '皇家高歌') {
+    return 'real'
+  }
+
+  if (name === '高歌国际') {
+    return 'inter'
+  }
+
+  if (name === '高歌联') {
+    return 'united'
+  }
+
+  throw new BadRequestException('球队名称必须是固定的 3 支球队之一')
 }

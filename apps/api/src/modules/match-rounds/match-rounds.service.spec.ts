@@ -45,6 +45,9 @@ describe('MatchRoundsService', () => {
 
   const roundRecord = {
     id: 1,
+    year: 2026,
+    season: '春季赛',
+    round: 1,
     matchDate: new Date('2026-04-28T20:00:00.000Z'),
     venue: '体育中心',
     remark: '周中补赛',
@@ -88,6 +91,9 @@ describe('MatchRoundsService', () => {
 
     await expect(
       service.create({
+        year: 2026,
+        season: '春季赛',
+        round: 2,
         matchDate: new Date('2026-04-28T20:00:00.000Z'),
         venue: ' 体育中心 ',
         remark: ' ',
@@ -99,6 +105,9 @@ describe('MatchRoundsService', () => {
       } as any),
     ).resolves.toMatchObject({
       id: 8,
+      year: 2026,
+      season: '春季赛',
+      round: 1,
       results: [
         expect.objectContaining({ teamId: 3, rank: 1, points: 2, teamName: '皇家高歌' }),
         expect.objectContaining({ teamId: 2, rank: 2, points: 1, teamName: '国际高歌' }),
@@ -116,6 +125,9 @@ describe('MatchRoundsService', () => {
     })
     expect(tx.matchRound.create).toHaveBeenCalledWith({
       data: {
+        year: 2026,
+        season: '春季赛',
+        round: 2,
         matchDate: new Date('2026-04-28T20:00:00.000Z'),
         venue: '体育中心',
         remark: null,
@@ -135,6 +147,9 @@ describe('MatchRoundsService', () => {
 
     await expect(
       service.create({
+        year: 2026,
+        season: '春季赛',
+        round: 1,
         matchDate: new Date('2026-04-28T20:00:00.000Z'),
         results: [
           { teamId: 0, rank: 1 },
@@ -151,6 +166,9 @@ describe('MatchRoundsService', () => {
 
     await expect(
       service.create({
+        year: 2026,
+        season: '春季赛',
+        round: 1,
         matchDate: new Date('2026-04-28T20:00:00.000Z'),
         results: [
           { teamId: 11, rank: 1 },
@@ -169,6 +187,9 @@ describe('MatchRoundsService', () => {
 
     await expect(
       service.create({
+        year: 2026,
+        season: '春季赛',
+        round: 1,
         matchDate: new Date('2026-04-28T20:00:00.000Z'),
         results: [
           { teamId: 1, rank: 1 },
@@ -183,6 +204,9 @@ describe('MatchRoundsService', () => {
 
     await expect(
       service.create({
+        year: 2026,
+        season: '春季赛',
+        round: 1,
         matchDate: new Date('2026-04-28T20:00:00.000Z'),
         results: [
           { teamId: 1, rank: 1 },
@@ -198,6 +222,9 @@ describe('MatchRoundsService', () => {
 
     await expect(
       service.create({
+        year: 2026,
+        season: '春季赛',
+        round: 1,
         matchDate: new Date('2026-04-28T20:00:00.000Z'),
         results: [
           { teamId: 1, rank: 1 },
@@ -217,6 +244,9 @@ describe('MatchRoundsService', () => {
       service.findAll({
         page: '2',
         pageSize: '1',
+        year: '2026',
+        season: '春季赛',
+        round: '1',
         matchDate: '2026-04-28',
         venueKeyword: '体育',
       } as any),
@@ -224,6 +254,9 @@ describe('MatchRoundsService', () => {
       list: [
         {
           id: 1,
+          year: 2026,
+          season: '春季赛',
+          round: 1,
           matchDate: new Date('2026-04-28T20:00:00.000Z'),
           venue: '体育中心',
           remark: '周中补赛',
@@ -241,6 +274,9 @@ describe('MatchRoundsService', () => {
 
     expect(prisma.matchRound.findMany).toHaveBeenCalledWith({
       where: {
+        year: 2026,
+        season: '春季赛',
+        round: 1,
         matchDate: {
           gte: new Date('2026-04-28T00:00:00.000Z'),
           lt: new Date('2026-04-29T00:00:00.000Z'),
@@ -270,6 +306,9 @@ describe('MatchRoundsService', () => {
     })
     expect(prisma.matchRound.count).toHaveBeenCalledWith({
       where: {
+        year: 2026,
+        season: '春季赛',
+        round: 1,
         matchDate: {
           gte: new Date('2026-04-28T00:00:00.000Z'),
           lt: new Date('2026-04-29T00:00:00.000Z'),
@@ -288,6 +327,9 @@ describe('MatchRoundsService', () => {
 
     await expect(service.findOne(1)).resolves.toEqual({
       id: 1,
+      year: 2026,
+      season: '春季赛',
+      round: 1,
       matchDate: new Date('2026-04-28T20:00:00.000Z'),
       venue: '体育中心',
       remark: '周中补赛',
@@ -330,6 +372,9 @@ describe('MatchRoundsService', () => {
 
     await expect(
       service.update(1, {
+        year: 2026,
+        season: '夏季赛',
+        round: 3,
         venue: '  ',
         remark: '',
         results: [
@@ -340,6 +385,9 @@ describe('MatchRoundsService', () => {
       } as any),
     ).resolves.toMatchObject({
       id: 1,
+      year: 2026,
+      season: '春季赛',
+      round: 1,
       venue: null,
       remark: null,
     })
@@ -347,6 +395,9 @@ describe('MatchRoundsService', () => {
     expect(tx.matchRound.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: {
+        year: 2026,
+        season: '夏季赛',
+        round: 3,
         venue: null,
         remark: null,
       },
@@ -375,16 +426,25 @@ describe('MatchRoundsService', () => {
 
     await expect(
       service.update(1, {
+        year: 2026,
+        season: '秋季赛',
+        round: 4,
         venue: ' 新场地 ',
       } as any),
     ).resolves.toMatchObject({
       id: 1,
+      year: 2026,
+      season: '春季赛',
+      round: 1,
       venue: '新场地',
     })
 
     expect(tx.matchRound.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: {
+        year: 2026,
+        season: '秋季赛',
+        round: 4,
         venue: '新场地',
       },
     })

@@ -84,4 +84,29 @@ describe('authService', () => {
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException)
   })
+
+  it('returns all gaoge management permissions for admin users', async () => {
+    const { prisma, service } = createService()
+    prisma.user.findUnique = jest.fn().mockResolvedValue({
+      id: 1,
+      role: 'admin',
+      status: 'active',
+      deletedAt: null,
+    })
+
+    await expect(service.getPermission(1)).resolves.toEqual({
+      permissions: [
+        'player:create',
+        'player:update',
+        'player:delete',
+        'team:create',
+        'team:update',
+        'team:delete',
+        'matchRound:create',
+        'matchRound:update',
+        'matchRound:delete',
+      ],
+      role: 'admin',
+    })
+  })
 })

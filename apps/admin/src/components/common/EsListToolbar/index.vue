@@ -5,7 +5,7 @@ defineOptions({
 
 const {
   selectedCount = 0,
-  showSelectionSummary = true,
+  showSelectionSummary = false,
   summaryLabel = '已选择',
   summaryUnit = '项',
 } = defineProps<{

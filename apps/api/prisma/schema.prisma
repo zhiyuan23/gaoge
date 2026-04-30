@@ -111,6 +111,7 @@ model Team {
   id           Int                @id @default(autoincrement())
   code         String             @unique // 由后端生成的只读编码，后台不展示不编辑
   name         String             @unique
+  avatarUrl    String?
   slogan       String?
   sponsorName  String?
   sort         Int                @default(0)
@@ -127,6 +128,9 @@ model Team {
 // 比赛轮次表
 // ============================================
 model MatchRound {
+  year      Int
+  season    String
+  round     Int
   id        Int                @id @default(autoincrement())
   matchDate DateTime
   venue     String?

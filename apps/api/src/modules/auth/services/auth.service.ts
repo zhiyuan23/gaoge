@@ -314,7 +314,17 @@ export class AuthService {
 
   private buildPermissions(role: string) {
     if (role === 'admin') {
-      return ['player:create', 'player:update', 'player:delete']
+      return [
+        'player:create',
+        'player:update',
+        'player:delete',
+        'team:create',
+        'team:update',
+        'team:delete',
+        'matchRound:create',
+        'matchRound:update',
+        'matchRound:delete',
+      ]
     }
 
     return []

@@ -75,12 +75,16 @@ export interface TeamFundPayload {
 /** 更新球队资金明细时的提交参数。 */
 export type UpdateTeamFundPayload = Partial<TeamFundPayload>
 
+/** 固定球队标识。 */
+export type TeamCode = 'real' | 'inter' | 'united'
+
 /**
  * 球队信息。
  *
  * @property id 球队 ID。
- * @property code 球队编码，仅由后端生成；后台只读且不展示、不编辑。
+ * @property code 固定球队标识。`皇家高歌 -> real`、`高歌国际 -> inter`、`高歌联 -> united`。
  * @property name 球队名称。
+ * @property avatarUrl 球队头像 URL。
  * @property slogan 球队口号。
  * @property sponsorName 赞助商名称。
  * @property sort 排序值，数值越小越靠前。
@@ -89,8 +93,9 @@ export type UpdateTeamFundPayload = Partial<TeamFundPayload>
  */
 export interface Team {
   id: number
-  code: string
+  code: TeamCode
   name: string
+  avatarUrl: string | null
   slogan: string | null
   sponsorName: string | null
   sort: number
@@ -102,12 +107,14 @@ export interface Team {
  * 创建或更新球队时的提交参数。
  *
  * @property name 球队名称。
+ * @property avatarUrl 球队头像 URL；传 null 表示显式清空。
  * @property slogan 球队口号；传 null 表示显式清空。
  * @property sponsorName 赞助商名称；传 null 表示显式清空。
  * @property sort 排序值。
  */
 export interface TeamPayload {
   name: string
+  avatarUrl?: string | null
   slogan?: string | null
   sponsorName?: string | null
   sort: number
@@ -147,10 +154,16 @@ export interface MatchRoundResultPayloadItem {
   rank: 1 | 2 | 3
 }
 
+/** 比赛赛季。 */
+export type MatchRoundSeason = '春季赛' | '夏季赛' | '秋季赛' | '冬季赛'
+
 /**
  * 比赛轮次信息。
  *
  * @property id 比赛轮次 ID。
+ * @property year 年度。
+ * @property season 赛季。
+ * @property round 场次。
  * @property matchDate 比赛日期时间。
  * @property venue 比赛场地。
  * @property remark 备注。
@@ -160,6 +173,9 @@ export interface MatchRoundResultPayloadItem {
  */
 export interface MatchRound {
   id: number
+  year: number
+  season: MatchRoundSeason
+  round: number
   matchDate: DateTimeString
   venue: string | null
   remark: string | null
@@ -171,12 +187,18 @@ export interface MatchRound {
 /**
  * 创建或更新比赛轮次时的提交参数。
  *
+ * @property year 年度。
+ * @property season 赛季。
+ * @property round 场次。
  * @property matchDate 比赛日期，格式 YYYY-MM-DD。
  * @property venue 比赛场地；传 null 表示显式清空。
  * @property remark 备注；传 null 表示显式清空。
  * @property results 本轮比赛固定 3 支球队的名次提交列表，积分由后端按名次推导。
  */
 export interface MatchRoundPayload {
+  year: number
+  season: MatchRoundSeason
+  round: number
   matchDate: string
   venue?: string | null
   remark?: string | null
@@ -185,6 +207,9 @@ export interface MatchRoundPayload {
 
 /** 更新比赛轮次时的提交参数。 */
 export interface UpdateMatchRoundPayload {
+  year?: number
+  season?: MatchRoundSeason
+  round?: number
   matchDate?: string
   venue?: string | null
   remark?: string | null
@@ -197,6 +222,9 @@ export interface UpdateMatchRoundPayload {
 export interface MatchRoundListParams {
   page?: number | string
   pageSize?: number | string
+  year?: number | string
+  season?: MatchRoundSeason
+  round?: number | string
   matchDate?: string
   venueKeyword?: string
 }

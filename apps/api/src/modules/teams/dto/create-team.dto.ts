@@ -7,6 +7,10 @@ export class CreateTeamDto {
 
   @ValidateIf((_, value) => value !== undefined && value !== null)
   @IsString()
+  avatarUrl?: string | null
+
+  @ValidateIf((_, value) => value !== undefined && value !== null)
+  @IsString()
   slogan?: string | null
 
   @ValidateIf((_, value) => value !== undefined && value !== null)

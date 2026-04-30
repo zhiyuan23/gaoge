@@ -256,6 +256,8 @@ watch(
 
 <style scoped>
 .es-search__grid {
+  --es-search-control-height: 36px;
+
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(var(--es-search-item-min-width), 1fr));
   gap: 12px 32px;
@@ -265,9 +267,25 @@ watch(
   width: 100%;
 }
 
+.es-search__field :deep(.el-date-editor) {
+  width: 100%;
+}
+
 .es-search__field :deep(.el-input__wrapper),
-.es-search__field :deep(.el-select__wrapper) {
-  min-height: 36px;
+.es-search__field :deep(.el-select__wrapper),
+.es-search__field :deep(.el-date-editor.el-input__wrapper),
+.es-search__field :deep(.el-range-editor.el-input__wrapper) {
+  min-height: var(--es-search-control-height);
+}
+
+.es-search__field :deep(.el-input-number) {
+  width: 100%;
+  min-height: var(--es-search-control-height);
+}
+
+.es-search__field :deep(.el-input-number .el-input__wrapper),
+.es-search__field :deep(.el-input-number .el-input__inner) {
+  min-height: var(--es-search-control-height);
 }
 
 .es-search__range {

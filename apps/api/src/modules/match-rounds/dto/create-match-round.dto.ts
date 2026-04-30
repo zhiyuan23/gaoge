@@ -4,9 +4,12 @@ import {
   ArrayMinSize,
   IsArray,
   IsDate,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
+  Max,
+  Min,
   ValidateNested,
 } from 'class-validator'
 
@@ -21,6 +24,21 @@ export class MatchRoundResultDto {
 }
 
 export class CreateMatchRoundDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  @Max(2100)
+  year: number
+
+  @IsIn(['春季赛', '夏季赛', '秋季赛', '冬季赛'])
+  season: '春季赛' | '夏季赛' | '秋季赛' | '冬季赛'
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(15)
+  round: number
+
   @Type(() => Date)
   @IsDate()
   matchDate: Date

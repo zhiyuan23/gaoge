@@ -16,7 +16,8 @@ import MultilevelMenuExample from './modules/example/multilevel-menu'
 import PermissionExample from './modules/example/permission'
 import PluginExample from './modules/example/plugin'
 import TabExample from './modules/example/tab'
-import Gaoge from './modules/gaoge'
+import Gaoge from './modules/football'
+import Playground from './modules/playground'
 
 import type { Route } from '#/global'
 
@@ -108,6 +109,13 @@ const asyncRoutes: Route.recordMainRaw[] = [
       JsxExample,
       ExternalLinkExample,
     ],
+  },
+  {
+    meta: {
+      title: '测试',
+      icon: 'lucide:flask-conical',
+    },
+    children: [Playground],
   },
 ]
 

@@ -81,12 +81,13 @@ describe('TeamsService', () => {
     )
   })
 
-  it('creates a team with an auto generated code', async () => {
+  it('creates a team with the mapped fixed team code', async () => {
     const { prisma, service } = createService()
     prisma.team.create.mockResolvedValue({ id: 1 })
 
     await service.create({
       name: '皇家高歌',
+      avatarUrl: 'https://example.com/team.png',
       slogan: '向前',
       sponsorName: null,
       sort: 1,
@@ -95,19 +96,34 @@ describe('TeamsService', () => {
     expect(prisma.team.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         name: '皇家高歌',
+        avatarUrl: 'https://example.com/team.png',
         slogan: '向前',
         sponsorName: null,
         sort: 1,
-        code: expect.stringMatching(/^team_[a-z0-9]+_[0-9a-f]+$/),
+        code: 'real',
       }),
     })
+  })
+
+  it('rejects create when the team name is not one of the fixed teams', async () => {
+    const { prisma, service } = createService()
+
+    expect(() =>
+      service.create({
+        name: '测试球队',
+        sort: 1,
+      } as any),
+    ).toThrow('球队名称必须是固定的 3 支球队之一')
+
+    expect(prisma.team.create).not.toHaveBeenCalled()
   })
 
   it('normalizes blank optional text fields to null on create', async () => {
     const { prisma, service } = createService()
 
     await service.create({
-      name: '皇家高歌',
+      name: '高歌国际',
+      avatarUrl: ' ',
       slogan: '   ',
       sponsorName: '',
       sort: 1,
@@ -115,6 +131,7 @@ describe('TeamsService', () => {
 
     expect(prisma.team.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
+        avatarUrl: null,
         slogan: null,
         sponsorName: null,
       }),
@@ -151,6 +168,8 @@ describe('TeamsService', () => {
 
     await expect(
       service.update(7, {
+        name: '高歌联',
+        avatarUrl: ' ',
         slogan: ' ',
         sponsorName: '',
       }),
@@ -159,6 +178,9 @@ describe('TeamsService', () => {
     expect(prisma.team.update).toHaveBeenCalledWith({
       where: { id: 7 },
       data: {
+        name: '高歌联',
+        code: 'united',
+        avatarUrl: null,
         slogan: null,
         sponsorName: null,
       },
@@ -173,17 +195,13 @@ describe('TeamsService', () => {
     await expect(
       service.update(8, {
         name: '新队名',
+        avatarUrl: undefined,
         slogan: undefined,
         sponsorName: undefined,
       }),
-    ).resolves.toEqual({ id: 8, name: '新队名', slogan: '保留口号' })
+    ).rejects.toThrow('球队名称必须是固定的 3 支球队之一')
 
-    expect(prisma.team.update).toHaveBeenCalledWith({
-      where: { id: 8 },
-      data: {
-        name: '新队名',
-      },
-    })
+    expect(prisma.team.update).not.toHaveBeenCalled()
   })
 
   it('treats explicit null as clearing nullable fields on update', async () => {
@@ -193,6 +211,7 @@ describe('TeamsService', () => {
 
     await expect(
       service.update(10, {
+        avatarUrl: null,
         slogan: null,
         sponsorName: null,
       }),
@@ -201,6 +220,7 @@ describe('TeamsService', () => {
     expect(prisma.team.update).toHaveBeenCalledWith({
       where: { id: 10 },
       data: {
+        avatarUrl: null,
         slogan: null,
         sponsorName: null,
       },

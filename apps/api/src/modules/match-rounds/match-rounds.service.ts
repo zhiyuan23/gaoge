@@ -164,9 +164,12 @@ function normalizeNullableText(value: string | null | undefined) {
 }
 
 function normalizeCreateRoundPayload(
-  dto: Pick<CreateMatchRoundDto, 'matchDate' | 'venue' | 'remark'>,
+  dto: Pick<CreateMatchRoundDto, 'year' | 'season' | 'round' | 'matchDate' | 'venue' | 'remark'>,
 ) {
   return {
+    year: dto.year,
+    season: dto.season,
+    round: dto.round,
     matchDate: dto.matchDate,
     venue: normalizeNullableText(dto.venue),
     remark: normalizeNullableText(dto.remark),
@@ -174,9 +177,12 @@ function normalizeCreateRoundPayload(
 }
 
 function normalizeUpdateRoundPayload(
-  dto: Pick<UpdateMatchRoundDto, 'matchDate' | 'venue' | 'remark'>,
+  dto: Pick<UpdateMatchRoundDto, 'year' | 'season' | 'round' | 'matchDate' | 'venue' | 'remark'>,
 ) {
   return {
+    ...(dto.year !== undefined ? { year: dto.year } : {}),
+    ...(dto.season !== undefined ? { season: dto.season } : {}),
+    ...(dto.round !== undefined ? { round: dto.round } : {}),
     ...(dto.matchDate !== undefined ? { matchDate: dto.matchDate } : {}),
     ...(dto.venue !== undefined ? { venue: normalizeNullableText(dto.venue) } : {}),
     ...(dto.remark !== undefined ? { remark: normalizeNullableText(dto.remark) } : {}),
@@ -184,9 +190,24 @@ function normalizeUpdateRoundPayload(
 }
 
 function buildMatchRoundWhere(params: MatchRoundListParams) {
+  const year = normalizePositiveIntegerOrUndefined(params.year)
+  const season = normalizeText(params.season)
+  const round = normalizePositiveIntegerOrUndefined(params.round)
   const matchDate = normalizeMatchDate(params.matchDate)
   const venueKeyword = normalizeText(params.venueKeyword)
   const where: Prisma.MatchRoundWhereInput = {}
+
+  if (year) {
+    where.year = year
+  }
+
+  if (season) {
+    where.season = season
+  }
+
+  if (round) {
+    where.round = round
+  }
 
   if (matchDate) {
     where.matchDate = {
@@ -203,6 +224,11 @@ function buildMatchRoundWhere(params: MatchRoundListParams) {
   }
 
   return where
+}
+
+function normalizePositiveIntegerOrUndefined(value: unknown) {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
 }
 
 function normalizeMatchDate(value: unknown) {
@@ -254,6 +280,9 @@ function pointsByRank(rank: number): 0 | 1 | 2 {
 
 function serializeMatchRound(round: {
   id: number
+  year: number
+  season: string
+  round: number
   matchDate: Date
   venue: string | null
   remark: string | null
@@ -270,6 +299,9 @@ function serializeMatchRound(round: {
 
   return {
     id: round.id,
+    year: round.year,
+    season: round.season,
+    round: round.round,
     matchDate: round.matchDate,
     venue: round.venue,
     remark: round.remark,
