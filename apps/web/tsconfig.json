@@ -1,8 +1,11 @@
 {
   "extends": "../../packages/configs/typescript-config/web.json",
   "compilerOptions": {
-    "rootDir": "../..",
-    "outDir": "dist"
+    "allowJs": true,
+    "checkJs": false,
+    "ignoreDeprecations": "6.0",
+    "noEmit": true,
+    "types": ["vitest/globals"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.js", "src/**/*.vue", "src/**/*.d.ts", "vite.config.js"]
 }

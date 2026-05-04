@@ -1,0 +1,146 @@
+name: 部署 Admin 到生产环境
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/admin/**'
+      - 'packages/shared/**'
+      - 'packages/sdk/**'
+      - 'packages/ui/**'
+      - 'packages/configs/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-admin-production
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  verify:
+    name: 校验与构建 Admin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 获取 pnpm store 目录
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: 缓存 pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 校验 Admin
+        run: pnpm --filter @gaoge/app-admin typecheck
+
+      - name: 构建 Admin
+        run: pnpm --filter @gaoge/app-admin build
+
+  deploy:
+    name: 部署 Admin 到服务器
+    runs-on: ubuntu-latest
+    needs: verify
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 获取 pnpm store 目录
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: 缓存 pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 构建 Admin
+        run: pnpm --filter @gaoge/app-admin build
+
+      - name: 配置 SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 写入服务器 known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.ADMIN_DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: 确保 Admin 发布目录存在
+        run: |
+          ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
+            mkdir -p ${{ secrets.ADMIN_DEPLOY_PATH }}/releases/admin/${{ github.sha }} \
+              ${{ secrets.ADMIN_DEPLOY_PATH }}/current
+          "
+
+      - name: 上传 Admin 构建产物
+        run: |
+          rsync -avz --delete \
+            apps/admin/dist/ \
+            ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }}:${{ secrets.ADMIN_DEPLOY_PATH }}/releases/admin/${{ github.sha }}/
+
+      - name: 切换 Admin 当前版本
+        run: |
+          ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
+            ln -sfn ${{ secrets.ADMIN_DEPLOY_PATH }}/releases/admin/${{ github.sha }} ${{ secrets.ADMIN_DEPLOY_PATH }}/current/admin
+          "
+
+      - name: 健康检查
+        run: |
+          for i in {1..12}; do
+            if curl -fsS ${{ secrets.ADMIN_HEALTH_URL }}; then
+              exit 0
+            fi
+            sleep 5
+          done
+          exit 1

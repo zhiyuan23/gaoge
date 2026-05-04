@@ -8,10 +8,12 @@
 
 - 当前仓库已具备 monorepo 基础结构与工具链
 - `apps/api` 与 `apps/admin` 已完成首轮迁入，并保持球员信息 CRUD 可运行
-- `apps/web` 与 `apps/miniapp` 仍处于后续迁入阶段
+- `apps/web` 已完成从平级 `gaoge-web` 的首轮迁入，当前为真实 Vite/Vue 前台项目
+- `apps/miniapp` 仍处于后续迁入阶段
 - `packages/*` 目前仍以第一阶段共享层骨架为主
+- 根目录工作流已按应用拆分为独立部署入口，`api`、`web`、`admin` 应分别维护自己的发布流程
 
-后续继续引入 `miniapp`、`web` 等真实项目，或显著调整 `api/admin` 的目录职责时，必须同步更新本文件，确保 AI 协作规则与真实代码结构一致。
+后续继续引入 `miniapp` 等真实项目，或显著调整 `web/admin/api` 的目录职责时，必须同步更新本文件，确保 AI 协作规则与真实代码结构一致。
 
 ## 核心原则
 

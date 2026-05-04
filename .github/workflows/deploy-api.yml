@@ -3,6 +3,15 @@ name: 部署 API 到生产环境
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'packages/shared/**'
+      - 'packages/server/**'
+      - 'packages/configs/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
   workflow_dispatch:
 
 concurrency:
@@ -55,10 +64,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: 类型检查
-        run: pnpm typecheck
-
-      - name: 构建管理后台
-        run: pnpm --filter @gaoge/app-admin build
+        run: pnpm --filter @gaoge/app-api typecheck
 
       - name: 构建服务端
         run: pnpm --filter @gaoge/app-api build
@@ -107,9 +113,6 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-      - name: 构建管理后台
-        run: pnpm --filter @gaoge/app-admin build
-
       - name: 构建服务端
         run: pnpm --filter @gaoge/app-api build
 
@@ -121,25 +124,25 @@ jobs:
       - name: 写入服务器 known_hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.API_DEPLOY_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
       - name: 确保部署目录存在
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "
-            mkdir -p ${{ secrets.DEPLOY_PATH }}
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "
+            mkdir -p ${{ secrets.API_DEPLOY_PATH }}
           "
 
       - name: 写入服务端环境变量
         run: |
-          if [ -z "${{ secrets.DEPLOY_ENV_FILE }}" ]; then
-            echo "GitHub Secret DEPLOY_ENV_FILE 为空" >&2
+          if [ -z "${{ secrets.DEPLOY_ENV_FILE_API }}" ]; then
+            echo "GitHub Secret DEPLOY_ENV_FILE_API 为空" >&2
             exit 1
           fi
 
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "mkdir -p ${{ secrets.DEPLOY_PATH }}/apps/api"
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "cat > ${{ secrets.DEPLOY_PATH }}/apps/api/.env" <<'EOF'
-          ${{ secrets.DEPLOY_ENV_FILE }}
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "mkdir -p ${{ secrets.API_DEPLOY_PATH }}/apps/api"
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "cat > ${{ secrets.API_DEPLOY_PATH }}/apps/api/.env" <<'EOF'
+          ${{ secrets.DEPLOY_ENV_FILE_API }}
           EOF
 
       - name: 同步 monorepo 文件到服务器
@@ -153,14 +156,15 @@ jobs:
             --exclude='docs' \
             --exclude='infra' \
             --exclude='apps/web' \
+            --exclude='apps/admin' \
             --exclude='apps/miniapp' \
             --exclude='*.log' \
             ./ \
-            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
+            ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}
 
       - name: 安装生产依赖并生成 Prisma Client
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash -lc '
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
             export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
             export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
@@ -168,7 +172,7 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            cd ${{ secrets.DEPLOY_PATH }}
+            cd ${{ secrets.API_DEPLOY_PATH }}
 
             command -v node >/dev/null 2>&1 || { echo \"node not found\" >&2; exit 1; }
             command -v pnpm >/dev/null 2>&1 || { echo \"pnpm not found\" >&2; exit 1; }
@@ -181,7 +185,7 @@ jobs:
 
       - name: 执行生产迁移
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash -lc '
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
             export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
             export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
@@ -189,14 +193,14 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            cd ${{ secrets.DEPLOY_PATH }}
+            cd ${{ secrets.API_DEPLOY_PATH }}
             export DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"
             pnpm --filter @gaoge/app-api db:migrate:prod
           '"
 
       - name: 重启 PM2 服务
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash -lc '
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
             export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
             export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
@@ -204,7 +208,7 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            cd ${{ secrets.DEPLOY_PATH }}/apps/api
+            cd ${{ secrets.API_DEPLOY_PATH }}/apps/api
             if pm2 describe gaoge-api >/dev/null 2>&1; then
               pm2 reload ecosystem.config.cjs --only gaoge-api --update-env
             else
@@ -216,7 +220,7 @@ jobs:
       - name: 输出 PM2 状态
         if: always()
         run: |
-          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "bash -lc '
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
             export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
@@ -229,7 +233,7 @@ jobs:
       - name: 健康检查
         run: |
           for i in {1..12}; do
-            if curl -fsS ${{ secrets.HEALTH_URL }}; then
+            if curl -fsS ${{ secrets.API_HEALTH_URL }}; then
               exit 0
             fi
             sleep 5
