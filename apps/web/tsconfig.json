@@ -3,7 +3,6 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
-    "ignoreDeprecations": "6.0",
     "noEmit": true,
     "types": ["vitest/globals"]
   },

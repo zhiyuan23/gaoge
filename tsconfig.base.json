@@ -13,16 +13,15 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "paths": {
-      "@gaoge/shared-types": ["packages/shared/types/src/index.ts"],
-      "@gaoge/shared-constants": ["packages/shared/constants/src/index.ts"],
-      "@gaoge/shared-utils": ["packages/shared/utils/src/index.ts"],
-      "@gaoge/shared-schemas": ["packages/shared/schemas/src/index.ts"],
-      "@gaoge/sdk-api-client": ["packages/sdk/api-client/src/index.ts"],
-      "@gaoge/sdk-openapi": ["packages/sdk/openapi/src/index.ts"],
-      "@gaoge/ui-tokens": ["packages/ui/tokens/src/index.ts"],
-      "@gaoge/server-database": ["packages/server/database/src/index.ts"]
+      "@gaoge/shared-types": ["./packages/shared/types/src/index.ts"],
+      "@gaoge/shared-constants": ["./packages/shared/constants/src/index.ts"],
+      "@gaoge/shared-utils": ["./packages/shared/utils/src/index.ts"],
+      "@gaoge/shared-schemas": ["./packages/shared/schemas/src/index.ts"],
+      "@gaoge/sdk-api-client": ["./packages/sdk/api-client/src/index.ts"],
+      "@gaoge/sdk-openapi": ["./packages/sdk/openapi/src/index.ts"],
+      "@gaoge/ui-tokens": ["./packages/ui/tokens/src/index.ts"],
+      "@gaoge/server-database": ["./packages/server/database/src/index.ts"]
     }
   }
 }
