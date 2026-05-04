@@ -114,20 +114,20 @@ jobs:
       - name: 确保 Admin 发布目录存在
         run: |
           ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
-            mkdir -p ${{ secrets.ADMIN_DEPLOY_PATH }}/releases/admin/${{ github.sha }} \
-              ${{ secrets.ADMIN_DEPLOY_PATH }}/current
+            mkdir -p ${{ secrets.ADMIN_DEPLOY_PATH }}/releases/${{ github.sha }}
           "
 
       - name: 上传 Admin 构建产物
         run: |
           rsync -avz --delete \
             apps/admin/dist/ \
-            ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }}:${{ secrets.ADMIN_DEPLOY_PATH }}/releases/admin/${{ github.sha }}/
+            ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }}:${{ secrets.ADMIN_DEPLOY_PATH }}/releases/${{ github.sha }}/
 
       - name: 切换 Admin 当前版本
         run: |
           ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
-            ln -sfn ${{ secrets.ADMIN_DEPLOY_PATH }}/releases/admin/${{ github.sha }} ${{ secrets.ADMIN_DEPLOY_PATH }}/current/admin
+            rm -rf ${{ secrets.ADMIN_DEPLOY_PATH }}/current
+            ln -sfn ${{ secrets.ADMIN_DEPLOY_PATH }}/releases/${{ github.sha }} ${{ secrets.ADMIN_DEPLOY_PATH }}/current
           "
 
       - name: 健康检查

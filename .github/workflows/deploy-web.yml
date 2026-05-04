@@ -117,20 +117,20 @@ jobs:
       - name: 确保 Web 发布目录存在
         run: |
           ssh ${{ secrets.WEB_DEPLOY_USER }}@${{ secrets.WEB_DEPLOY_HOST }} "
-            mkdir -p ${{ secrets.WEB_DEPLOY_PATH }}/releases/web/${{ github.sha }} \
-              ${{ secrets.WEB_DEPLOY_PATH }}/current
+            mkdir -p ${{ secrets.WEB_DEPLOY_PATH }}/releases/${{ github.sha }}
           "
 
       - name: 上传 Web 构建产物
         run: |
           rsync -avz --delete \
             apps/web/dist/ \
-            ${{ secrets.WEB_DEPLOY_USER }}@${{ secrets.WEB_DEPLOY_HOST }}:${{ secrets.WEB_DEPLOY_PATH }}/releases/web/${{ github.sha }}/
+            ${{ secrets.WEB_DEPLOY_USER }}@${{ secrets.WEB_DEPLOY_HOST }}:${{ secrets.WEB_DEPLOY_PATH }}/releases/${{ github.sha }}/
 
       - name: 切换 Web 当前版本
         run: |
           ssh ${{ secrets.WEB_DEPLOY_USER }}@${{ secrets.WEB_DEPLOY_HOST }} "
-            ln -sfn ${{ secrets.WEB_DEPLOY_PATH }}/releases/web/${{ github.sha }} ${{ secrets.WEB_DEPLOY_PATH }}/current/web
+            rm -rf ${{ secrets.WEB_DEPLOY_PATH }}/current
+            ln -sfn ${{ secrets.WEB_DEPLOY_PATH }}/releases/${{ github.sha }} ${{ secrets.WEB_DEPLOY_PATH }}/current
           "
 
       - name: 健康检查
