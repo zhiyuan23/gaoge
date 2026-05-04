@@ -173,7 +173,8 @@ jobs:
             command -v pnpm >/dev/null 2>&1 || { echo \"pnpm not found\" >&2; exit 1; }
             command -v pm2 >/dev/null 2>&1 || { echo \"pm2 not found\" >&2; exit 1; }
 
-            pnpm install --frozen-lockfile --prod --filter @gaoge/app-api...
+            # Production install should not execute root prepare scripts like husky.
+            pnpm install --frozen-lockfile --prod --filter @gaoge/app-api... --ignore-scripts
             export DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"
             pnpm --filter @gaoge/app-api db:generate
           '"
