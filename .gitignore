@@ -5,7 +5,7 @@ dist
 coverage
 *.tsbuildinfo
 .DS_Store
-.env
-.env.*
 !.env.example
 !.env*.example
+apps/api/.env
+apps/api/.env.*
