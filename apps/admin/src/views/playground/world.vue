@@ -4,7 +4,7 @@ meta:
 </route>
 
 <template>
-  <div class="flex-center-center bg-#212121 size-full">
+  <div class="flex-center-center bg-#212121 absolute size-full">
     <div class="section-banner">
       <div id="star-1">
         <div class="curved-corner-star">

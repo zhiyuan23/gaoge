@@ -11,7 +11,7 @@ const routes: RouteRecordRaw = {
   meta: {
     title: '高歌FC',
     cacheable: true,
-    icon: 'lucide:star',
+    icon: 'proicons:soccer',
   },
   children: [
     {
