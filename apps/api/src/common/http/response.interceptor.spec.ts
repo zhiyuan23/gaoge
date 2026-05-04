@@ -21,4 +21,32 @@ describe('responseInterceptor', () => {
       complete: done,
     })
   })
+
+  it('sets no-store cache headers for API responses', (done) => {
+    const setHeader = jest.fn()
+    const interceptor = new ResponseInterceptor()
+    const next: CallHandler = {
+      handle: () => of({ list: [] }),
+    }
+    const context = {
+      switchToHttp: () => ({
+        getResponse: () => ({
+          setHeader,
+        }),
+      }),
+    } as ExecutionContext
+
+    interceptor.intercept(context, next).subscribe({
+      next: () => {
+        expect(setHeader).toHaveBeenCalledWith(
+          'Cache-Control',
+          'no-store, no-cache, must-revalidate, proxy-revalidate',
+        )
+        expect(setHeader).toHaveBeenCalledWith('Pragma', 'no-cache')
+        expect(setHeader).toHaveBeenCalledWith('Expires', '0')
+        expect(setHeader).toHaveBeenCalledWith('Surrogate-Control', 'no-store')
+      },
+      complete: done,
+    })
+  })
 })

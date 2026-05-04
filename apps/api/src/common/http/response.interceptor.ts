@@ -12,9 +12,11 @@ export interface ApiResponseEnvelope<T> {
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponseEnvelope<unknown>> {
   intercept(
-    _context: ExecutionContext,
+    context: ExecutionContext,
     next: CallHandler<T>,
   ): Observable<ApiResponseEnvelope<unknown>> {
+    applyNoStoreHeaders(context)
+
     return next.handle().pipe(
       map((data) => {
         if (isEnvelope(data)) {
@@ -39,4 +41,17 @@ function isEnvelope(value: unknown): value is ApiResponseEnvelope<unknown> {
     'data' in value &&
     'errMsg' in value
   )
+}
+
+function applyNoStoreHeaders(context: ExecutionContext) {
+  const response = context.switchToHttp?.().getResponse?.()
+
+  if (!response || typeof response.setHeader !== 'function') {
+    return
+  }
+
+  response.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  response.setHeader('Pragma', 'no-cache')
+  response.setHeader('Expires', '0')
+  response.setHeader('Surrogate-Control', 'no-store')
 }
