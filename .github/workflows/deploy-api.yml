@@ -191,7 +191,11 @@ jobs:
 
       - name: 切换 API 当前版本
         run: |
-          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "ln -sfn ${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }} ${{ secrets.API_DEPLOY_PATH }}/current/api"
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
+            set -eo pipefail
+            rm -rf ${{ secrets.API_DEPLOY_PATH }}/current
+            ln -sfn ${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }} ${{ secrets.API_DEPLOY_PATH }}/current
+          '"
 
       - name: 重启 PM2 服务
         run: |
@@ -201,12 +205,9 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            cd ${{ secrets.API_DEPLOY_PATH }}/current/api
-            if pm2 describe gaoge-api >/dev/null 2>&1; then
-              pm2 reload ecosystem.config.cjs --only gaoge-api --update-env
-            else
-              pm2 start ecosystem.config.cjs --only gaoge-api --update-env
-            fi
+            pm2 delete gaoge-api >/dev/null 2>&1 || true
+            cd ${{ secrets.API_DEPLOY_PATH }}/current
+            pm2 start ecosystem.config.cjs --only gaoge-api --update-env
             pm2 save
           '"
 

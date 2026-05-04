@@ -145,11 +145,14 @@
   releases/
     web/<git-sha>/
     admin/<git-sha>/
-    api/<git-sha>/
   current/
     web -> /var/www/gaoge/releases/web/<git-sha>
     admin -> /var/www/gaoge/releases/admin/<git-sha>
-    api -> /var/www/gaoge/releases/api/<git-sha>
+
+/var/www/gaoge/api/
+  releases/
+    api/<git-sha>/
+  current -> /var/www/gaoge/api/releases/api/<git-sha>
   shared/
     api.env
 ```
@@ -159,7 +162,7 @@
 - `releases/web/*` 保存 web 历史发布版本
 - `releases/admin/*` 保存 admin 历史发布版本
 - `releases/api/*` 保存 API 历史发布版本与对应依赖
-- `current/web`、`current/admin` 和 `current/api` 都作为稳定入口
+- `current/web`、`current/admin` 和 `/var/www/gaoge/api/current` 都作为稳定入口
 - `shared/api.env` 作为 API 发布版本共享的环境变量文件
 
 ### 域名与流量入口
@@ -238,8 +241,8 @@ API 继续按现有服务器模式暴露，不在本设计中强制改域名结�
 3. 上传到服务器新 release 目录
 4. 将共享 `.env` 链接到该 release
 5. 执行 `prisma migrate deploy`
-6. 切换 `current/api`
-7. `pm2 reload`
+6. 切换 `current`
+7. 删除旧 PM2 进程定义后重新启动
 
 这条线仍与静态站分离，因为它保留了 PM2 和数据库迁移，但发布形态收敛为 release + symlink，避免每次把整套 monorepo 同步到服务器。
 
@@ -311,8 +314,8 @@ API 继续按现有服务器模式暴露，不在本设计中强制改域名结�
 - 校验 `apps/api`
 - 构建 `apps/api`
 - 打包 API release artifact
-- 上传到 `/var/www/gaoge/releases/api/<git-sha>`
-- 服务器端执行迁移、切换 `current/api`、PM2 reload
+- 上传到 `/var/www/gaoge/api/releases/api/<git-sha>`
+- 服务器端执行迁移、切换 `current`、删除旧 PM2 定义并重新启动
 
 触发路径建议：
 

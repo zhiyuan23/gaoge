@@ -278,7 +278,7 @@ Expected: matches for concurrency group, scoped secrets, and admin paths.
 - [ ] **Step 1: Add a failing check for missing artifact release steps**
 
 ```bash
-rg -n "upload-artifact|download-artifact|releases/api|current/api|DEPLOY_ENV_FILE_API" .github/workflows/deploy-api.yml
+rg -n "upload-artifact|download-artifact|releases/api|current|DEPLOY_ENV_FILE_API" .github/workflows/deploy-api.yml
 ```
 
 Expected: fail because the current workflow still rsyncs the monorepo and has no API release artifact flow.
@@ -294,13 +294,13 @@ Required changes:
 - extract to `${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}`
 - link `${{ secrets.API_DEPLOY_PATH }}/shared/api.env` into the release
 - run `prisma migrate deploy` from the extracted release
-- switch `${{ secrets.API_DEPLOY_PATH }}/current/api`
-- reload PM2 from the stable symlink instead of an uploaded source tree
+- switch `${{ secrets.API_DEPLOY_PATH }}/current`
+- recreate PM2 from the stable symlink instead of reloading a stale process definition
 
 - [ ] **Step 3: Verify the API workflow now reflects application isolation**
 
 ```bash
-rg -n "upload-artifact|download-artifact|releases/api|current/api|DEPLOY_ENV_FILE_API" .github/workflows/deploy-api.yml
+rg -n "upload-artifact|download-artifact|releases/api|current|DEPLOY_ENV_FILE_API|pm2 delete gaoge-api" .github/workflows/deploy-api.yml
 ```
 
 Expected: matches for artifact packaging, release directories, stable symlink, and API env secret usage.
