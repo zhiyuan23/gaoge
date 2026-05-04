@@ -18,6 +18,7 @@ async function bootstrap() {
       'http://127.0.0.1:9527', // H5 开发
       'https://gaoge.cc', // 生产域名
       'https://www.gaoge.cc',
+      'https://admin.gaoge.cc',
       'https://api.gaoge.cc',
     ],
     credentials: true,
