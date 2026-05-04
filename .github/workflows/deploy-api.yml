@@ -20,6 +20,9 @@ concurrency:
 
 env:
   NODE_VERSION: '22'
+  API_RELEASE_DIR: '.deploy/api'
+  API_RELEASE_ARCHIVE: 'api-release.tgz'
+  API_RELEASE_ARTIFACT: 'api-release-bundle'
 
 jobs:
   verify:
@@ -66,6 +69,27 @@ jobs:
       - name: 构建服务端
         run: pnpm --filter @gaoge/app-api build
 
+      - name: 生成 API 发布目录
+        run: |
+          rm -rf ${{ env.API_RELEASE_DIR }}
+          pnpm --filter @gaoge/app-api --prod deploy --legacy ${{ env.API_RELEASE_DIR }}
+
+      - name: 生成发布目录 Prisma Client
+        run: pnpm --dir ${{ env.API_RELEASE_DIR }} exec prisma generate --schema prisma/schema.prisma
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: 压缩 API 发布包
+        run: tar -czf ${{ env.API_RELEASE_ARCHIVE }} -C ${{ env.API_RELEASE_DIR }} .
+
+      - name: 上传 API 发布包
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.API_RELEASE_ARTIFACT }}
+          path: ${{ env.API_RELEASE_ARCHIVE }}
+          if-no-files-found: error
+          retention-days: 7
+
   deploy:
     name: 部署到服务器
     runs-on: ubuntu-latest
@@ -73,43 +97,11 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v5
+      - name: 下载 API 发布包
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-
-      - name: 安装 pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: 安装 Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: 获取 pnpm store 目录
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-
-      - name: 缓存 pnpm store
-        uses: actions/cache@v5
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: 安装依赖
-        run: pnpm install --frozen-lockfile
-
-      - name: 生成 Prisma Client
-        run: pnpm --filter @gaoge/app-api db:generate
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      - name: 构建服务端
-        run: pnpm --filter @gaoge/app-api build
+          name: ${{ env.API_RELEASE_ARTIFACT }}
+          path: ./artifact
 
       - name: 配置 SSH
         uses: webfactory/ssh-agent@v0.8.0
@@ -125,7 +117,10 @@ jobs:
       - name: 确保部署目录存在
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "
-            mkdir -p ${{ secrets.API_DEPLOY_PATH }}
+            mkdir -p \
+              ${{ secrets.API_DEPLOY_PATH }}/releases/api \
+              ${{ secrets.API_DEPLOY_PATH }}/current \
+              ${{ secrets.API_DEPLOY_PATH }}/shared
           "
 
       - name: 写入服务端环境变量
@@ -135,76 +130,78 @@ jobs:
             exit 1
           fi
 
-          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "mkdir -p ${{ secrets.API_DEPLOY_PATH }}/apps/api"
-          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "cat > ${{ secrets.API_DEPLOY_PATH }}/apps/api/.env" <<'EOF'
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "cat > ${{ secrets.API_DEPLOY_PATH }}/shared/api.env" <<'EOF'
           ${{ secrets.DEPLOY_ENV_FILE_API }}
           EOF
 
-      - name: 同步 monorepo 文件到服务器
-        run: |
-          rsync -avz --delete \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='.github' \
-            --exclude='.husky' \
-            --exclude='.vscode' \
-            --exclude='docs' \
-            --exclude='infra' \
-            --exclude='apps/web' \
-            --exclude='apps/admin' \
-            --exclude='apps/miniapp' \
-            --exclude='*.log' \
-            ./ \
-            ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}
-
-      - name: 安装生产依赖并生成 Prisma Client
+      - name: 检查服务端运行环境
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
-            export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
-            export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            cd ${{ secrets.API_DEPLOY_PATH }}
-
             command -v node >/dev/null 2>&1 || { echo \"node not found\" >&2; exit 1; }
-            command -v pnpm >/dev/null 2>&1 || { echo \"pnpm not found\" >&2; exit 1; }
             command -v pm2 >/dev/null 2>&1 || { echo \"pm2 not found\" >&2; exit 1; }
+          '"
 
-            # Production install should not execute root prepare scripts like husky.
-            pnpm install --frozen-lockfile --prod --filter @gaoge/app-api... --ignore-scripts
-            export DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"
-            pnpm --filter @gaoge/app-api db:generate
+      - name: 解压 API 发布包
+        run: |
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
+            set -eo pipefail
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+            set -u
+
+            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}
+            rm -rf \"\$RELEASE_DIR\"
+            mkdir -p \"\$RELEASE_DIR\"
+          '"
+
+          rsync -avz \
+            ./artifact/${{ env.API_RELEASE_ARCHIVE }} \
+            ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}/${{ env.API_RELEASE_ARCHIVE }}
+
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
+            set -eo pipefail
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+            set -u
+
+            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}
+            tar -xzf \"\$RELEASE_DIR/${{ env.API_RELEASE_ARCHIVE }}\" -C \"\$RELEASE_DIR\"
+            rm -f \"\$RELEASE_DIR/${{ env.API_RELEASE_ARCHIVE }}\"
+            ln -sfn ${{ secrets.API_DEPLOY_PATH }}/shared/api.env \"\$RELEASE_DIR/.env\"
           '"
 
       - name: 执行生产迁移
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
-            export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
-            export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            cd ${{ secrets.API_DEPLOY_PATH }}
+            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}
+            cd \"\$RELEASE_DIR\"
             export DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"
-            pnpm --filter @gaoge/app-api db:migrate:prod
+            ./node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma
           '"
+
+      - name: 切换 API 当前版本
+        run: |
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "ln -sfn ${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }} ${{ secrets.API_DEPLOY_PATH }}/current/api"
 
       - name: 重启 PM2 服务
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
-            export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
-            export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            cd ${{ secrets.API_DEPLOY_PATH }}/apps/api
+            cd ${{ secrets.API_DEPLOY_PATH }}/current/api
             if pm2 describe gaoge-api >/dev/null 2>&1; then
               pm2 reload ecosystem.config.cjs --only gaoge-api --update-env
             else
@@ -217,8 +214,6 @@ jobs:
         if: always()
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
-            export PNPM_HOME=\"\$HOME/.local/share/pnpm\"
-            export PATH=\"\$PNPM_HOME:\$HOME/bin:\$PATH\"
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
 

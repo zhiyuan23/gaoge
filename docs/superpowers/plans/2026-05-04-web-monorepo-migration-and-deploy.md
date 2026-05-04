@@ -4,9 +4,9 @@
 
 **Goal:** 将平级 `gaoge-web` 迁入 `apps/web`，并在 monorepo 内补齐 `web`、`admin`、`api` 三条独立发布流水线。
 
-**Architecture:** `apps/web` 直接承接原 Vite/Vue 前台应用，保持应用代码先稳定迁入，再通过工作区依赖和 `turbo` 脚本接入 monorepo。发布侧保持三条独立 workflow：`web` 与 `admin` 使用静态产物发布到服务器版本目录并切换软链接，`api` 保持 SSH + rsync + PM2 + Prisma migrate 的服务端发布模式，但补上应用级触发路径和应用级 secrets 命名。
+**Architecture:** `apps/web` 直接承接原 Vite/Vue 前台应用，保持应用代码先稳定迁入，再通过工作区依赖和 `turbo` 脚本接入 monorepo。发布侧保持三条独立 workflow：`web` 与 `admin` 使用静态产物发布到服务器版本目录并切换软链接，`api` 使用 CI 生成的 release artifact 上传到服务器版本目录，再执行 Prisma migrate 与 PM2 reload。
 
-**Tech Stack:** pnpm workspace, Turbo, Vue 3, Vite, Vitest, GitHub Actions, rsync, SSH, PM2, Nginx
+**Tech Stack:** pnpm workspace, Turbo, Vue 3, Vite, Vitest, GitHub Actions, artifact bundle, rsync, SSH, PM2, Nginx
 
 ---
 
@@ -269,48 +269,41 @@ rg -n "deploy-admin-production|ADMIN_DEPLOY_PATH|apps/admin/\\*\\*" .github/work
 
 Expected: matches for concurrency group, scoped secrets, and admin paths.
 
-### Task 5: Tighten the existing API workflow to the monorepo application boundary
+### Task 5: Convert the API workflow to artifact release deployment
 
 **Files:**
 
 - Modify: `.github/workflows/deploy-api.yml`
 
-- [ ] **Step 1: Add a failing check for missing app-scoped triggers and secrets**
+- [ ] **Step 1: Add a failing check for missing artifact release steps**
 
 ```bash
-rg -n "paths:|API_DEPLOY_PATH|API_HEALTH_URL|API_DEPLOY_HOST|API_DEPLOY_USER" .github/workflows/deploy-api.yml
+rg -n "upload-artifact|download-artifact|releases/api|current/api|DEPLOY_ENV_FILE_API" .github/workflows/deploy-api.yml
 ```
 
-Expected: fail because the current workflow still uses unscoped `DEPLOY_*` and `HEALTH_URL` naming and has no `paths` filter.
+Expected: fail because the current workflow still rsyncs the monorepo and has no API release artifact flow.
 
 - [ ] **Step 2: Update `deploy-api.yml`**
 
 Required changes:
 
-- add `push.paths` for:
-  - `apps/api/**`
-  - `packages/shared/**`
-  - `packages/server/**`
-  - `packages/configs/**`
-  - `pnpm-lock.yaml`
-  - `pnpm-workspace.yaml`
-  - `package.json`
-  - `turbo.json`
-- rename deploy secrets usage:
-  - `DEPLOY_HOST` -> `API_DEPLOY_HOST`
-  - `DEPLOY_USER` -> `API_DEPLOY_USER`
-  - `DEPLOY_PATH` -> `API_DEPLOY_PATH`
-  - `HEALTH_URL` -> `API_HEALTH_URL`
-  - `DEPLOY_ENV_FILE` -> `DEPLOY_ENV_FILE_API`
-- remove unrelated `apps/admin` build steps from the API deploy flow so API deployment does not depend on admin release artifacts
+- keep the app-scoped `push.paths`
+- build API once in `verify`
+- package a self-contained API release bundle in CI
+- upload/download the bundle through GitHub Actions artifacts
+- extract to `${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}`
+- link `${{ secrets.API_DEPLOY_PATH }}/shared/api.env` into the release
+- run `prisma migrate deploy` from the extracted release
+- switch `${{ secrets.API_DEPLOY_PATH }}/current/api`
+- reload PM2 from the stable symlink instead of an uploaded source tree
 
 - [ ] **Step 3: Verify the API workflow now reflects application isolation**
 
 ```bash
-rg -n "apps/api/\\*\\*|API_DEPLOY_PATH|API_HEALTH_URL|DEPLOY_ENV_FILE_API" .github/workflows/deploy-api.yml
+rg -n "upload-artifact|download-artifact|releases/api|current/api|DEPLOY_ENV_FILE_API" .github/workflows/deploy-api.yml
 ```
 
-Expected: matches for scoped triggers and scoped secret names.
+Expected: matches for artifact packaging, release directories, stable symlink, and API env secret usage.
 
 ### Task 6: Run end-to-end verification for the local migration
 

@@ -145,19 +145,22 @@
   releases/
     web/<git-sha>/
     admin/<git-sha>/
+    api/<git-sha>/
   current/
     web -> /var/www/gaoge/releases/web/<git-sha>
     admin -> /var/www/gaoge/releases/admin/<git-sha>
-  apps/
-    api/
+    api -> /var/www/gaoge/releases/api/<git-sha>
+  shared/
+    api.env
 ```
 
 职责说明：
 
 - `releases/web/*` 保存 web 历史发布版本
 - `releases/admin/*` 保存 admin 历史发布版本
-- `current/web` 和 `current/admin` 作为 Nginx 稳定入口
-- `apps/api` 作为 API 工作目录，继续由 PM2 管理
+- `releases/api/*` 保存 API 历史发布版本与对应依赖
+- `current/web`、`current/admin` 和 `current/api` 都作为稳定入口
+- `shared/api.env` 作为 API 发布版本共享的环境变量文件
 
 ### 域名与流量入口
 
@@ -228,16 +231,17 @@ API 继续按现有服务器模式暴露，不在本设计中强制改域名结�
 
 ### API
 
-`apps/api` 继续采用当前 monorepo 根目录 `deploy-api.yml` 的总体思路：
+`apps/api` 采用“CI 生成 release artifact，服务器解压发布”的方式：
 
 1. 校验和构建 API
-2. 同步所需 monorepo 文件到服务器
-3. 在服务器安装生产依赖
-4. 生成 Prisma Client
+2. 在 CI 中生成自包含的 API 发布包
+3. 上传到服务器新 release 目录
+4. 将共享 `.env` 链接到该 release
 5. 执行 `prisma migrate deploy`
-6. `pm2 reload`
+6. 切换 `current/api`
+7. `pm2 reload`
 
-这条线与静态站分离，避免把静态资源发布逻辑和服务进程发布逻辑缠在一起。
+这条线仍与静态站分离，因为它保留了 PM2 和数据库迁移，但发布形态收敛为 release + symlink，避免每次把整套 monorepo 同步到服务器。
 
 ## Workflow 设计
 
@@ -306,8 +310,9 @@ API 继续按现有服务器模式暴露，不在本设计中强制改域名结�
 
 - 校验 `apps/api`
 - 构建 `apps/api`
-- 同步 API 所需 monorepo 文件
-- 服务器端安装依赖、生成 Prisma Client、执行迁移、PM2 reload
+- 打包 API release artifact
+- 上传到 `/var/www/gaoge/releases/api/<git-sha>`
+- 服务器端执行迁移、切换 `current/api`、PM2 reload
 
 触发路径建议：
 
@@ -413,6 +418,7 @@ API secrets：
 约束：
 
 - `web` 与 `admin` 必须采用 release + symlink 模式
+- `api` 应采用 release artifact + symlink 模式，避免在线覆盖源码目录
 
 ### 风险 4：过早共享化
 
@@ -433,4 +439,5 @@ API secrets：
 - `gaoge.cc` / `www.gaoge.cc` 由 monorepo 的 `apps/web` 发布
 - `admin.gaoge.cc` 由 monorepo 的 `apps/admin` 发布
 - `apps/api` 继续由 monorepo workflow 发布
+- `apps/api` 发布不再依赖整仓 rsync 到服务器
 - 旧 `gaoge-web` 与旧 `gaoge-server` 不再承担正式发布职责
