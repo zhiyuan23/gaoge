@@ -34,8 +34,6 @@ jobs:
 
       - name: 安装 pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: 安装 Node.js
         uses: actions/setup-node@v4
@@ -77,8 +75,6 @@ jobs:
 
       - name: 安装 pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: 安装 Node.js
         uses: actions/setup-node@v4
