@@ -1,11 +1,16 @@
-import { createApiClient } from '@gaoge/sdk-api-client'
-import { appName } from '@gaoge/shared-constants'
-import { lightTokens } from '@gaoge/ui-tokens'
+import { createSSRApp } from 'vue'
 
-export const miniappShell = {
-  app: `${appName} Miniapp`,
-  api: createApiClient('/miniapp-api'),
-  theme: lightTokens,
+import App from '@/App.vue'
+import setupPlugins from '@/plugins'
+
+import '@/static/styles/tdesign-theme.css' // TDesign 自定义主题
+import 'virtual:uno.css' // UnoCSS
+
+export const createApp = () => {
+  const app = createSSRApp(App)
+
+  // 注册全局插件（路由、Pinia、权限、UI库等）
+  app.use(setupPlugins)
+
+  return { app }
 }
-
-console.log('apps/miniapp scaffold ready', miniappShell)

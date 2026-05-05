@@ -12,10 +12,10 @@ export default [
       '**/coverage/**',
       '**/.turbo/**',
       '**/node_modules/**',
+      '**/src/types/auto-imports.d.ts',
+      '**/src/types/components.d.ts',
       'apps/admin/public/tinymce/**',
       'apps/admin/src/iconify/*.json',
-      'apps/admin/src/types/auto-imports.d.ts',
-      'apps/admin/src/types/components.d.ts',
       'apps/admin/src/views/example/**',
       'apps/admin/src/views/plugin_example/**',
       'apps/api/test/app.e2e-spec.js',
@@ -125,6 +125,15 @@ export default [
     files: ['apps/api/**/*.{ts,tsx,js}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    files: ['apps/miniapp/**/*.{ts,tsx,vue}'],
+    rules: {
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      'vue/multi-word-component-names': 'off',
     },
   },
   eslintConfigPrettier,

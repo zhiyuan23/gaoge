@@ -1,8 +1,35 @@
 {
   "extends": "../../packages/configs/typescript-config/web.json",
   "compilerOptions": {
-    "rootDir": "../..",
-    "outDir": "dist"
+    "allowJs": true,
+    "baseUrl": ".",
+    "declaration": false,
+    "declarationMap": false,
+    "jsx": "preserve",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@gaoge/shared-types": ["../../packages/shared/types/src/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "types": [
+      "vite/client",
+      "@dcloudio/types",
+      "@uni-helper/uni-app-types",
+      "miniprogram-api-typings"
+    ]
   },
-  "include": ["src/**/*.ts"]
+  "vueCompilerOptions": {
+    "plugins": ["@uni-helper/uni-app-types/volar-plugin"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "uno.config.ts",
+    "vite.config.ts",
+    "node_modules/@tdesign-uniapp/global.d.ts"
+  ],
+  "exclude": ["dist", "node_modules", "uni_modules"]
 }

@@ -1,0 +1,72 @@
+page {
+  min-height: 100vh;
+  font-size: 26rpx;
+  color: var(--app-text-main);
+  background-color: var(--app-bg-color);
+}
+
+uni-page-body {
+  min-height: auto !important;
+}
+
+uni-image {
+  display: block !important;
+}
+
+uni-modal {
+  z-index: 99999;
+}
+
+image {
+  display: block;
+}
+
+input {
+  height: 96rpx;
+  line-height: 96rpx;
+}
+
+/* 设置页面最小高度，兼容H5自定义导航条 */
+.page {
+  // #ifdef MP-WEIXIN
+  min-height: calc(100vh - var(--window-top)) !important;
+  // #endif
+
+  // #ifdef H5
+  min-height: 100% !important;
+  // #endif
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  border-style: solid;
+  border-width: 2rpx;
+  border-radius: 100rpx;
+}
+
+/* 点击反馈 */
+.t-press,
+.button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按下时加一层黑色遮罩 */
+.t-press::after,
+.button::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background: rgb(0 0 0 / 4%);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.t-press:active::after,
+.button:active::after {
+  opacity: 1;
+}

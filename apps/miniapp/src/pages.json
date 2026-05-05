@@ -1,0 +1,98 @@
+{
+  "easycom": {
+    "custom": {
+      "^t-(.*)": "@tdesign/uniapp/$1/$1.vue"
+    }
+  },
+  "pages": [
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/football/player/index",
+      "style": {
+        "navigationBarTitleText": "球员列表"
+      }
+    }
+  ],
+  "subPackages": [
+    {
+      "root": "pages/common",
+      "pages": [
+        {
+          "path": "webview/index",
+          "style": {
+            "navigationBarTitleText": ""
+          }
+        },
+        {
+          "path": "404/index",
+          "style": {
+            "navigationBarTitleText": "404",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "historyRecord/index",
+          "style": {
+            "navigationBarTitleText": "历史记录"
+          }
+        },
+        {
+          "path": "historyRecord/detail",
+          "style": {
+            "navigationBarTitleText": "记录详情"
+          }
+        },
+        {
+          "path": "scan/index",
+          "style": {
+            "navigationBarTitleText": "扫码"
+          }
+        }
+      ]
+    }
+  ],
+  "preloadRule": {},
+  "tabBar": {
+    "custom": false,
+    "color": "#999999",
+    "selectedColor": "#3C9CFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "text": "首页",
+        "pagePath": "pages/home/index"
+      },
+      {
+        "text": "球员列表",
+        "pagePath": "pages/football/player/index"
+      },
+      {
+        "text": "我的",
+        "pagePath": "pages/profile/index"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "高歌体育",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#ffffff"
+  }
+}
