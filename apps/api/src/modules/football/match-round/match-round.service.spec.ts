@@ -1,8 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 
-import { MatchRoundsService } from './match-rounds.service'
+import { MatchRoundService } from './match-round.service'
 
-describe('MatchRoundsService', () => {
+describe('MatchRoundService', () => {
   const createService = () => {
     const tx = {
       team: {
@@ -34,7 +34,7 @@ describe('MatchRoundsService', () => {
       }),
     }
 
-    const service = new MatchRoundsService(prisma as any)
+    const service = new MatchRoundService(prisma as any)
 
     return {
       prisma,

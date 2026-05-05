@@ -1,6 +1,6 @@
 import type { Team, TeamListParams, TeamListResponse, TeamPayload } from '@gaoge/shared-types'
 
-import api from '../index'
+import api from '@/api'
 
 export type { Team, TeamListParams, TeamListResponse, TeamPayload }
 

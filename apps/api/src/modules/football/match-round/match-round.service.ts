@@ -24,7 +24,7 @@ const MATCH_ROUND_INCLUDE = {
 } as const
 
 @Injectable()
-export class MatchRoundsService {
+export class MatchRoundService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateMatchRoundDto) {

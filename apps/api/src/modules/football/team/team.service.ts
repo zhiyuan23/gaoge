@@ -9,7 +9,7 @@ import type { CreateTeamDto } from './dto/create-team.dto'
 import type { UpdateTeamDto } from './dto/update-team.dto'
 
 @Injectable()
-export class TeamsService {
+export class TeamService {
   constructor(private readonly prisma: PrismaService) {}
 
   create(dto: CreateTeamDto) {

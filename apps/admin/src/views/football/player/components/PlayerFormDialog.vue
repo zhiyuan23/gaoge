@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Player, PlayerPayload } from '@/api/players'
+import type { Player, PlayerPayload } from '@/api/football/player'
 import type { SearchOption } from '@/components/common/EsSearch/types'
 
 import { createEmptyPlayerForm } from '../model/defaults'

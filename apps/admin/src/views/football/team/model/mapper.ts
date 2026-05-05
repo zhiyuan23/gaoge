@@ -1,4 +1,4 @@
-import type { Team, TeamListParams, TeamPayload } from '@/api/teams'
+import type { Team, TeamListParams, TeamPayload } from '@/api/football/team'
 
 import type { TeamFormModel, TeamSearch } from './types'
 

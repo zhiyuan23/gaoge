@@ -1,6 +1,6 @@
-import { PlayersService } from './players.service'
+import { PlayerService } from './player.service'
 
-describe('PlayersService', () => {
+describe('PlayerService', () => {
   const createService = () => {
     const prisma = {
       player: {
@@ -11,7 +11,7 @@ describe('PlayersService', () => {
       $transaction: jest.fn((actions: Promise<unknown>[]) => Promise.all(actions)),
     }
 
-    const service = new PlayersService(prisma as any)
+    const service = new PlayerService(prisma as any)
 
     return {
       prisma,

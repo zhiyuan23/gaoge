@@ -6,7 +6,7 @@ import type {
   UpdateMatchRoundPayload,
 } from '@gaoge/shared-types'
 
-import api from '../index'
+import api from '@/api'
 
 export type {
   MatchRound,

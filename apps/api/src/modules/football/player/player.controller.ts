@@ -17,40 +17,40 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
 
 import { CreatePlayerDto } from './dto/create-player.dto'
 import { UpdatePlayerDto } from './dto/update-player.dto'
-import { PlayersService } from './players.service'
+import { PlayerService } from './player.service'
 
 @Controller('football/players')
-export class PlayersController {
-  constructor(private readonly playersService: PlayersService) {}
+export class PlayerController {
+  constructor(private readonly playerService: PlayerService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   create(@Body() dto: CreatePlayerDto) {
-    return this.playersService.create(dto)
+    return this.playerService.create(dto)
   }
 
   @Get()
   findAll(@Query() query: Record<string, string | undefined>) {
-    return this.playersService.findAll(query)
+    return this.playerService.findAll(query)
   }
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.playersService.findOne(id)
+    return this.playerService.findOne(id)
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePlayerDto) {
-    return this.playersService.update(id, dto)
+    return this.playerService.update(id, dto)
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.playersService.remove(id)
+    return this.playerService.remove(id)
   }
 }

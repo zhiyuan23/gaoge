@@ -1,8 +1,8 @@
 import { NotFoundException } from '@nestjs/common'
 
-import { TeamsService } from './teams.service'
+import { TeamService } from './team.service'
 
-describe('TeamsService', () => {
+describe('TeamService', () => {
   const createService = () => {
     const prisma = {
       team: {
@@ -16,7 +16,7 @@ describe('TeamsService', () => {
       $transaction: jest.fn((actions: Promise<unknown>[]) => Promise.all(actions)),
     }
 
-    const service = new TeamsService(prisma as any)
+    const service = new TeamService(prisma as any)
 
     return {
       prisma,

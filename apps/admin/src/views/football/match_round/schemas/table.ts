@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 
-import type { MatchRound } from '@/api/match-rounds'
+import type { MatchRound } from '@/api/football/match-round'
 import type { TableColumn } from '@/components/common/EsTable/types'
 
 import { MATCH_ROUND_PERMISSIONS } from '../auth'

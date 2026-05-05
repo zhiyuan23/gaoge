@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 
-import type { Player, PlayerListParams, PlayerPayload } from '@/api/players'
+import type { Player, PlayerListParams, PlayerPayload } from '@/api/football/player'
 
 import type { PlayerFormModel, PlayerSearch } from './types'
 

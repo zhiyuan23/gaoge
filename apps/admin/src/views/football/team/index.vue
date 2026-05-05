@@ -6,8 +6,8 @@ meta:
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import type { Team, TeamPayload } from '@/api/teams'
-import teamsApi from '@/api/teams'
+import type { Team, TeamPayload } from '@/api/football/team'
+import teamsApi from '@/api/football/team'
 import type { SearchFormData } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
 import { useListPage } from '@/composables/useListPage'

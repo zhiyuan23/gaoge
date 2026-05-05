@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common'
 
 import { FundModule } from './fund/fund.module'
-import { MatchRoundsModule } from './match-rounds/match-rounds.module'
-import { PlayersModule } from './players/players.module'
-import { TeamsModule } from './teams/teams.module'
+import { MatchRoundModule } from './match-round/match-round.module'
+import { PlayerModule } from './player/player.module'
+import { TeamModule } from './team/team.module'
 
 @Module({
-  imports: [PlayersModule, TeamsModule, MatchRoundsModule, FundModule],
+  imports: [PlayerModule, TeamModule, MatchRoundModule, FundModule],
 })
 export class FootballModule {}

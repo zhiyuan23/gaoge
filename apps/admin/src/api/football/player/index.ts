@@ -5,7 +5,7 @@ import type {
   PlayerPayload,
 } from '@gaoge/shared-types'
 
-import api from '../index'
+import api from '@/api'
 
 export type { Player, PlayerListParams, PlayerListResponse, PlayerPayload }
 

@@ -1,4 +1,4 @@
-import type { Team } from '@/api/teams'
+import type { Team } from '@/api/football/team'
 
 import type { MatchRoundFormModel, MatchRoundResultFormItem, MatchRoundSearch } from './types'
 

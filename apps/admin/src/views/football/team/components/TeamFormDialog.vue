@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Team, TeamPayload } from '@/api/teams'
+import type { Team, TeamPayload } from '@/api/football/team'
 
 import { createEmptyTeamForm } from '../model/defaults'
 import { buildTeamPayload, createTeamFormFromRow } from '../model/mapper'

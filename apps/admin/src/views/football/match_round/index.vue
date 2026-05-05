@@ -6,10 +6,14 @@ meta:
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import type { MatchRound, MatchRoundPayload, UpdateMatchRoundPayload } from '@/api/match-rounds'
-import matchRoundsApi from '@/api/match-rounds'
-import type { Team } from '@/api/teams'
-import teamsApi from '@/api/teams'
+import type {
+  MatchRound,
+  MatchRoundPayload,
+  UpdateMatchRoundPayload,
+} from '@/api/football/match-round'
+import matchRoundsApi from '@/api/football/match-round'
+import type { Team } from '@/api/football/team'
+import teamsApi from '@/api/football/team'
 import type { SearchFormData } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
 import { useListPage } from '@/composables/useListPage'

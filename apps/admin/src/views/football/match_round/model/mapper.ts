@@ -5,8 +5,8 @@ import type {
   MatchRoundListParams,
   MatchRoundPayload,
   UpdateMatchRoundPayload,
-} from '@/api/match-rounds'
-import type { Team } from '@/api/teams'
+} from '@/api/football/match-round'
+import type { Team } from '@/api/football/team'
 
 import { createMatchRoundResultItems, getPointsByRank } from './defaults'
 import type { MatchRoundFormModel, MatchRoundSearch } from './types'

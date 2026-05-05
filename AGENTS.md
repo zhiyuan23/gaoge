@@ -9,11 +9,11 @@
 - 当前仓库已具备 monorepo 基础结构与工具链
 - `apps/api` 与 `apps/admin` 已完成首轮迁入，并保持球员信息 CRUD 可运行
 - `apps/web` 已完成从平级 `gaoge-web` 的首轮迁入，当前为真实 Vite/Vue 前台项目
-- `apps/miniapp` 仍处于后续迁入阶段
+- `apps/miniapp` 已完成从平级 `gaoge-miniapp` 的首轮迁入，当前为真实 uni-app/Vue 前台项目
 - `packages/*` 目前仍以第一阶段共享层骨架为主
-- 根目录工作流已按应用拆分为独立部署入口，`api`、`web`、`admin` 应分别维护自己的发布流程
+- 根目录工作流已按应用拆分为独立部署入口，`api`、`web`、`admin`、`miniapp` 应分别维护自己的发布流程
 
-后续继续引入 `miniapp` 等真实项目，或显著调整 `web/admin/api` 的目录职责时，必须同步更新本文件，确保 AI 协作规则与真实代码结构一致。
+后续继续引入新的真实项目，或显著调整 `web/admin/api/miniapp` 的目录职责时，必须同步更新本文件，确保 AI 协作规则与真实代码结构一致。
 
 ## 核心原则
 
@@ -94,6 +94,9 @@ shared -> configs
 - 共享包统一使用 `@gaoge/*`
 - 应用内部使用 `@/`
 - 跨包引用统一使用工作区包名，不直接引用其他包内部路径
+- 按业务领域组织的接口代码，前后端统一优先采用 `领域/资源` 两级目录，例如 `football/player`
+- 资源代码目录、模块目录、类名优先使用单数，例如 `player`、`PlayerService`
+- HTTP REST 路由保持资源集合语义，优先使用复数，例如 `/football/players`
 
 ## 代码风格
 

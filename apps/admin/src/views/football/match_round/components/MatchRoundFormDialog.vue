@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import type { MatchRound, MatchRoundPayload, UpdateMatchRoundPayload } from '@/api/match-rounds'
-import type { Team } from '@/api/teams'
+import type {
+  MatchRound,
+  MatchRoundPayload,
+  UpdateMatchRoundPayload,
+} from '@/api/football/match-round'
+import type { Team } from '@/api/football/team'
 
 import { createEmptyMatchRoundForm } from '../model/defaults'
 import {

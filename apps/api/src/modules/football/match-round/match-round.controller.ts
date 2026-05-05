@@ -19,40 +19,40 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
 
 import { CreateMatchRoundDto } from './dto/create-match-round.dto'
 import { UpdateMatchRoundDto } from './dto/update-match-round.dto'
-import { MatchRoundsService } from './match-rounds.service'
+import { MatchRoundService } from './match-round.service'
 
 @Controller('football/match-rounds')
-export class MatchRoundsController {
-  constructor(private readonly matchRoundsService: MatchRoundsService) {}
+export class MatchRoundController {
+  constructor(private readonly matchRoundService: MatchRoundService) {}
 
   @Get()
   findAll(@Query() query: MatchRoundListParams) {
-    return this.matchRoundsService.findAll(query)
+    return this.matchRoundService.findAll(query)
   }
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.matchRoundsService.findOne(id)
+    return this.matchRoundService.findOne(id)
   }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   create(@Body() dto: CreateMatchRoundDto) {
-    return this.matchRoundsService.create(dto)
+    return this.matchRoundService.create(dto)
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMatchRoundDto) {
-    return this.matchRoundsService.update(id, dto)
+    return this.matchRoundService.update(id, dto)
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   remove(@Param('id', ParseIntPipe) id: number) {
-    return this.matchRoundsService.remove(id)
+    return this.matchRoundService.remove(id)
   }
 }

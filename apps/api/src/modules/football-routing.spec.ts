@@ -4,21 +4,21 @@ import { ROLES_KEY } from '@/common/auth/roles.decorator'
 
 import { AuthController } from './auth/controllers/auth.controller'
 import { FundController } from './football/fund/fund.controller'
-import { MatchRoundsController } from './football/match-rounds/match-rounds.controller'
-import { PlayersController } from './football/players/players.controller'
-import { TeamsController } from './football/teams/teams.controller'
+import { MatchRoundController } from './football/match-round/match-round.controller'
+import { PlayerController } from './football/player/player.controller'
+import { TeamController } from './football/team/team.controller'
 
 describe('football route metadata', () => {
   it('maps players routes under /football/players', () => {
-    expect(Reflect.getMetadata(PATH_METADATA, PlayersController)).toBe('football/players')
+    expect(Reflect.getMetadata(PATH_METADATA, PlayerController)).toBe('football/players')
   })
 
   it('maps teams routes under /football/teams', () => {
-    expect(Reflect.getMetadata(PATH_METADATA, TeamsController)).toBe('football/teams')
+    expect(Reflect.getMetadata(PATH_METADATA, TeamController)).toBe('football/teams')
   })
 
   it('maps match rounds routes under /football/match-rounds', () => {
-    expect(Reflect.getMetadata(PATH_METADATA, MatchRoundsController)).toBe('football/match-rounds')
+    expect(Reflect.getMetadata(PATH_METADATA, MatchRoundController)).toBe('football/match-rounds')
   })
 
   it('maps fund routes under /football/fund', () => {
