@@ -12,7 +12,7 @@ export type { AdminLoginResponse, AuthUser, PermissionResponse }
 export default {
   // 登录
   login: (data: AdminLoginPayload) =>
-    api.post('auth/admin-login', data, {
+    api.post('auth/admin/login', data, {
       noAuth: true,
     }),
 

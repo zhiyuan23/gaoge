@@ -105,8 +105,47 @@ describe('authService', () => {
         'matchRound:create',
         'matchRound:update',
         'matchRound:delete',
+        'fund:create',
+        'fund:update',
+        'fund:delete',
       ],
       role: 'admin',
     })
+  })
+
+  it('marks miniapp tokens with clientType during wechat login', async () => {
+    const { jwtService, prisma, service } = createService()
+    const getSessionByCode = jest.fn().mockResolvedValue({
+      openid: 'openid-1',
+      unionid: 'unionid-1',
+      session_key: 'session-key',
+    })
+    ;(service as any).wechatService = { getSessionByCode }
+    prisma.user.findUnique = jest.fn().mockResolvedValue(null)
+    prisma.user.create = jest.fn().mockResolvedValue({
+      id: 9,
+      account: null,
+      passwordHash: null,
+      role: 'user',
+      status: 'active',
+      nickname: null,
+      avatarUrl: null,
+      phone: null,
+      openid: 'openid-1',
+      deletedAt: null,
+      lastLoginAt: new Date('2026-05-05T00:00:00.000Z'),
+    })
+
+    await service.wechatLogin({
+      code: 'wechat-code',
+    })
+
+    expect(jwtService.signAsync).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        role: 'user',
+        clientType: 'miniapp',
+      }),
+    )
   })
 })

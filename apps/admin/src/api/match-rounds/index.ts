@@ -18,10 +18,10 @@ export type {
 
 export default {
   list: (params?: MatchRoundListParams) =>
-    api.get<MatchRoundListResponse>('/match-rounds', { params, noAuth: true }),
-  detail: (id: number) => api.get<MatchRound>(`/match-rounds/${id}`, { noAuth: true }),
-  create: (data: MatchRoundPayload) => api.post<MatchRound>('/match-rounds', data),
+    api.get<MatchRoundListResponse>('/football/match-rounds', { params, noAuth: true }),
+  detail: (id: number) => api.get<MatchRound>(`/football/match-rounds/${id}`, { noAuth: true }),
+  create: (data: MatchRoundPayload) => api.post<MatchRound>('/football/match-rounds', data),
   update: (id: number, data: UpdateMatchRoundPayload) =>
-    api.patch<MatchRound>(`/match-rounds/${id}`, data),
-  remove: (id: number) => api.delete<MatchRound>(`/match-rounds/${id}`),
+    api.patch<MatchRound>(`/football/match-rounds/${id}`, data),
+  remove: (id: number) => api.delete<MatchRound>(`/football/match-rounds/${id}`),
 }

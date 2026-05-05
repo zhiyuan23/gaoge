@@ -13,7 +13,7 @@ import {
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
 
-import { AdminLoginDto, PhoneLoginDto, RefreshTokenDto, WechatLoginDto } from '../dto/login.dto'
+import { AdminLoginDto, MiniappLoginDto, PhoneLoginDto, RefreshTokenDto } from '../dto/login.dto'
 import { JwtAuthGuard } from '../guards/jwt-auth.guard'
 import { AuthService } from '../services/auth.service'
 
@@ -21,15 +21,15 @@ import { AuthService } from '../services/auth.service'
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('admin-login')
+  @Post('admin/login')
   @HttpCode(HttpStatus.OK)
   adminLogin(@Body() loginDto: AdminLoginDto) {
     return this.authService.adminLogin(loginDto)
   }
 
-  @Post('wechat-login')
+  @Post('miniapp/login')
   @HttpCode(HttpStatus.OK)
-  wechatLogin(@Body() loginDto: WechatLoginDto) {
+  wechatLogin(@Body() loginDto: MiniappLoginDto) {
     return this.authService.wechatLogin(loginDto)
   }
 

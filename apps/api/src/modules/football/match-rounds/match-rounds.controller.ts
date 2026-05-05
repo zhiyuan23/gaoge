@@ -21,7 +21,7 @@ import { CreateMatchRoundDto } from './dto/create-match-round.dto'
 import { UpdateMatchRoundDto } from './dto/update-match-round.dto'
 import { MatchRoundsService } from './match-rounds.service'
 
-@Controller('match-rounds')
+@Controller('football/match-rounds')
 export class MatchRoundsController {
   constructor(private readonly matchRoundsService: MatchRoundsService) {}
 

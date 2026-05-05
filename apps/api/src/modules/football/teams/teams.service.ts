@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client'
 
 import type { TeamCode, TeamListParams } from '@gaoge/shared-types'
 
-import { PrismaService } from '../../common/prisma/prisma.service'
+import { PrismaService } from '@/common/prisma/prisma.service'
 
 import type { CreateTeamDto } from './dto/create-team.dto'
 import type { UpdateTeamDto } from './dto/update-team.dto'

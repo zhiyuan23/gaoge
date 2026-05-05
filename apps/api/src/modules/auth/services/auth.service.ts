@@ -6,7 +6,7 @@ import type { AuthLoginResponse, AuthUser, PermissionResponse, UserRole } from '
 import { hashPassword, verifyPassword } from '../../../common/auth/password.util'
 import { PrismaService } from '../../../common/prisma/prisma.service'
 import { WechatService } from '../../../common/wechat/wechat.service'
-import type { AdminLoginDto, PhoneLoginDto, WechatLoginDto } from '../dto/login.dto'
+import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from '../dto/login.dto'
 
 export interface JwtPayload {
   sub: number
@@ -14,6 +14,7 @@ export interface JwtPayload {
   account?: string | null
   phone?: string
   role?: UserRole
+  clientType?: 'admin' | 'miniapp'
 }
 
 @Injectable()
@@ -66,7 +67,7 @@ export class AuthService {
   /**
    * 微信登录
    */
-  async wechatLogin(loginDto: WechatLoginDto): Promise<AuthLoginResponse> {
+  async wechatLogin(loginDto: MiniappLoginDto): Promise<AuthLoginResponse> {
     try {
       // 1. 通过code获取openid和session_key
       const wechatSession = await this.wechatService.getSessionByCode(loginDto.code)
@@ -176,12 +177,14 @@ export class AuthService {
     refreshToken: string
     expiresIn: number
   }> {
+    const clientType = user.role === 'admin' ? 'admin' : 'miniapp'
     const payload: JwtPayload = {
       sub: user.id,
       openid: user.openid,
       account: user.account,
       phone: user.phone,
       role: user.role,
+      clientType,
     }
 
     const accessToken = await this.jwtService.signAsync(payload)
@@ -324,6 +327,9 @@ export class AuthService {
         'matchRound:create',
         'matchRound:update',
         'matchRound:delete',
+        'fund:create',
+        'fund:update',
+        'fund:delete',
       ]
     }
 

@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client'
 
 import type { PlayerListParams } from '@gaoge/shared-types'
 
-import { PrismaService } from '../../common/prisma/prisma.service'
+import { PrismaService } from '@/common/prisma/prisma.service'
 
 import type { CreatePlayerDto } from './dto/create-player.dto'
 import type { UpdatePlayerDto } from './dto/update-player.dto'

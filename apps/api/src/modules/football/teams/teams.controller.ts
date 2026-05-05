@@ -21,7 +21,7 @@ import { CreateTeamDto } from './dto/create-team.dto'
 import { UpdateTeamDto } from './dto/update-team.dto'
 import { TeamsService } from './teams.service'
 
-@Controller('teams')
+@Controller('football/teams')
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
 

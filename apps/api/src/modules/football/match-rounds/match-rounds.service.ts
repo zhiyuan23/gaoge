@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client'
 
 import type { MatchRoundListParams } from '@gaoge/shared-types'
 
-import { PrismaService } from '../../common/prisma/prisma.service'
+import { PrismaService } from '@/common/prisma/prisma.service'
 
 import type { CreateMatchRoundDto, MatchRoundResultDto } from './dto/create-match-round.dto'
 import type { UpdateMatchRoundDto } from './dto/update-match-round.dto'

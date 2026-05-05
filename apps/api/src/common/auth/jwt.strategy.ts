@@ -11,6 +11,7 @@ export interface JwtPayload {
   account?: string | null
   phone?: string | null
   role?: string
+  clientType?: 'admin' | 'miniapp'
   iat: number
   exp: number
 }
@@ -43,6 +44,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       account: user.account,
       phone: user.phone,
       role: user.role,
+      clientType: payload.clientType,
       status: user.status,
     }
   }

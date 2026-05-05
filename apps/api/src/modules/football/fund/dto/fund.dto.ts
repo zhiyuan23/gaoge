@@ -3,7 +3,7 @@ import { IsDate, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator'
 
 import type { TeamFundCategory, TeamFundStatus, TeamFundType } from '@gaoge/shared-types'
 
-export class CreateTeamFundDto {
+export class CreateFundDto {
   @IsIn(['income', 'expense'])
   type: TeamFundType
 
@@ -30,7 +30,7 @@ export class CreateTeamFundDto {
   recordDate: Date
 }
 
-export class QueryTeamFundDto {
+export class QueryFundDto {
   @IsOptional()
   @IsIn(['income', 'expense'])
   type?: TeamFundType
@@ -54,7 +54,7 @@ export class QueryTeamFundDto {
   endDate?: Date
 }
 
-export class UpdateTeamFundDto {
+export class UpdateFundDto {
   @IsOptional()
   @IsIn(['income', 'expense'])
   type?: TeamFundType

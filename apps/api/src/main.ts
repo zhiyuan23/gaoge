@@ -32,12 +32,10 @@ async function bootstrap() {
     .setDescription('高歌项目后端接口文档')
     .setVersion('1.0')
     .addBearerAuth()
-    .addServer('/api') // 自动带上全局API前缀
     .build()
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api-docs', app, document)
 
-  app.setGlobalPrefix('api')
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

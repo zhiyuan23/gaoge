@@ -10,6 +10,7 @@ import pkg from './package.json'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd())
+  const proxyPrefix = env.VITE_APP_API_PREFIX
   // 全局 scss 资源
   const scssResources: string[] = []
   fs.readdirSync('src/assets/styles/resources').forEach((dirname) => {
@@ -24,15 +25,16 @@ export default defineConfig(({ mode, command }) => {
       open: true,
       host: true,
       port: 9000,
-      proxy: {
-        [env.VITE_APP_API_PREFIX]: {
-          target: env.VITE_APP_BASE_URL,
-          secure: false,
-          changeOrigin: command === 'serve' && env.VITE_OPEN_PROXY === 'true',
-          rewrite: (path) => path,
-          // rewrite: path => path.replace(/^\/api/, '/api'),
-        },
-      },
+      proxy: proxyPrefix
+        ? {
+            [proxyPrefix]: {
+              target: env.VITE_APP_BASE_URL,
+              secure: false,
+              changeOrigin: command === 'serve' && env.VITE_OPEN_PROXY === 'true',
+              rewrite: (path) => path,
+            },
+          }
+        : undefined,
     },
     // 构建选项 https://cn.vitejs.dev/config/build-options
     build: {

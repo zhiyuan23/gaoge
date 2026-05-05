@@ -5,11 +5,12 @@ import { ElMessage } from 'element-plus'
 import useUserStore from '@/store/user'
 import { getApiBaseUrl } from '@/utils/url'
 
+const apiPrefix = import.meta.env.VITE_APP_API_PREFIX || ''
+const useProxyPrefix =
+  import.meta.env.DEV && import.meta.env.VITE_OPEN_PROXY && apiPrefix.length > 0
+
 const api = axios.create({
-  baseURL:
-    import.meta.env.DEV && import.meta.env.VITE_OPEN_PROXY
-      ? import.meta.env.VITE_APP_API_PREFIX
-      : getApiBaseUrl(),
+  baseURL: useProxyPrefix ? apiPrefix : getApiBaseUrl(),
   timeout: 1000 * 60,
   responseType: 'json',
   headers: {

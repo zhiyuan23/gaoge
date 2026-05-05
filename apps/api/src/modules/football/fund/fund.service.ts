@@ -1,23 +1,19 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 
 import type { TeamFundSummary } from '@gaoge/shared-types'
 
 import { PrismaService } from '@/common/prisma/prisma.service'
 
-import type {
-  CreateTeamFundDto,
-  QueryTeamFundDto,
-  UpdateTeamFundDto,
-} from './dto/create-team-fund.dto'
+import type { CreateFundDto, QueryFundDto, UpdateFundDto } from './dto/fund.dto'
 
 @Injectable()
-export class TeamService {
+export class FundService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
    * 创建资金记录
    */
-  async create(dto: CreateTeamFundDto, creatorId: number) {
+  async create(dto: CreateFundDto, creatorId: number) {
     return this.prisma.teamFund.create({
       data: {
         type: dto.type,
@@ -35,7 +31,7 @@ export class TeamService {
   /**
    * 获取资金记录列表
    */
-  async findAll(query: QueryTeamFundDto) {
+  async findAll(query: QueryFundDto) {
     const where: any = {}
 
     if (query.type) where.type = query.type
@@ -93,13 +89,8 @@ export class TeamService {
   /**
    * 更新资金记录 (仅管理员)
    */
-  async update(id: number, dto: UpdateTeamFundDto, userId: number, userRole: string) {
+  async update(id: number, dto: UpdateFundDto) {
     await this.findOne(id)
-
-    // 检查权限
-    if (userRole !== 'admin') {
-      throw new ForbiddenException('只有管理员可以修改资金记录')
-    }
 
     return this.prisma.teamFund.update({
       where: { id },
@@ -110,12 +101,8 @@ export class TeamService {
   /**
    * 删除资金记录 (仅管理员)
    */
-  async remove(id: number, userId: number, userRole: string) {
+  async remove(id: number) {
     await this.findOne(id)
-
-    if (userRole !== 'admin') {
-      throw new ForbiddenException('只有管理员可以删除资金记录')
-    }
 
     return this.prisma.teamFund.delete({ where: { id } })
   }
