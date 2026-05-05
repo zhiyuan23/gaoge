@@ -1,12 +1,12 @@
 import { loadingFadeOut } from 'virtual:app-loading'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
 import setupGuards from './guards'
 // 路由相关数据
 import { constantRoutes } from './routes'
 
 const router = createRouter({
-  history: createWebHashHistory(), // 动态注入模式
+  history: createWebHistory(),
   routes: constantRoutes,
 })
 
