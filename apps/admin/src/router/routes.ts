@@ -18,6 +18,7 @@ import PluginExample from './modules/example/plugin'
 import TabExample from './modules/example/tab'
 import Gaoge from './modules/football'
 import Playground from './modules/playground'
+import System from './modules/system'
 
 import type { Route } from '#/global'
 
@@ -116,6 +117,13 @@ const asyncRoutes: Route.recordMainRaw[] = [
       icon: 'lucide:flask-conical',
     },
     children: [Playground],
+  },
+  {
+    meta: {
+      title: '系统管理',
+      icon: 'ri:settings-3-line',
+    },
+    children: [System],
   },
 ]
 

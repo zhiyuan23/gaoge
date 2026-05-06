@@ -23,8 +23,14 @@ const {
       <span class="text-primary font-semibold">{{ selectedCount }}</span>
       {{ summaryUnit }}
     </div>
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="actions flex flex-wrap items-center gap-2">
       <slot name="actions" />
     </div>
   </div>
 </template>
+
+<style scoped>
+.actions ::v-deep(.el-button) {
+  margin-bottom: 16px;
+}
+</style>

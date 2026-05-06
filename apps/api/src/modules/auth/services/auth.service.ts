@@ -3,23 +3,16 @@ import { JwtService } from '@nestjs/jwt'
 
 import type { AuthLoginResponse, AuthUser, PermissionResponse, UserRole } from '@gaoge/shared-types'
 
-import { hashPassword, verifyPassword } from '../../../common/auth/password.util'
-import { PrismaService } from '../../../common/prisma/prisma.service'
-import { WechatService } from '../../../common/wechat/wechat.service'
-import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from '../dto/login.dto'
+import { hashPassword, verifyPassword } from '@/common/auth/password.util'
+import { PrismaService } from '@/common/prisma/prisma.service'
+import { WechatService } from '@/common/wechat/wechat.service'
 
-const systemAdminPermissions = [
-  'system.user.view',
-  'system.user.create',
-  'system.user.update',
-  'system.user.enable',
-  'system.user.disable',
-  'system.user.reset-password',
-  'system.user.delete',
-  'system.role.view',
-  'system.menu.view',
-  'system.permission.view',
-] as const
+import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from '../dto/login.dto'
+import {
+  footballAdminPermissions,
+  footballViewerPermissions,
+  systemPermissions,
+} from '../permissions'
 
 export interface JwtPayload {
   sub: number
@@ -53,7 +46,7 @@ export class AuthService {
       throw new UnauthorizedException('账号或密码错误')
     }
 
-    if (user.deletedAt || user.status !== 'active' || user.role !== 'admin') {
+    if (user.deletedAt || user.status !== 'active' || !['admin', 'viewer'].includes(user.role)) {
       throw new UnauthorizedException('当前账号无后台权限')
     }
 
@@ -190,7 +183,7 @@ export class AuthService {
     refreshToken: string
     expiresIn: number
   }> {
-    const clientType = user.role === 'admin' ? 'admin' : 'miniapp'
+    const clientType = ['admin', 'viewer'].includes(user.role) ? 'admin' : 'miniapp'
     const payload: JwtPayload = {
       sub: user.id,
       openid: user.openid,
@@ -330,21 +323,11 @@ export class AuthService {
 
   private buildPermissions(role: string) {
     if (role === 'admin') {
-      return [
-        'player:create',
-        'player:update',
-        'player:delete',
-        'team:create',
-        'team:update',
-        'team:delete',
-        'matchRound:create',
-        'matchRound:update',
-        'matchRound:delete',
-        'fund:create',
-        'fund:update',
-        'fund:delete',
-        ...systemAdminPermissions,
-      ]
+      return [...footballAdminPermissions, ...systemPermissions]
+    }
+
+    if (role === 'viewer') {
+      return [...footballViewerPermissions]
     }
 
     return []
@@ -365,6 +348,8 @@ export class AuthService {
   }
 
   private toUserRole(role: string): UserRole {
-    return role === 'admin' ? 'admin' : 'user'
+    if (role === 'admin') return 'admin'
+    if (role === 'viewer') return 'viewer'
+    return 'user'
   }
 }

@@ -11,6 +11,6 @@ export class UpdateSystemUserDto {
   @IsString()
   avatarUrl?: string
 
-  @IsIn(['user', 'admin'])
+  @IsIn(['user', 'admin', 'viewer'])
   role: UserRole
 }

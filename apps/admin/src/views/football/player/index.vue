@@ -167,7 +167,7 @@ watch(tableData, () => {
       >
       </EsSearch>
 
-      <EsListToolbar :selected-count="selectionDataList.length">
+      <EsListToolbar>
         <template #actions>
           <ElButton v-auth="PLAYER_PERMISSIONS.create" type="primary" plain @click="handleAdd">
             新增球员
@@ -215,19 +215,3 @@ watch(tableData, () => {
     />
   </div>
 </template>
-
-<style scoped>
-.absolute-container {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-}
-
-.table-wrapper {
-  flex: 1;
-  min-height: 0;
-  margin-top: 16px;
-}
-</style>

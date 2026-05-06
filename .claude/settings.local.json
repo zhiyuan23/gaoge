@@ -6,7 +6,16 @@
       "Bash(pnpm:*)",
       "Bash(npx eslint:*)",
       "Bash(turbo run:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)",
+      "Bash(git worktree:*)",
+      "Bash(git branch:*)",
+      "Bash(kill 75999:*)",
+      "Bash(kill 77004)",
+      "Bash(npx prettier:*)",
+      "Bash(npm_config_loglevel=error npx eslint apps/admin/src/components/common/EsListToolbar/index.vue --fix)"
     ]
   }
 }

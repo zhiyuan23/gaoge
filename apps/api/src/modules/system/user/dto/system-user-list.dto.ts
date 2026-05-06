@@ -21,7 +21,7 @@ export class SystemUserListDto implements SystemUserListParams {
   keyword?: string
 
   @IsOptional()
-  @IsIn(['user', 'admin'])
+  @IsIn(['user', 'admin', 'viewer'])
   role?: UserRole
 
   @IsOptional()

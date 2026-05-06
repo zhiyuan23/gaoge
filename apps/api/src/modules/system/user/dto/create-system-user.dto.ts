@@ -19,7 +19,7 @@ export class CreateSystemUserDto {
   @IsString()
   avatarUrl?: string
 
-  @IsIn(['user', 'admin'])
+  @IsIn(['user', 'admin', 'viewer'])
   role: UserRole
 
   @IsIn(['active', 'inactive'])

@@ -74,6 +74,20 @@ body {
   height: 100%;
 }
 
+/* 通用列表页面布局 */
+.absolute-container {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.table-wrapper {
+  flex: 1;
+  min-height: 0;
+}
+
 /* textarea 字体跟随系统 */
 textarea {
   font-family: inherit;

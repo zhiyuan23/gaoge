@@ -24,36 +24,41 @@ import { SystemUserService } from './system-user.service'
 
 @Controller('system/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
 export class SystemUserController {
   constructor(private readonly systemUserService: SystemUserService) {}
 
   @Post()
+  @Roles('admin')
   create(@Body() dto: CreateSystemUserDto) {
     return this.systemUserService.create(dto)
   }
 
   @Get()
+  @Roles('admin', 'viewer')
   findAll(@Query() query: SystemUserListDto) {
     return this.systemUserService.findAll(query)
   }
 
   @Patch(':id')
+  @Roles('admin')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemUserDto) {
     return this.systemUserService.update(id, dto)
   }
 
   @Patch(':id/status')
+  @Roles('admin')
   updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemUserStatusDto) {
     return this.systemUserService.updateStatus(id, dto)
   }
 
   @Patch(':id/reset-password')
+  @Roles('admin')
   resetPassword(@Param('id', ParseIntPipe) id: number, @Body() dto: ResetSystemUserPasswordDto) {
     return this.systemUserService.resetPassword(id, dto)
   }
 
   @Delete(':id')
+  @Roles('admin')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.systemUserService.remove(id)
   }

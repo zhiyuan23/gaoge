@@ -165,7 +165,7 @@ export class SystemUserService {
       throw new NotFoundException('系统用户不存在')
     }
 
-    return user
+    return user as BackendSystemUserLookupRecord
   }
 }
 

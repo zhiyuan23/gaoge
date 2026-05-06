@@ -273,20 +273,6 @@ watch(tableData, () => {
 </template>
 
 <style scoped>
-.absolute-container {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-}
-
-.table-wrapper {
-  flex: 1;
-  min-height: 0;
-  margin-top: 16px;
-}
-
 :deep(.team-tag) {
   font-weight: 500;
   border-color: transparent;

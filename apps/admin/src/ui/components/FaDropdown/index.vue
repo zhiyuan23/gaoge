@@ -26,6 +26,7 @@ const props = defineProps<{
     icon?: string
     disabled?: boolean
     hide?: boolean
+    class?: string
     handle?: () => void
   }[][]
 }>()
@@ -69,6 +70,7 @@ function handleItemClick(item: { handle?: () => void }) {
           <DropdownMenuItem
             v-for="(v, i) in item"
             :key="i"
+            :class="v.class"
             :disabled="v.disabled"
             @click="handleItemClick(v)"
           >

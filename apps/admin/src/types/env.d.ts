@@ -2,7 +2,7 @@
 interface ImportMetaEnv {
   // Auto generate by env-parse
   /**
-   * API 通用前缀
+   * API 通用前缀；生产环境已去掉后端 /api 前缀，留空即可
    */
   readonly VITE_APP_API_PREFIX: string
   /**

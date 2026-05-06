@@ -181,19 +181,3 @@ watch(tableData, () => {
     />
   </div>
 </template>
-
-<style scoped>
-.absolute-container {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-}
-
-.table-wrapper {
-  flex: 1;
-  min-height: 0;
-  margin-top: 16px;
-}
-</style>

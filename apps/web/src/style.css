@@ -121,8 +121,12 @@ a {
 .section-overlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(90deg, var(--bg-overlay-strong) 0%, rgb(6 8 12 / 28%) 52%, rgb(6 8 12 / 58%) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--bg-overlay-strong) 0%,
+    rgb(6 8 12 / 28%) 52%,
+    rgb(6 8 12 / 58%) 100%
+  );
 }
 
 .section-copy {

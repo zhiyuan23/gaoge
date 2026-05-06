@@ -1,7 +1,8 @@
 export const PLAYER_PERMISSIONS = {
-  create: 'player:create',
-  update: 'player:update',
-  delete: 'player:delete',
+  view: 'football.player.view',
+  create: 'football.player.create',
+  update: 'football.player.update',
+  delete: 'football.player.delete',
 } as const
 
 export const PLAYER_MANAGE_PERMISSIONS = [

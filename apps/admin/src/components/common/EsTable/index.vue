@@ -96,6 +96,18 @@ const props = defineProps({
 const emit = defineEmits<EsTableEmits>()
 const { auth } = useAuth()
 
+const ACTION_COLUMN_MIN_WIDTH = 110
+
+const ACTION_ICON_MAP: Record<string, string> = {
+  edit: 'i-ri:edit-line',
+  delete: 'i-ri:delete-bin-line',
+  enable: 'i-ri:check-line',
+  disable: 'i-ri:close-line',
+  resetPassword: 'i-ri:lock-password-line',
+  detail: 'i-ri:eye-line',
+  view: 'i-ri:eye-line',
+}
+
 // 当前页码
 const currentPage = ref(props.page)
 // 每页条数
@@ -127,7 +139,20 @@ const finalColumns = computed(() => {
     prefixColumns.push(indexCol)
   }
 
-  return [...prefixColumns, ...props.columns]
+  const normalizedColumns = props.columns.map((col) => {
+    if (!col.actions?.length) {
+      return col
+    }
+
+    return {
+      ...col,
+      width: Math.max(col.width ?? 0, ACTION_COLUMN_MIN_WIDTH),
+      fixed: col.fixed ?? 'right',
+      visible: hasVisibleColumnActions(col),
+    }
+  })
+
+  return [...prefixColumns, ...normalizedColumns]
 })
 
 // 监听外部传入的页码变化
@@ -168,13 +193,34 @@ function emitPaginationChange() {
   })
 }
 
-function isActionVisible(action: TableAction, row: any) {
-  const visible = typeof action.visible === 'function' ? action.visible(row) : action.visible
+function resolveActionVisible(action: TableAction, row?: any) {
+  if (typeof action.visible === 'function') {
+    return row === undefined ? true : action.visible(row)
+  }
+
+  return action.visible
+}
+
+function isActionVisible(action: TableAction, row?: any) {
+  const visible = resolveActionVisible(action, row)
   if (visible === false) {
     return false
   }
 
   return action.auth ? auth(action.auth) : true
+}
+
+function hasVisibleColumnActions(col: TableColumn) {
+  const actions = col.actions ?? []
+  if (!actions.length) {
+    return false
+  }
+
+  if (!props.data.length) {
+    return actions.some((action) => isActionVisible(action))
+  }
+
+  return props.data.some((row) => actions.some((action) => isActionVisible(action, row)))
 }
 
 function isActionDisabled(action: TableAction, row: any) {
@@ -198,15 +244,7 @@ function getActionIcon(action: TableAction) {
     return action.icon
   }
 
-  if (action.key === 'edit') {
-    return 'i-ri:edit-line'
-  }
-
-  if (action.key === 'delete') {
-    return 'i-ri:delete-bin-line'
-  }
-
-  return 'i-ri:more-line'
+  return ACTION_ICON_MAP[action.key] ?? 'i-ri:more-line'
 }
 
 function getDropdownItems(col: TableColumn, row: any) {
@@ -215,6 +253,7 @@ function getDropdownItems(col: TableColumn, row: any) {
       label: action.label,
       icon: getActionIcon(action),
       disabled: isActionDisabled(action, row),
+      class: action.type === 'danger' ? 'text-destructive focus:text-destructive' : undefined,
       handle: () => handleActionClick(row, action),
     })),
   ]
@@ -256,7 +295,7 @@ function handleSelectionChange(rows: any[]) {
       <template v-for="col in finalColumns" :key="col.prop || col.type || col.label">
         <ElTableColumn v-if="col.type === 'selection' || col.type === 'index'" v-bind="col" />
 
-        <ElTableColumn v-else-if="col.actions?.length" v-bind="col">
+        <ElTableColumn v-else-if="col.actions?.length && (col.visible ?? true)" v-bind="col">
           <template #default="{ row }">
             <div class="flex-center gap-2">
               <template v-if="getColumnActions(col, row).length">

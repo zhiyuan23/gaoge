@@ -1,7 +1,8 @@
 export const MATCH_ROUND_PERMISSIONS = {
-  create: 'matchRound:create',
-  update: 'matchRound:update',
-  delete: 'matchRound:delete',
+  view: 'football.matchRound.view',
+  create: 'football.matchRound.create',
+  update: 'football.matchRound.update',
+  delete: 'football.matchRound.delete',
 } as const
 
 export const MATCH_ROUND_MANAGE_PERMISSIONS = [

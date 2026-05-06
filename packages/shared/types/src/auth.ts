@@ -1,7 +1,7 @@
 import type { DateTimeString } from './common.js'
 
-/** 用户角色。admin 可访问后台管理能力，user 为普通用户。 */
-export type UserRole = 'user' | 'admin'
+/** 用户角色。admin 可访问后台管理能力，viewer 只读访问，user 为普通用户。 */
+export type UserRole = 'user' | 'admin' | 'viewer'
 
 /** 用户账号状态。inactive 用户不可正常登录或访问受保护接口。 */
 export type UserStatus = 'active' | 'inactive'

@@ -1,7 +1,8 @@
 export const TEAM_PERMISSIONS = {
-  create: 'team:create',
-  update: 'team:update',
-  delete: 'team:delete',
+  view: 'football.team.view',
+  create: 'football.team.create',
+  update: 'football.team.update',
+  delete: 'football.team.delete',
 } as const
 
 export const TEAM_MANAGE_PERMISSIONS = [
