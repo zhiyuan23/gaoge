@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import useAuth from '@/composables/useAuth'
 
+import { ACTION_COLUMN_MIN_WIDTH, hasVisibleActions, isActionDisabled } from './action'
+import EsTableActionCell from './EsTableActionCell.vue'
 import type { EsTableEmits, TableAction, TableColumn, TableSize } from './types'
 
 defineOptions({
@@ -96,18 +98,6 @@ const props = defineProps({
 const emit = defineEmits<EsTableEmits>()
 const { auth } = useAuth()
 
-const ACTION_COLUMN_MIN_WIDTH = 110
-
-const ACTION_ICON_MAP: Record<string, string> = {
-  edit: 'i-ri:edit-line',
-  delete: 'i-ri:delete-bin-line',
-  enable: 'i-ri:check-line',
-  disable: 'i-ri:close-line',
-  resetPassword: 'i-ri:lock-password-line',
-  detail: 'i-ri:eye-line',
-  view: 'i-ri:eye-line',
-}
-
 // 当前页码
 const currentPage = ref(props.page)
 // 每页条数
@@ -148,7 +138,7 @@ const finalColumns = computed(() => {
       ...col,
       width: Math.max(col.width ?? 0, ACTION_COLUMN_MIN_WIDTH),
       fixed: col.fixed ?? 'right',
-      visible: hasVisibleColumnActions(col),
+      visible: (col.visible ?? true) && hasVisibleActions(col.actions, props.data, auth),
     }
   })
 
@@ -193,72 +183,6 @@ function emitPaginationChange() {
   })
 }
 
-function resolveActionVisible(action: TableAction, row?: any) {
-  if (typeof action.visible === 'function') {
-    return row === undefined ? true : action.visible(row)
-  }
-
-  return action.visible
-}
-
-function isActionVisible(action: TableAction, row?: any) {
-  const visible = resolveActionVisible(action, row)
-  if (visible === false) {
-    return false
-  }
-
-  return action.auth ? auth(action.auth) : true
-}
-
-function hasVisibleColumnActions(col: TableColumn) {
-  const actions = col.actions ?? []
-  if (!actions.length) {
-    return false
-  }
-
-  if (!props.data.length) {
-    return actions.some((action) => isActionVisible(action))
-  }
-
-  return props.data.some((row) => actions.some((action) => isActionVisible(action, row)))
-}
-
-function isActionDisabled(action: TableAction, row: any) {
-  return typeof action.disabled === 'function' ? action.disabled(row) : Boolean(action.disabled)
-}
-
-function getColumnActions(col: TableColumn, row: any) {
-  return (col.actions ?? []).filter((action) => isActionVisible(action, row))
-}
-
-function getPrimaryAction(col: TableColumn, row: any) {
-  return getColumnActions(col, row)[0]
-}
-
-function getSecondaryActions(col: TableColumn, row: any) {
-  return getColumnActions(col, row).slice(1)
-}
-
-function getActionIcon(action: TableAction) {
-  if (action.icon) {
-    return action.icon
-  }
-
-  return ACTION_ICON_MAP[action.key] ?? 'i-ri:more-line'
-}
-
-function getDropdownItems(col: TableColumn, row: any) {
-  return [
-    getSecondaryActions(col, row).map((action) => ({
-      label: action.label,
-      icon: getActionIcon(action),
-      disabled: isActionDisabled(action, row),
-      class: action.type === 'danger' ? 'text-destructive focus:text-destructive' : undefined,
-      handle: () => handleActionClick(row, action),
-    })),
-  ]
-}
-
 function handleActionClick(row: any, action: TableAction) {
   if (isActionDisabled(action, row)) {
     return
@@ -295,35 +219,17 @@ function handleSelectionChange(rows: any[]) {
       <template v-for="col in finalColumns" :key="col.prop || col.type || col.label">
         <ElTableColumn v-if="col.type === 'selection' || col.type === 'index'" v-bind="col" />
 
-        <ElTableColumn v-else-if="col.actions?.length && (col.visible ?? true)" v-bind="col">
+        <ElTableColumn
+          v-else-if="col.actions?.length && (col.visible ?? true)"
+          v-bind="col"
+          width="110"
+        >
           <template #default="{ row }">
-            <div class="flex-center gap-2">
-              <template v-if="getColumnActions(col, row).length">
-                <FaButton
-                  variant="outline"
-                  size="icon"
-                  class="table-action-icon-button"
-                  :disabled="isActionDisabled(getPrimaryAction(col, row), row)"
-                  @click="handleActionClick(row, getPrimaryAction(col, row))"
-                >
-                  <FaIcon :name="getActionIcon(getPrimaryAction(col, row))" class="size-4" />
-                </FaButton>
-                <FaDropdown
-                  v-if="getSecondaryActions(col, row).length"
-                  :items="getDropdownItems(col, row)"
-                >
-                  <FaButton
-                    variant="outline"
-                    size="icon"
-                    class="table-action-icon-button"
-                    aria-label="更多操作"
-                  >
-                    <FaIcon name="i-ri:more-line" class="size-4" />
-                  </FaButton>
-                </FaDropdown>
-              </template>
-              <span v-else class="text-secondary">--</span>
-            </div>
+            <EsTableActionCell
+              :actions="col.actions"
+              :row="row"
+              @action-click="(action) => handleActionClick(row, action)"
+            />
           </template>
         </ElTableColumn>
 
@@ -382,12 +288,6 @@ function handleSelectionChange(rows: any[]) {
 }
 
 :deep(.el-table-fixed-column--right) {
-  padding: 0;
-}
-
-:deep(.table-action-icon-button) {
-  width: 32px;
-  height: 32px;
   padding: 0;
 }
 </style>

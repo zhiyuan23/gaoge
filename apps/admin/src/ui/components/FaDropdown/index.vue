@@ -21,6 +21,7 @@ const props = defineProps<{
   side?: DropdownMenuContentProps['side']
   sideOffset?: DropdownMenuContentProps['sideOffset']
   collisionPadding?: DropdownMenuContentProps['collisionPadding']
+  contentClass?: string
   items: {
     label: string
     icon?: string
@@ -58,7 +59,14 @@ function handleItemClick(item: { handle?: () => void }) {
     <DropdownMenuTrigger as-child>
       <slot />
     </DropdownMenuTrigger>
-    <DropdownMenuContent :align :align-offset :side :side-offset :collision-padding>
+    <DropdownMenuContent
+      :align
+      :align-offset
+      :side
+      :side-offset
+      :collision-padding
+      :class="contentClass"
+    >
       <template v-if="!!slots.label">
         <DropdownMenuLabel>
           <slot name="label" />
