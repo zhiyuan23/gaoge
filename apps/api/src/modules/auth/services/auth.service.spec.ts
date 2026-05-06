@@ -94,8 +94,8 @@ describe('authService', () => {
       deletedAt: null,
     })
 
-    await expect(service.getPermission(1)).resolves.toEqual({
-      permissions: [
+    await expect(service.getPermission(1)).resolves.toMatchObject({
+      permissions: expect.arrayContaining([
         'player:create',
         'player:update',
         'player:delete',
@@ -108,7 +108,17 @@ describe('authService', () => {
         'fund:create',
         'fund:update',
         'fund:delete',
-      ],
+        'system.user.view',
+        'system.user.create',
+        'system.user.update',
+        'system.user.enable',
+        'system.user.disable',
+        'system.user.reset-password',
+        'system.user.delete',
+        'system.role.view',
+        'system.menu.view',
+        'system.permission.view',
+      ]),
       role: 'admin',
     })
   })

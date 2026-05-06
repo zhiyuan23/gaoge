@@ -8,6 +8,19 @@ import { PrismaService } from '../../../common/prisma/prisma.service'
 import { WechatService } from '../../../common/wechat/wechat.service'
 import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from '../dto/login.dto'
 
+const systemAdminPermissions = [
+  'system.user.view',
+  'system.user.create',
+  'system.user.update',
+  'system.user.enable',
+  'system.user.disable',
+  'system.user.reset-password',
+  'system.user.delete',
+  'system.role.view',
+  'system.menu.view',
+  'system.permission.view',
+] as const
+
 export interface JwtPayload {
   sub: number
   openid?: string | null
@@ -330,6 +343,7 @@ export class AuthService {
         'fund:create',
         'fund:update',
         'fund:delete',
+        ...systemAdminPermissions,
       ]
     }
 
