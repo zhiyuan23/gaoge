@@ -7,10 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      deep-pick-omit:
-        specifier: ^1.2.1
-        version: 1.2.1
     devDependencies:
       '@commitlint/cli':
         specifier: ^20.1.0
