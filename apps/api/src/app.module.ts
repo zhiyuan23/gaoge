@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module'
 import { BannerModule } from './modules/banner/banner.module'
 import { FootballModule } from './modules/football/football.module'
 import { HealthModule } from './modules/health/health.module'
+import { SystemModule } from './modules/system/system.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 
@@ -22,6 +23,7 @@ import { AppService } from './app.service'
     FootballModule,
     AuthModule,
     BannerModule,
+    SystemModule,
   ],
   controllers: [AppController],
   providers: [AppService],
