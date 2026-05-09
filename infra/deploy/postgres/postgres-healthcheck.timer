@@ -1,0 +1,10 @@
+[Unit]
+Description=Run PostgreSQL healthcheck every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Unit=postgres-healthcheck.service
+
+[Install]
+WantedBy=timers.target

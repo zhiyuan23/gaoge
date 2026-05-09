@@ -22,6 +22,17 @@ const form = reactive({
   newPassword: '',
 })
 
+watch(
+  () => props.modelValue,
+  (opened) => {
+    if (!opened) {
+      return
+    }
+    form.newPassword = ''
+  },
+  { immediate: true },
+)
+
 function handleSubmit() {
   emit('submit', { newPassword: form.newPassword })
 }
