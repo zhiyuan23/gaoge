@@ -29,7 +29,6 @@ const emit = defineEmits<{
 
 type PlayerFormExpose = {
   validate: () => Promise<boolean>
-  reset: () => void
   clearValidate: () => void
 }
 
@@ -65,16 +64,15 @@ watch(
   },
   { immediate: true },
 )
-
-watch(visible, (value) => {
-  if (!value) {
-    formRef.value?.reset()
-  }
-})
 </script>
 
 <template>
-  <ElDialog v-model="visible" :title="mode === 'create' ? '新增球员' : '编辑球员'" width="640px">
+  <ElDialog
+    v-model="visible"
+    :title="mode === 'create' ? '新增球员' : '编辑球员'"
+    width="640px"
+    destroy-on-close
+  >
     <PlayerForm
       ref="formRef"
       v-model:model="formModel"

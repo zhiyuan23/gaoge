@@ -1,5 +1,9 @@
 /** 足球业务 — 管理员权限 */
 export const footballAdminPermissions = [
+  'football.assetRecord.view',
+  'football.assetRecord.create',
+  'football.assetRecord.update',
+  'football.assetRecord.delete',
   'football.player.create',
   'football.player.update',
   'football.player.delete',
@@ -16,6 +20,7 @@ export const footballAdminPermissions = [
 
 /** 足球业务 — 浏览者（只读）权限 */
 export const footballViewerPermissions = [
+  'football.assetRecord.view',
   'football.player.view',
   'football.team.view',
   'football.matchRound.view',

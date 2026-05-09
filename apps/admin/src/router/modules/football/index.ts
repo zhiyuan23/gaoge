@@ -33,9 +33,18 @@ const routes: RouteRecordRaw = {
     {
       path: 'match-round',
       name: 'matchRound',
-      component: () => import('@/views/football/match_round/index.vue'),
+      component: () => import('@/views/football/match-round/index.vue'),
       meta: {
         title: '比赛信息',
+      },
+    },
+    {
+      path: 'asset-record',
+      name: 'assetRecord',
+      component: () => import('@/views/football/asset-record/index.vue'),
+      meta: {
+        title: '资产信息',
+        auth: ['football.assetRecord.view'],
       },
     },
   ],

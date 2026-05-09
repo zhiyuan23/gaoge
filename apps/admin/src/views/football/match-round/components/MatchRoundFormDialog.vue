@@ -37,7 +37,6 @@ const emit = defineEmits<{
 
 type MatchRoundFormExpose = {
   validate: () => Promise<boolean>
-  reset: () => void
   clearValidate: () => void
 }
 
@@ -85,12 +84,6 @@ watch(
   },
   { immediate: true },
 )
-
-watch(visible, (value) => {
-  if (!value) {
-    formRef.value?.reset()
-  }
-})
 </script>
 
 <template>
@@ -98,6 +91,7 @@ watch(visible, (value) => {
     v-model="visible"
     :title="mode === 'create' ? '新增比赛信息' : '编辑比赛信息'"
     width="720px"
+    destroy-on-close
   >
     <MatchRoundForm
       ref="formRef"

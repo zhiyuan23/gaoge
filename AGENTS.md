@@ -114,12 +114,20 @@ shared -> configs
 
 AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 
+## 后台表单弹窗约定
+
+- 对后台通用 CRUD 表单弹窗（如球员信息、资产信息、球队信息、比赛信息等），默认优先使用 `ElDialog` 的 `destroy-on-close`
+- 目标是避免关闭后残留校验提示、脏表单状态和额外的手动清理逻辑
+- 若无明确需求，不要额外添加 `watch(visible)` 之类的关闭时 `resetFields`/`reset` 兜底逻辑
+- 只有在产品明确要求保留弹窗内部临时编辑状态时，才评估不使用 `destroy-on-close`
+
 ## 常用命令
 
 - `pnpm dev:admin`
 - `pnpm dev:web`
 - `pnpm dev:miniapp`
 - `pnpm dev:api`
+- `pnpm dev:admin-api`
 - `pnpm lint`
 - `pnpm lint:fix`
 - `pnpm lint:style`

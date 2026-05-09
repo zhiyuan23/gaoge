@@ -105,6 +105,34 @@ model TeamFund {
 }
 
 // ============================================
+// 球队资产收支流水表
+// ============================================
+model FootballAssetRecord {
+  id          Int       @id @default(autoincrement())
+  direction   String    // income / expense
+  recordType  String    // match_fee / extra_income / equipment / activity / other_expense
+  amount      Int       // 金额（分）
+  seasonLabel String?   // 赛季文本标签
+  matchLabel  String?   // 场次文本标签
+  isWaived    Boolean   @default(false) // 是否免收，仅比赛收费收入使用
+  title       String    // 标题
+  description String?   // 备注
+  recordDate  DateTime  // 业务发生日期
+  status      String    @default("confirmed") // confirmed / cancelled
+  creatorId   Int?      // 创建人 ID
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([direction])
+  @@index([recordType])
+  @@index([recordDate])
+  @@index([status])
+  @@index([seasonLabel])
+  @@index([matchLabel])
+}
+
+// ============================================
 // 球队信息表
 // ============================================
 model Team {

@@ -25,7 +25,6 @@ const emit = defineEmits<{
 
 type TeamFormExpose = {
   validate: () => Promise<boolean>
-  reset: () => void
   clearValidate: () => void
 }
 
@@ -61,16 +60,15 @@ watch(
   },
   { immediate: true },
 )
-
-watch(visible, (value) => {
-  if (!value) {
-    formRef.value?.reset()
-  }
-})
 </script>
 
 <template>
-  <ElDialog v-model="visible" :title="mode === 'create' ? '新增球队' : '编辑球队'" width="640px">
+  <ElDialog
+    v-model="visible"
+    :title="mode === 'create' ? '新增球队' : '编辑球队'"
+    width="640px"
+    destroy-on-close
+  >
     <TeamForm ref="formRef" v-model:model="formModel" />
     <template #footer>
       <ElButton @click="visible = false">取消</ElButton>

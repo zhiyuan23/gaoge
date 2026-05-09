@@ -14,6 +14,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     EsListToolbar: typeof import('./../components/common/EsListToolbar/index.vue')['default']
     EsSearch: typeof import('./../components/common/EsSearch/index.vue')['default']
+    EsSummaryCards: typeof import('./../components/common/EsSummaryCards/index.vue')['default']
     EsTable: typeof import('./../components/common/EsTable/index.vue')['default']
     FaAuth: typeof import('./../ui/components/FaAuth/index.vue')['default']
     FaAvatar: typeof import('./../ui/components/FaAvatar/index.vue')['default']
@@ -59,6 +60,7 @@ declare module 'vue' {
 declare global {
   const EsListToolbar: typeof import('./../components/common/EsListToolbar/index.vue')['default']
   const EsSearch: typeof import('./../components/common/EsSearch/index.vue')['default']
+  const EsSummaryCards: typeof import('./../components/common/EsSummaryCards/index.vue')['default']
   const EsTable: typeof import('./../components/common/EsTable/index.vue')['default']
   const FaAuth: typeof import('./../ui/components/FaAuth/index.vue')['default']
   const FaAvatar: typeof import('./../ui/components/FaAvatar/index.vue')['default']

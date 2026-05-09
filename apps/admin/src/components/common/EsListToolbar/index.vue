@@ -17,7 +17,7 @@ const {
 </script>
 
 <template>
-  <div class="flex items-center justify-between gap-3 rounded-xl px-4">
+  <div class="flex items-center justify-between gap-3 rounded-xl">
     <div v-if="showSelectionSummary" class="text-sm text-[rgb(var(--ui-muted-foreground))]">
       {{ summaryLabel }}
       <span class="text-primary font-semibold">{{ selectedCount }}</span>

@@ -1,3 +1,4 @@
+export type * from './asset-record.js'
 export type * from './auth.js'
 export type * from './banner.js'
 export type * from './common.js'
