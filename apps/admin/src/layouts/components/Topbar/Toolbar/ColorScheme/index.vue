@@ -28,8 +28,8 @@ function toggleColorScheme(event: MouseEvent) {
         clipPath: isDark ? [endClipPath, startClipPath] : [startClipPath, endClipPath],
       },
       {
-        duration: 300,
-        easing: 'ease-out',
+        duration: 500,
+        easing: 'ease-in',
         fill: 'forwards',
         pseudoElement: isDark ? '::view-transition-old(root)' : '::view-transition-new(root)',
       },
