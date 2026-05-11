@@ -232,7 +232,7 @@ watch(
             />
           </FaLabel>
 
-          <div class="flex flex-wrap items-center justify-end gap-2 md:col-end-[-1]">
+          <div class="flex flex-wrap items-center justify-end gap-2 md:-col-end-1">
             <FaButton v-if="showReset" variant="outline" @click="handleReset">
               {{ resetText }}
             </FaButton>
