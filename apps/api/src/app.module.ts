@@ -8,6 +8,7 @@ import { BannerModule } from './modules/banner/banner.module'
 import { BasketballModule } from './modules/basketball/basketball.module'
 import { FootballModule } from './modules/football/football.module'
 import { HealthModule } from './modules/health/health.module'
+import { MiniappModule } from './modules/miniapp/miniapp.module'
 import { SystemModule } from './modules/system/system.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
@@ -25,6 +26,7 @@ import { AppService } from './app.service'
     FootballModule,
     AuthModule,
     BannerModule,
+    MiniappModule,
     SystemModule,
   ],
   controllers: [AppController],
