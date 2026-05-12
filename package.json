@@ -13,6 +13,8 @@
     "dev:miniapp": "turbo run dev --filter=@gaoge/app-miniapp",
     "dev:api": "turbo run dev --filter=@gaoge/app-api",
     "dev:admin-api": "turbo run dev --parallel --filter=@gaoge/app-admin --filter=@gaoge/app-api",
+    "db:migrate:api": "pnpm --filter @gaoge/app-api db:migrate",
+    "db:migrate:prod:api": "pnpm --filter @gaoge/app-api db:migrate:prod",
     "build": "turbo run build",
     "lint": "prettier --check . && eslint . && pnpm lint:style",
     "lint:fix": "prettier --write . && eslint . --fix && pnpm lint:style:fix",

@@ -9,6 +9,8 @@ import { WechatService } from '@/common/wechat/wechat.service'
 
 import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from '../dto/login.dto'
 import {
+  basketballAdminPermissions,
+  basketballViewerPermissions,
   footballAdminPermissions,
   footballViewerPermissions,
   systemPermissions,
@@ -323,11 +325,11 @@ export class AuthService {
 
   private buildPermissions(role: string) {
     if (role === 'admin') {
-      return [...footballAdminPermissions, ...systemPermissions]
+      return [...footballAdminPermissions, ...basketballAdminPermissions, ...systemPermissions]
     }
 
     if (role === 'viewer') {
-      return [...footballViewerPermissions]
+      return [...footballViewerPermissions, ...basketballViewerPermissions]
     }
 
     return []

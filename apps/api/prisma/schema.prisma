@@ -67,6 +67,35 @@ model Player {
 }
 
 // ============================================
+// 篮球队员表
+// ============================================
+model BasketballPlayer {
+  id           Int        @id @default(autoincrement())
+  openid       String?    @unique // 微信openid，非必填唯一
+  playerNumber Int?       @unique // 球员号码，业务上新增/编辑必填，范围 0~100
+  nickname     String     @unique // 昵称，必填唯一
+  realName     String?    // 真实姓名，非必填
+  avatarUrl    String?    // 头像，非必填
+  subTeam      String?    // 当前分队字段仍保留为文本，后续再迁移为关联模型
+  jerseyName   String?    // 球衣名称，非必填
+  birthDate    DateTime?  // 出生年月日，非必填
+  isAdmin      Boolean    @default(false) // 是否管理员
+  position     String?    // 篮球位置，非必填
+  jerseySize   String?    // 球衣尺码，非必填
+  status       String     @default("active") // active / inactive
+  remark       String?    // 备注
+  userId       Int?       @unique // 绑定的用户ID
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([playerNumber])
+  @@index([openid])
+  @@index([nickname])
+  @@index([subTeam])
+}
+
+// ============================================
 // Token 表
 // ============================================
 model RefreshToken {
@@ -86,6 +115,28 @@ model RefreshToken {
 // 球队资金明细表
 // ============================================
 model TeamFund {
+  id          Int       @id @default(autoincrement())
+  type        String    // income (收入) / expense (支出)
+  amount      Int       // 金额 (分，存储整数)
+  title       String    // 标题
+  description String?   // 详细说明
+  category    String    // 类别：game_fee(比赛费) / equipment(装备) / venue(场地) / activity(活动) / sponsor(赞助) / other(其他)
+  status      String    @default("pending") // pending / confirmed / cancelled
+  recordDate  DateTime  // 记录日期
+  creatorId   Int?      // 创建者ID (管理员)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([type])
+  @@index([recordDate])
+  @@index([status])
+}
+
+// ============================================
+// 篮球队资金明细表
+// ============================================
+model BasketballTeamFund {
   id          Int       @id @default(autoincrement())
   type        String    // income (收入) / expense (支出)
   amount      Int       // 金额 (分，存储整数)
@@ -133,6 +184,34 @@ model FootballAssetRecord {
 }
 
 // ============================================
+// 篮球队资产收支流水表
+// ============================================
+model BasketballAssetRecord {
+  id          Int       @id @default(autoincrement())
+  direction   String    // income / expense
+  recordType  String    // match_fee / extra_income / equipment / activity / other_expense
+  amount      Int       // 金额（分）
+  seasonLabel String?   // 赛季文本标签
+  matchLabel  String?   // 场次文本标签
+  isWaived    Boolean   @default(false) // 是否免收，仅比赛收费收入使用
+  title       String    // 标题
+  description String?   // 备注
+  recordDate  DateTime  // 业务发生日期
+  status      String    @default("confirmed") // confirmed / cancelled
+  creatorId   Int?      // 创建人 ID
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([direction])
+  @@index([recordType])
+  @@index([recordDate])
+  @@index([status])
+  @@index([seasonLabel])
+  @@index([matchLabel])
+}
+
+// ============================================
 // 球队信息表
 // ============================================
 model Team {
@@ -148,6 +227,26 @@ model Team {
   updatedAt    DateTime           @updatedAt
 
   matchResults MatchRoundResult[]
+
+  @@index([sort])
+}
+
+// ============================================
+// 篮球队信息表
+// ============================================
+model BasketballTeam {
+  id           Int                          @id @default(autoincrement())
+  code         String                       @unique // 由后端生成的只读编码，后台不展示不编辑
+  name         String                       @unique
+  avatarUrl    String?
+  slogan       String?
+  sponsorName  String?
+  sort         Int                          @default(0)
+
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+
+  matchResults BasketballMatchRoundResult[]
 
   @@index([sort])
 }
@@ -173,6 +272,26 @@ model MatchRound {
 }
 
 // ============================================
+// 篮球比赛轮次表
+// ============================================
+model BasketballMatchRound {
+  year      Int
+  season    String
+  round     Int
+  id        Int                          @id @default(autoincrement())
+  matchDate DateTime
+  venue     String?
+  remark    String?
+
+  createdAt DateTime                     @default(now())
+  updatedAt DateTime                     @updatedAt
+
+  results   BasketballMatchRoundResult[]
+
+  @@index([matchDate])
+}
+
+// ============================================
 // 比赛轮次结果表
 // ============================================
 model MatchRoundResult {
@@ -185,6 +304,25 @@ model MatchRoundResult {
 
   matchRound   MatchRound @relation(fields: [matchRoundId], references: [id], onDelete: Cascade)
   team         Team       @relation(fields: [teamId], references: [id], onDelete: Restrict)
+
+  @@unique([matchRoundId, teamId])
+  @@unique([matchRoundId, rank])
+  @@index([teamId])
+}
+
+// ============================================
+// 篮球比赛轮次结果表
+// ============================================
+model BasketballMatchRoundResult {
+  id           Int                  @id @default(autoincrement())
+  matchRoundId Int
+  teamId       Int
+  rank         Int                  // 业务约束仅允许 1 / 2 / 3，数据库级 CHECK 见迁移
+  points       Int                  // 按名次换算后的积分快照：1=>2, 2=>1, 3=>0
+  createdAt    DateTime             @default(now())
+
+  matchRound   BasketballMatchRound @relation(fields: [matchRoundId], references: [id], onDelete: Cascade)
+  team         BasketballTeam       @relation(fields: [teamId], references: [id], onDelete: Restrict)
 
   @@unique([matchRoundId, teamId])
   @@unique([matchRoundId, rank])
