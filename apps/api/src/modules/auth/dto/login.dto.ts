@@ -1,17 +1,9 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { IsNotEmpty, IsString } from 'class-validator'
 
 export class MiniappLoginDto {
   @IsString()
   @IsNotEmpty()
   code: string
-
-  @IsString()
-  @IsOptional()
-  nickname?: string
-
-  @IsString()
-  @IsOptional()
-  avatarUrl?: string
 }
 
 export class WechatPhoneInfo {

@@ -61,6 +61,98 @@ export interface AuthLoginResponse {
 export type AdminLoginResponse = AuthLoginResponse
 
 /**
+ * 小程序账号绑定的球员摘要信息。
+ *
+ * @property playerId 球员 ID。
+ * @property playerNumber 球员号码。
+ * @property nickname 球员昵称。
+ * @property avatarUrl 球员头像 URL。
+ * @property subTeam 子球队。
+ * @property status 球员状态。
+ */
+export interface MiniappBindingSummary {
+  playerId: number
+  playerNumber: number | null
+  nickname: string
+  avatarUrl: string | null
+  subTeam: string | null
+  status: string
+}
+
+/**
+ * 小程序登录态用户信息。
+ *
+ * @property id 用户 ID。
+ * @property openid 微信 openid。
+ * @property nickname 用户昵称。
+ * @property avatarUrl 用户头像 URL。
+ * @property phone 用户手机号。
+ * @property status 用户状态。
+ * @property isBound 是否已绑定足球球员。
+ */
+export interface MiniappAuthUser {
+  id: number
+  openid: string
+  nickname: string | null
+  avatarUrl: string | null
+  phone: string | null
+  status: UserStatus
+  isBound: boolean
+}
+
+/**
+ * 小程序静默登录响应数据。
+ *
+ * @property accessToken 访问 token。
+ * @property refreshToken 刷新 token。
+ * @property expiresIn accessToken 有效期，单位为秒。
+ * @property user 当前登录的小程序用户。
+ * @property binding 当前绑定的球员摘要，未绑定时为 null。
+ */
+export interface MiniappLoginResponse {
+  accessToken: string
+  refreshToken: string
+  expiresIn: number
+  user: MiniappAuthUser
+  binding: MiniappBindingSummary | null
+}
+
+/**
+ * 小程序当前登录信息响应。
+ *
+ * @property user 当前登录的小程序用户。
+ * @property binding 当前绑定的球员摘要，未绑定时为 null。
+ */
+export interface MiniappMeResponse {
+  user: MiniappAuthUser
+  binding: MiniappBindingSummary | null
+}
+
+/**
+ * 小程序可绑定球员选项。
+ *
+ * @property playerId 球员 ID。
+ * @property playerNumber 球员号码。
+ * @property nickname 球员昵称。
+ * @property subTeam 子球队。
+ */
+export interface MiniappBindOption {
+  playerId: number
+  playerNumber: number | null
+  nickname: string
+  subTeam: string | null
+}
+
+/**
+ * 小程序可绑定球员列表响应。
+ *
+ * @property list 可绑定球员列表。
+ */
+export interface MiniappBindOptionsResponse {
+  list: MiniappBindOption[]
+}
+
+/**
  * 当前用户权限响应数据。
  *
  * @property permissions 权限标识列表，例如 player:create。

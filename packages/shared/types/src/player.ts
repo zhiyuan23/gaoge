@@ -7,7 +7,8 @@ export type PlayerStatus = string
  * 球员信息。
  *
  * @property id 球员记录 ID。
- * @property openid 微信 openid，当前作为球员唯一标识之一。
+ * @property openid 微信 openid，兼容旧数据，运行时不再作为唯一绑定依据。
+ * @property userId 已绑定的用户 ID，未绑定时为 null。
  * @property playerNumber 球员号码，当前业务要求全局唯一，范围 0~100。
  * @property nickname 昵称，当前作为球员唯一标识之一。
  * @property realName 真实姓名。
@@ -26,6 +27,7 @@ export type PlayerStatus = string
 export interface Player {
   id: number
   openid: string | null
+  userId: number | null
   playerNumber: number | null
   nickname: string
   realName: string | null

@@ -1,7 +1,15 @@
 import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 
-import type { AuthLoginResponse, AuthUser, PermissionResponse, UserRole } from '@gaoge/shared-types'
+import type {
+  AuthLoginResponse,
+  AuthUser,
+  MiniappAuthUser,
+  MiniappBindingSummary,
+  MiniappLoginResponse,
+  PermissionResponse,
+  UserRole,
+} from '@gaoge/shared-types'
 
 import { hashPassword, verifyPassword } from '@/common/auth/password.util'
 import { PrismaService } from '@/common/prisma/prisma.service'
@@ -75,7 +83,7 @@ export class AuthService {
   /**
    * 微信登录
    */
-  async wechatLogin(loginDto: MiniappLoginDto): Promise<AuthLoginResponse> {
+  async wechatLogin(loginDto: MiniappLoginDto): Promise<MiniappLoginResponse> {
     try {
       // 1. 通过code获取openid和session_key
       const wechatSession = await this.wechatService.getSessionByCode(loginDto.code)
@@ -91,8 +99,6 @@ export class AuthService {
           data: {
             openid: wechatSession.openid,
             unionid: wechatSession.unionid,
-            nickname: loginDto.nickname,
-            avatarUrl: loginDto.avatarUrl,
             lastLoginAt: new Date(),
           },
         })
@@ -106,14 +112,27 @@ export class AuthService {
         })
       }
 
+      const binding = await this.prisma.player.findFirst({
+        where: { userId: user.id },
+        select: {
+          id: true,
+          playerNumber: true,
+          nickname: true,
+          avatarUrl: true,
+          subTeam: true,
+          status: true,
+        },
+      })
+
       // 3. 生成token
       const tokens = await this.generateTokens(user)
 
       this.logger.log('微信登录成功', { userId: user.id, openid: user.openid })
 
       return {
-        user: this.serializeUser(user),
         ...tokens,
+        user: this.serializeMiniappUser(user, Boolean(binding)),
+        binding: this.serializeMiniappBinding(binding),
       }
     } catch (error: any) {
       this.logger.error('微信登录失败', { error: error.message, code: loginDto.code })
@@ -346,6 +365,42 @@ export class AuthService {
       role: this.toUserRole(user.role),
       status: user.status,
       lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
+    }
+  }
+
+  private serializeMiniappUser(user: any, isBound: boolean): MiniappAuthUser {
+    return {
+      id: user.id,
+      openid: user.openid ?? '',
+      nickname: user.nickname,
+      avatarUrl: user.avatarUrl,
+      phone: user.phone,
+      status: user.status,
+      isBound,
+    }
+  }
+
+  private serializeMiniappBinding(
+    binding: {
+      id: number
+      playerNumber: number | null
+      nickname: string
+      avatarUrl: string | null
+      subTeam: string | null
+      status: string
+    } | null,
+  ): MiniappBindingSummary | null {
+    if (!binding) {
+      return null
+    }
+
+    return {
+      playerId: binding.id,
+      playerNumber: binding.playerNumber,
+      nickname: binding.nickname,
+      avatarUrl: binding.avatarUrl,
+      subTeam: binding.subTeam,
+      status: binding.status,
     }
   }
 
