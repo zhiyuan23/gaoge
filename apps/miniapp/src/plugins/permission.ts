@@ -1,17 +1,4 @@
-import { ERROR404_PATH, isPathExists, LOGIN_PATH, removeQueryString, routes } from '@/router'
-
-// import { useAuthStore } from '@/store'
-
-// const { isLogin } = storeToRefs(useAuthStore())
-const isLogin = true
-
-// 白名单路由
-const whiteList: string[] = ['/']
-routes.forEach((item) => {
-  if (item.needLogin !== true) {
-    whiteList.push(item.path)
-  }
-})
+import { ERROR404_PATH, isPathExists, removeQueryString } from '@/router'
 
 /**
  * 权限校验
@@ -19,24 +6,14 @@ routes.forEach((item) => {
  * @returns 是否有权限
  */
 export const hasPerm = (path = ''): boolean => {
-  if (!isPathExists(path) && path !== '/') {
+  const normalizedPath = removeQueryString(path)
+
+  if (!isPathExists(normalizedPath) && normalizedPath !== '/') {
     uni.redirectTo({ url: ERROR404_PATH })
     return false
   }
 
-  const normalizedPath = removeQueryString(path)
-
-  // 在白名单或已登录 → 允许访问
-  const hasPermission = whiteList.includes(normalizedPath) || isLogin
-
-  if (!hasPermission) {
-    // 未登录 → 跳登录页并携带 redirect 参数
-    uni.redirectTo({
-      url: `${LOGIN_PATH}?redirect=${encodeURIComponent(path)}`,
-    })
-  }
-
-  return hasPermission
+  return true
 }
 
 export const setupPermission = (): void => {

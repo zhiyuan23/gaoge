@@ -1,15 +1,22 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { useAuthStore } from '@/store'
+
+const authStore = useAuthStore()
+const me = computed(() => authStore.me)
+</script>
 
 <template>
   <view class="page">
-    123
     <CustomNavbar title="首页" :show-back="false" />
-    <view class="gap-x-8rpx -mt-260 flex flex-wrap justify-center px-28">
-      <PressFeedback>
-        <view class="size-160 flex-col-center">
-          <text class="z-9 -mt-50 text-xs text-gray-500"> 高歌FC </text>
-        </view>
-      </PressFeedback>
+    <view class="px-28 pt-32">
+      <view class="rounded-24 bg-white px-32 py-28 shadow-sm">
+        <text class="color-#0F172A text-32 font-600 leading-44">
+          {{ me?.user.isBound ? '已完成登录并绑定球员' : '已完成登录，暂未绑定球员' }}
+        </text>
+        <text class="color-#475569 text-26 mt-20 block">
+          当前 openid：{{ me?.user.openid || '-' }}
+        </text>
+      </view>
     </view>
   </view>
 </template>

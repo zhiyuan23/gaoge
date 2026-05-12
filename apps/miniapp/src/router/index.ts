@@ -13,7 +13,6 @@ interface PageJson {
 
 // 路径常量
 export const HOME_PATH = '/pages/home/index'
-export const LOGIN_PATH = '/pages/login/index'
 export const ERROR404_PATH = '/pages/common/404/index'
 
 const pagesJson = rawPagesJson as PageJson

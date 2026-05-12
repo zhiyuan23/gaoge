@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { useAppStore } from '@/store'
+import { useAppStore, useAuthStore } from '@/store'
 
 onLaunch(async () => {
   useAppStore().initSystemInfo()
+  await useAuthStore().ensureSession()
 })
 
 onShow(() => {
