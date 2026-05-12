@@ -1,5 +1,6 @@
+import { refreshTokenReq } from '@/api/auth'
 import { type ApiResponseEnvelope, ApiResponseError, parseResponseEnvelope } from '@/api/response'
-import { Loading, reLaunch, storage, Toast } from '@/utils'
+import { Loading, storage, Toast } from '@/utils'
 
 type RequestMethod = 'GET' | 'POST' | 'UPLOAD' | 'DOWNLOAD'
 
@@ -9,6 +10,8 @@ interface RequestOption {
   loading?: boolean
   toast?: boolean
   json?: boolean
+  skipAuth?: boolean
+  skipRefresh?: boolean
   filePath?: string
   name?: string
 }
@@ -19,9 +22,11 @@ interface InternalRequestConfig extends RequestOption {
   data?: any
   filePath?: string
   name?: string
+  retryAttempted?: boolean
 }
 
 const defaultTimeout = 10000
+let refreshPromise: Promise<string | null> | null = null
 
 const normalizeBaseUrl = () => {
   let baseURL = import.meta.env.VITE_API_BASE_URL
@@ -36,19 +41,49 @@ const normalizeBaseUrl = () => {
 }
 
 const createHeaders = (config: InternalRequestConfig) => {
+  const token = storage.get('accessToken')
   const headers: Record<string, string> = {
     'content-type': config.json
       ? 'application/json;charset=UTF-8'
       : 'application/x-www-form-urlencoded',
-    thirdSessionKey: storage.get('thirdSessionKey'),
+    ...(config.skipAuth || !token ? {} : { Authorization: `Bearer ${token}` }),
     ...(config.header || {}),
   }
 
   return headers
 }
 
+const refreshAccessToken = async () => {
+  const refreshToken = storage.get('refreshToken')
+
+  if (!refreshToken) {
+    return null
+  }
+
+  if (!refreshPromise) {
+    refreshPromise = refreshTokenReq(refreshToken)
+      .then((payload) => {
+        storage.set('accessToken', payload.accessToken)
+        storage.set('refreshToken', payload.refreshToken)
+        storage.syncAuthState({
+          accessToken: payload.accessToken,
+          refreshToken: payload.refreshToken,
+        })
+
+        return payload.accessToken
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+
+  return refreshPromise
+}
+
 const requestCore = async <T = any>(config: InternalRequestConfig): Promise<T> => {
-  if (config.loading) {
+  const shouldShowLoading = config.loading && !config.retryAttempted
+
+  if (shouldShowLoading) {
     Loading.show()
   }
 
@@ -100,10 +135,28 @@ const requestCore = async <T = any>(config: InternalRequestConfig): Promise<T> =
 
     if (resData.code === 0) {
       return resData.data
-    } else if (resData.code === 401) {
-      storage.clearStorage()
-      Toast('登录超时，请重新登录')
-      reLaunch('/pages/login/index')
+    }
+
+    if (resData.code === 401 && !config.skipRefresh && !config.retryAttempted) {
+      try {
+        const nextAccessToken = await refreshAccessToken()
+
+        if (nextAccessToken) {
+          return requestCore<T>({
+            ...config,
+            retryAttempted: true,
+          })
+        }
+      } catch {
+        storage.clearAuth()
+      }
+
+      storage.clearAuth()
+      if (config.toast !== false) {
+        Toast('登录超时，请重新登录')
+      }
+
+      return Promise.reject(new ApiResponseError(resData))
     }
 
     if (config.toast !== false) {
@@ -121,7 +174,7 @@ const requestCore = async <T = any>(config: InternalRequestConfig): Promise<T> =
     }
     return Promise.reject(err)
   } finally {
-    if (config.loading) {
+    if (shouldShowLoading) {
       Loading.hide()
     }
   }

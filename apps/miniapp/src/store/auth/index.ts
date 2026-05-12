@@ -1,88 +1,83 @@
-import { bindUserReq, getSession, getSessionKeyReq, isLoginApi } from '@/api'
-import { reLaunch, storage } from '@/utils'
+import type { MiniappLoginResponse, MiniappMeResponse } from '@gaoge/shared-types'
+
+import { loginByCode, logoutReq, requestMe } from '@/api/auth'
+import { storage } from '@/utils'
 
 const useAuthStore = defineStore(
   'auth',
   () => {
-    const isLogin = ref<boolean>(false)
-    const loading = ref(false)
+    const accessToken = ref(storage.get('accessToken'))
+    const refreshToken = ref(storage.get('refreshToken'))
+    const me = ref<MiniappMeResponse | null>(null)
+    const bootstrapping = ref(false)
 
-    const setSessionKey = (sessionKey: string) => {
-      storage.set('thirdSessionKey', sessionKey)
-      isLogin.value = true
-    }
-
-    const logout = () => {
-      isLogin.value = false
-      storage.remove('thirdSessionKey')
-    }
-
-    // 检查是否登录
-    const checkLogin = async () => {
-      try {
-        await isLoginApi()
-        isLogin.value = true
-      } catch {
-        isLogin.value = false
+    const setSession = (payload: MiniappLoginResponse) => {
+      accessToken.value = payload.accessToken
+      refreshToken.value = payload.refreshToken
+      me.value = {
+        user: payload.user,
+        binding: payload.binding,
       }
+
+      storage.set('accessToken', payload.accessToken)
+      storage.set('refreshToken', payload.refreshToken)
     }
 
-    // 授权登录
-    const login = async (phoneCode = '', redirect = false) => {
-      if (loading.value) return
+    const silentLogin = async () => {
+      const code = await new Promise<string>((resolve, reject) => {
+        uni.login({
+          provider: 'weixin',
+          success: (res) => {
+            if (res.code) {
+              resolve(res.code)
+              return
+            }
 
-      loading.value = true
-      try {
-        const { code } = await uni.login()
-        const res = await getSession({ wxCode: code, phoneCode })
+            reject(new Error('获取登录凭证失败'))
+          },
+          fail: reject,
+        })
+      })
 
-        setSessionKey(res.thirdSessionKey)
+      const payload = await loginByCode({ code })
+      setSession(payload)
 
-        if (redirect) {
-          reLaunch('/pages/home/index')
-        }
-      } catch {
-        throw new Error('登录失败')
-      } finally {
-        loading.value = false
-      }
+      return payload
     }
 
-    const loginByAccount = async (username: string, password: string, redirect = false) => {
-      if (loading.value) return
+    const fetchMe = async () => {
+      me.value = await requestMe()
 
-      loading.value = true
+      return me.value
+    }
+
+    const logout = async () => {
       try {
-        const { code } = await uni.login()
-        const session = await getSessionKeyReq({ code, orgType: 4 })
-
-        setSessionKey(session.thirdSessionKey)
-        await bindUserReq({ username, password, orgType: 4 })
-
-        if (redirect) {
-          reLaunch('/pages/home/index')
+        if (accessToken.value) {
+          await logoutReq()
         }
-      } catch (error) {
-        logout()
-        throw error
       } finally {
-        loading.value = false
+        accessToken.value = ''
+        refreshToken.value = ''
+        me.value = null
+        storage.clearAuth()
       }
     }
 
     return {
-      isLogin,
-      loading,
-
-      checkLogin,
-      login,
-      loginByAccount,
+      accessToken,
+      refreshToken,
+      me,
+      bootstrapping,
+      setSession,
+      silentLogin,
+      fetchMe,
       logout,
     }
   },
   {
     persist: {
-      omit: ['loading'],
+      omit: ['bootstrapping'],
     },
   },
 )
