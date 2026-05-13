@@ -234,3 +234,32 @@ export interface MatchRoundListResponse {
   list: MatchRound[]
   total: number
 }
+
+export interface FootballStandingParams {
+  year: number | string
+  season: MatchRoundSeason
+}
+
+export interface FootballStandingRound {
+  id: number
+  round: number
+  matchDate: DateTimeString
+  label: string
+}
+
+export interface FootballStandingTeam {
+  teamId: number
+  teamCode: TeamCode
+  teamName: string
+  totalPoints: number
+  roundPoints: number[]
+}
+
+export interface FootballStandingResponse {
+  season: {
+    year: number
+    season: MatchRoundSeason
+  }
+  rounds: FootballStandingRound[]
+  teams: FootballStandingTeam[]
+}
