@@ -60,16 +60,35 @@ const currentTeamData = computed(() => teamData[activeTeam.value])
 const isFootballTeam = computed(() => activeTeam.value === 'gaoge-fc')
 const standingRounds = computed(() => standings.value.rounds ?? [])
 const standingTeams = computed(() => standings.value.teams ?? [])
-const totalRowPoints = computed(() =>
-  standingRounds.value.map((_, roundIndex) =>
-    standingTeams.value.reduce((sum, team) => sum + (team.roundPoints?.[roundIndex] ?? 0), 0),
-  ),
+const standingTeamDisplayOrder = {
+  real: 0,
+  inter: 1,
+  united: 2,
+}
+const orderedStandingTeams = computed(() =>
+  [...standingTeams.value].sort((leftTeam, rightTeam) => {
+    const leftOrder = standingTeamDisplayOrder[leftTeam.teamCode] ?? Number.MAX_SAFE_INTEGER
+    const rightOrder = standingTeamDisplayOrder[rightTeam.teamCode] ?? Number.MAX_SAFE_INTEGER
+
+    if (leftOrder !== rightOrder) {
+      return leftOrder - rightOrder
+    }
+
+    return (leftTeam.teamId ?? 0) - (rightTeam.teamId ?? 0)
+  }),
+)
+const standingTableRows = computed(() =>
+  standingRounds.value.map((round, roundIndex) => ({
+    id: round.id ?? `round-${roundIndex + 1}`,
+    label: round.label ?? `第${round.round ?? roundIndex + 1}轮`,
+    points: orderedStandingTeams.value.map((team) => team.roundPoints?.[roundIndex] ?? 0),
+  })),
 )
 const grandTotalPoints = computed(() =>
   standingTeams.value.reduce((sum, team) => sum + (team.totalPoints ?? 0), 0),
 )
 const maxStandingPoints = computed(() =>
-  Math.max(1, ...standingTeams.value.map((team) => team.totalPoints ?? 0)),
+  Math.max(1, ...orderedStandingTeams.value.map((team) => team.totalPoints ?? 0)),
 )
 const standingTeamAccents = {
   real: {
@@ -225,7 +244,7 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
           <span>返回</span>
         </button>
         <div class="text-sm font-bold tracking-[2px] text-white">GAOGE SPORTS</div>
-        <div class="w-[70px]"></div>
+        <div class="w-17.5"></div>
       </div>
     </header>
 
@@ -273,7 +292,7 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
       <transition name="fade" mode="out-in">
         <div :key="activeTeam">
           <!-- Team Hero Image -->
-          <div class="relative mb-6 h-[200px] overflow-hidden rounded-2xl md:h-[350px]">
+          <div class="h-50 md:h-87.5 relative mb-6 overflow-hidden rounded-2xl">
             <img
               :src="currentTeamData.heroImage"
               :alt="currentTeamData.name"
@@ -284,7 +303,7 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
               class="absolute inset-0 bg-gradient-to-t from-[#090a0d] via-[#090a0d]/30 to-transparent"
             ></div>
             <div
-              class="absolute inset-0 bg-gradient-to-r from-[#090a0d]/60 via-transparent to-[#090a0d]/40"
+              class="bg-linear-to-r absolute inset-0 from-[#090a0d]/60 via-transparent to-[#090a0d]/40"
             ></div>
             <div class="absolute bottom-0 left-0 right-0 p-5">
               <div class="flex items-center gap-3">
@@ -349,9 +368,9 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
                 <h2 class="text-lg font-bold" :style="{ color: teamColors[activeTeam].primary }">
                   赛季排行榜
                 </h2>
-                <p class="mt-2 text-sm text-white/55">按赛季查看三支球队积分对比与每轮明细</p>
+                <!-- <p class="mt-2 text-sm text-white/55">按赛季查看三支球队积分对比与每轮明细</p> -->
               </div>
-              <div class="grid grid-cols-2 gap-3 md:w-auto">
+              <div v-if="false" class="grid grid-cols-2 gap-3 md:w-auto">
                 <label
                   class="flex flex-col gap-2 text-xs uppercase tracking-[0.14em] text-white/40"
                 >
@@ -415,15 +434,15 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
               <div>
                 <div class="mb-3 flex items-center justify-between">
                   <h3 class="text-sm font-semibold text-white">总积分走势</h3>
-                  <span class="text-xs tracking-[0.1em] text-white/40">
+                  <span class="text-xs tracking-widest text-white/40">
                     总计 {{ grandTotalPoints }} 分
                   </span>
                 </div>
-                <div class="grid gap-3 md:grid-cols-3">
+                <div class="grid grid-cols-3 gap-2 md:gap-3">
                   <article
-                    v-for="team in standingTeams"
+                    v-for="team in orderedStandingTeams"
                     :key="team.teamId"
-                    class="overflow-hidden rounded-2xl border p-4"
+                    class="overflow-hidden rounded-2xl border px-3 py-3 md:p-4"
                     :style="{
                       borderColor:
                         standingTeamAccents[team.teamCode]?.border || 'rgba(255,255,255,0.1)',
@@ -433,16 +452,19 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
                     }"
                   >
                     <div class="flex items-start justify-between gap-3">
-                      <div>
-                        <p class="text-xs uppercase tracking-[0.12em] text-white/45">总积分</p>
-                        <h4 class="mt-2 text-lg font-semibold text-white">{{ team.teamName }}</h4>
+                      <div class="min-w-0">
+                        <p class="text-[10px] uppercase tracking-[0.12em] text-white/45 md:text-xs">
+                          {{ team.teamCode }}
+                        </p>
+                        <h4
+                          class="mt-2 whitespace-nowrap text-[13px] font-semibold text-white md:text-lg"
+                        >
+                          {{ team.teamName }}
+                        </h4>
                       </div>
                       <div class="text-right">
-                        <div class="text-3xl font-black leading-none text-white">
+                        <div class="text-2xl font-black leading-none text-white md:text-3xl">
                           {{ team.totalPoints }}
-                        </div>
-                        <div class="mt-1 text-[11px] tracking-[0.14em] text-white/45">
-                          {{ team.roundPoints.length }} 轮
                         </div>
                       </div>
                     </div>
@@ -464,52 +486,43 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
               <div class="border-white/8 overflow-hidden rounded-2xl border bg-[#0f1117]">
                 <div class="overflow-x-auto">
                   <table class="min-w-full text-left text-sm text-white/80">
-                    <thead
-                      class="bg-white/[0.03] text-xs uppercase tracking-[0.14em] text-white/40"
-                    >
+                    <thead class="bg-white/3 text-xs uppercase tracking-[0.14em] text-white/40">
                       <tr>
-                        <th class="px-4 py-3 font-medium">球队</th>
+                        <th class="px-4 py-3 font-medium">轮次</th>
                         <th
-                          v-for="round in standingRounds"
-                          :key="round.id"
+                          v-for="team in orderedStandingTeams"
+                          :key="team.teamId"
                           class="px-4 py-3 text-center font-medium"
                         >
-                          {{ round.label }}
+                          {{ team.teamName }}
                         </th>
-                        <th class="px-4 py-3 text-center font-medium">总积分</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr
-                        v-for="team in standingTeams"
-                        :key="team.teamId"
-                        class="border-t border-white/[0.06]"
+                        v-for="row in standingTableRows"
+                        :key="row.id"
+                        class="border-white/6 border-t"
                       >
-                        <th class="px-4 py-4 font-semibold text-white">{{ team.teamName }}</th>
+                        <th class="px-4 py-4 font-semibold text-white">{{ row.label }}</th>
                         <td
-                          v-for="(point, pointIndex) in team.roundPoints"
-                          :key="`${team.teamId}-${pointIndex}`"
+                          v-for="(point, pointIndex) in row.points"
+                          :key="`${row.id}-${pointIndex}`"
                           class="text-white/72 px-4 py-4 text-center"
                         >
                           {{ point }}
                         </td>
-                        <td class="px-4 py-4 text-center font-semibold text-white">
-                          {{ team.totalPoints }}
-                        </td>
                       </tr>
                     </tbody>
-                    <tfoot class="border-t border-white/[0.08] bg-white/[0.02]">
+                    <tfoot class="border-white/8 bg-white/2 border-t">
                       <tr>
-                        <th class="px-4 py-4 font-semibold text-white">总计</th>
+                        <th class="px-4 py-4 font-semibold text-white">总积分</th>
                         <td
-                          v-for="(point, pointIndex) in totalRowPoints"
-                          :key="`total-${pointIndex}`"
+                          v-for="team in orderedStandingTeams"
+                          :key="`total-${team.teamId}`"
                           class="px-4 py-4 text-center font-semibold text-white"
                         >
-                          {{ point }}
-                        </td>
-                        <td class="px-4 py-4 text-center font-black text-white">
-                          {{ grandTotalPoints }}
+                          {{ team.totalPoints }}
                         </td>
                       </tr>
                     </tfoot>
@@ -530,7 +543,7 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
               @touchmove="onTouchMove"
               @touchend="onTouchEnd"
             >
-              <div class="relative aspect-[16/10]">
+              <div class="aspect-16/10 relative">
                 <img
                   v-for="(img, index) in currentTeamData.gallery"
                   :key="index"
