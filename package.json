@@ -8,9 +8,9 @@
   },
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "dev:admin": "turbo run dev --filter=@gaoge/app-admin",
-    "dev:web": "turbo run dev --filter=@gaoge/app-web",
-    "dev:miniapp": "turbo run dev --filter=@gaoge/app-miniapp",
+    "dev:admin": "node scripts/dev-with-api.mjs admin",
+    "dev:web": "node scripts/dev-with-api.mjs web",
+    "dev:miniapp": "node scripts/dev-with-api.mjs miniapp",
     "dev:api": "turbo run dev --filter=@gaoge/app-api",
     "dev:admin-api": "turbo run dev --parallel --filter=@gaoge/app-admin --filter=@gaoge/app-api",
     "db:migrate:api": "pnpm --filter @gaoge/app-api db:migrate",

@@ -1,24 +1,26 @@
 # 根目录开发命令自动拉起 API 方案
 
-> 适用范围：高歌体育 monorepo 根目录开发脚本，涉及 `apps/admin`、`apps/miniapp`、`apps/api`
+> 适用范围：高歌体育 monorepo 根目录开发脚本，涉及 `apps/admin`、`apps/web`、`apps/miniapp`、`apps/api`
 
 ## 1. 背景与目标
 
 当前仓库已经提供以下根目录开发命令：
 
 - `pnpm dev:admin`
+- `pnpm dev:web`
 - `pnpm dev:miniapp`
 - `pnpm dev:api`
 - `pnpm dev:admin-api`
 
-现状是 `dev:admin` 和 `dev:miniapp` 只会单独启动对应前端应用，不会自动带起 `api`。这会带来两个开发体验问题：
+现状是 `dev:admin`、`dev:web` 和 `dev:miniapp` 只会单独启动对应前端应用，不会自动带起 `api`。这会带来两个开发体验问题：
 
-- 本地调试 `admin` 或 `miniapp` 时，常常还要手动再开一个 `api`
+- 本地调试 `admin`、`web` 或 `miniapp` 时，常常还要手动再开一个 `api`
 - 若开发者已经单独启动了 `api`，再执行双开命令又可能造成重复启动尝试
 
 本方案目标是优化根目录开发编排体验，使：
 
 - `pnpm dev:admin` 在本地 `api` 未启动时自动带起 `api`
+- `pnpm dev:web` 在本地 `api` 未启动时自动带起 `api`
 - `pnpm dev:miniapp` 在本地 `api` 未启动时自动带起 `api`
 - 若 `api` 已启动，则只启动目标前端应用，不重复拉起 `api`
 - 保持应用间依赖关系不变，不把该逻辑写入 `apps/*` 内部脚本
@@ -27,7 +29,7 @@
 
 ### 2.1 本次范围
 
-- 修改根目录 `package.json` 中 `dev:admin` 与 `dev:miniapp` 的行为
+- 修改根目录 `package.json` 中 `dev:admin`、`dev:web` 与 `dev:miniapp` 的行为
 - 在根目录新增一个轻量开发编排脚本
 - 复用现有 `api` 健康检查入口判断服务是否已启动
 
@@ -46,7 +48,7 @@
 
 行为：
 
-1. 执行 `pnpm dev:admin` 或 `pnpm dev:miniapp`
+1. 执行 `pnpm dev:admin`、`pnpm dev:web` 或 `pnpm dev:miniapp`
 2. 先请求本地 `api` 健康检查地址
 3. 若健康检查成功，只启动目标应用
 4. 若健康检查失败，并行启动 `api + 目标应用`
@@ -67,7 +69,7 @@
 
 行为：
 
-- `dev:admin` 与 `dev:miniapp` 固定并行启动 `api + 前端`
+- `dev:admin`、`dev:web` 与 `dev:miniapp` 固定并行启动 `api + 前端`
 
 优点：
 
@@ -83,7 +85,7 @@
 
 行为：
 
-- 在 `apps/admin` 或 `apps/miniapp` 内部 `dev` 前加探测与启动逻辑
+- 在 `apps/admin`、`apps/web` 或 `apps/miniapp` 内部 `dev` 前加探测与启动逻辑
 
 优点：
 
@@ -131,7 +133,7 @@
 
 脚本职责：
 
-- 接收目标应用参数，如 `admin`、`miniapp`
+- 接收目标应用参数，如 `admin`、`web`、`miniapp`
 - 检查本地 `api` 健康状态
 - 根据结果决定执行：
   - 只启动目标应用
@@ -152,6 +154,9 @@
 - `pnpm dev:admin`
   - 若 `api` 已启动，等价于当前的 `turbo run dev --filter=@gaoge/app-admin`
   - 若 `api` 未启动，等价于 `turbo run dev --parallel --filter=@gaoge/app-admin --filter=@gaoge/app-api`
+- `pnpm dev:web`
+  - 若 `api` 已启动，等价于当前的 `turbo run dev --filter=@gaoge/app-web`
+  - 若 `api` 未启动，等价于 `turbo run dev --parallel --filter=@gaoge/app-web --filter=@gaoge/app-api`
 - `pnpm dev:miniapp`
   - 若 `api` 已启动，等价于当前的 `turbo run dev --filter=@gaoge/app-miniapp`
   - 若 `api` 未启动，等价于 `turbo run dev --parallel --filter=@gaoge/app-miniapp --filter=@gaoge/app-api`
@@ -159,7 +164,6 @@
 以下命令保持不变：
 
 - `pnpm dev:api`
-- `pnpm dev:web`
 - `pnpm dev:admin-api`
 
 ### 4.4 失败边界与预期
@@ -193,6 +197,7 @@
 脚本首期只支持两个目标值：
 
 - `admin`
+- `web`
 - `miniapp`
 
 若传入其他参数，脚本应直接报错并退出，避免隐藏行为。
@@ -214,11 +219,15 @@
    - 预期同时启动 `api` 与 `admin`
 2. 已单独启动 `api` 后执行 `pnpm dev:admin`
    - 预期只启动 `admin`
-3. 未启动 `api` 时执行 `pnpm dev:miniapp`
+3. 未启动 `api` 时执行 `pnpm dev:web`
+   - 预期同时启动 `api` 与 `web`
+4. 已单独启动 `api` 后执行 `pnpm dev:web`
+   - 预期只启动 `web`
+5. 未启动 `api` 时执行 `pnpm dev:miniapp`
    - 预期同时启动 `api` 与 `miniapp`
-4. 已单独启动 `api` 后执行 `pnpm dev:miniapp`
+6. 已单独启动 `api` 后执行 `pnpm dev:miniapp`
    - 预期只启动 `miniapp`
-5. `pnpm dev:admin-api`
+7. `pnpm dev:admin-api`
    - 预期行为保持不变
 
 代码级验证应至少覆盖：
