@@ -6,6 +6,7 @@ import { AuthController } from './auth/controllers/auth.controller'
 import { FundController } from './football/fund/fund.controller'
 import { MatchRoundController } from './football/match-round/match-round.controller'
 import { PlayerController } from './football/player/player.controller'
+import { StandingController } from './football/standing/standing.controller'
 import { TeamController } from './football/team/team.controller'
 
 describe('football route metadata', () => {
@@ -19,6 +20,10 @@ describe('football route metadata', () => {
 
   it('maps match rounds routes under /football/match-rounds', () => {
     expect(Reflect.getMetadata(PATH_METADATA, MatchRoundController)).toBe('football/match-rounds')
+  })
+
+  it('maps standings routes under /football/standings', () => {
+    expect(Reflect.getMetadata(PATH_METADATA, StandingController)).toBe('football/standings')
   })
 
   it('maps fund routes under /football/fund', () => {
