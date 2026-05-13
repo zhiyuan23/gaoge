@@ -4,6 +4,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { teamColors, teamData, teams } from '@/data/teams'
+import { fetchFootballStandings } from '@/utils/football'
 
 const router = useRouter()
 const route = useRoute()
@@ -11,6 +12,21 @@ const route = useRoute()
 // 从路由参数获取 team，默认足球
 const activeTeam = ref(route.params.team === 'basketball' ? 'warm-sunshine' : 'gaoge-fc')
 const currentSlide = ref(0)
+const seasons = ['春季赛', '夏季赛', '秋季赛', '冬季赛']
+const seasonYears = [2026]
+const seasonYear = ref(2026)
+const seasonName = ref('春季赛')
+const standingsLoading = ref(false)
+const standingsError = ref('')
+let standingsRequestSequence = 0
+const standings = ref({
+  season: {
+    year: 2026,
+    season: '春季赛',
+  },
+  rounds: [],
+  teams: [],
+})
 
 // 监听路由变化
 watch(
@@ -41,6 +57,37 @@ const touchEndX = ref(0)
 const minSwipeDistance = 50
 
 const currentTeamData = computed(() => teamData[activeTeam.value])
+const isFootballTeam = computed(() => activeTeam.value === 'gaoge-fc')
+const standingRounds = computed(() => standings.value.rounds ?? [])
+const standingTeams = computed(() => standings.value.teams ?? [])
+const totalRowPoints = computed(() =>
+  standingRounds.value.map((_, roundIndex) =>
+    standingTeams.value.reduce((sum, team) => sum + (team.roundPoints?.[roundIndex] ?? 0), 0),
+  ),
+)
+const grandTotalPoints = computed(() =>
+  standingTeams.value.reduce((sum, team) => sum + (team.totalPoints ?? 0), 0),
+)
+const maxStandingPoints = computed(() =>
+  Math.max(1, ...standingTeams.value.map((team) => team.totalPoints ?? 0)),
+)
+const standingTeamAccents = {
+  real: {
+    border: 'rgba(245, 158, 11, 0.32)',
+    glow: 'rgba(245, 158, 11, 0.18)',
+    fill: '#f59e0b',
+  },
+  inter: {
+    border: 'rgba(59, 130, 246, 0.32)',
+    glow: 'rgba(59, 130, 246, 0.18)',
+    fill: '#3b82f6',
+  },
+  united: {
+    border: 'rgba(239, 68, 68, 0.32)',
+    glow: 'rgba(239, 68, 68, 0.18)',
+    fill: '#ef4444',
+  },
+}
 
 const nextSlide = () => {
   const total = currentTeamData.value.gallery.length
@@ -69,6 +116,65 @@ const switchTeam = (team) => {
   })
 }
 
+const loadStandings = async () => {
+  const requestSequence = ++standingsRequestSequence
+
+  if (!isFootballTeam.value) {
+    standingsError.value = ''
+    standingsLoading.value = false
+    standings.value = {
+      season: {
+        year: seasonYear.value,
+        season: seasonName.value,
+      },
+      rounds: [],
+      teams: [],
+    }
+    return
+  }
+
+  standingsLoading.value = true
+  standingsError.value = ''
+
+  try {
+    const payload = await fetchFootballStandings({
+      year: seasonYear.value,
+      season: seasonName.value,
+    })
+
+    if (requestSequence !== standingsRequestSequence) {
+      return
+    }
+
+    standings.value = {
+      season: payload.season ?? {
+        year: seasonYear.value,
+        season: seasonName.value,
+      },
+      rounds: payload.rounds ?? [],
+      teams: payload.teams ?? [],
+    }
+  } catch (error) {
+    if (requestSequence !== standingsRequestSequence) {
+      return
+    }
+
+    standingsError.value = error instanceof Error ? error.message : '积分加载失败'
+    standings.value = {
+      season: {
+        year: seasonYear.value,
+        season: seasonName.value,
+      },
+      rounds: [],
+      teams: [],
+    }
+  } finally {
+    if (requestSequence === standingsRequestSequence) {
+      standingsLoading.value = false
+    }
+  }
+}
+
 // 触摸滑动事件处理
 const onTouchStart = (e) => {
   touchEndX.value = 0
@@ -89,6 +195,10 @@ const onTouchEnd = () => {
     }
   }
 }
+
+watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
+  immediate: true,
+})
 </script>
 
 <template>
@@ -229,6 +339,185 @@ const onTouchEnd = () => {
               {{ currentTeamData.description }}
             </p>
           </div>
+
+          <section
+            v-if="isFootballTeam"
+            class="border-white/8 mb-6 rounded-3xl border bg-white/5 p-4 md:p-6"
+          >
+            <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 class="text-lg font-bold" :style="{ color: teamColors[activeTeam].primary }">
+                  赛季排行榜
+                </h2>
+                <p class="mt-2 text-sm text-white/55">按赛季查看三支球队积分对比与每轮明细</p>
+              </div>
+              <div class="grid grid-cols-2 gap-3 md:w-auto">
+                <label
+                  class="flex flex-col gap-2 text-xs uppercase tracking-[0.14em] text-white/40"
+                >
+                  年份
+                  <select
+                    v-model.number="seasonYear"
+                    class="rounded-2xl border border-white/10 bg-[#11131a] px-4 py-3 text-sm tracking-normal text-white outline-none transition focus:border-white/25"
+                  >
+                    <option v-for="year in seasonYears" :key="year" :value="year">
+                      {{ year }}
+                    </option>
+                  </select>
+                </label>
+                <label
+                  class="flex flex-col gap-2 text-xs uppercase tracking-[0.14em] text-white/40"
+                >
+                  赛段
+                  <select
+                    v-model="seasonName"
+                    class="rounded-2xl border border-white/10 bg-[#11131a] px-4 py-3 text-sm tracking-normal text-white outline-none transition focus:border-white/25"
+                  >
+                    <option v-for="season in seasons" :key="season" :value="season">
+                      {{ season }}
+                    </option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div
+              v-if="standingsLoading"
+              class="border-white/8 rounded-2xl border bg-[#0f1117] px-4 py-10 text-center text-sm text-white/55"
+            >
+              排行榜加载中...
+            </div>
+
+            <div
+              v-else-if="standingsError"
+              class="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-6"
+            >
+              <p class="text-sm text-red-100">积分加载失败：{{ standingsError }}</p>
+              <button
+                class="border-white/12 bg-white/8 hover:bg-white/12 mt-4 rounded-full border px-4 py-2 text-sm text-white transition"
+                @click="loadStandings"
+              >
+                重试
+              </button>
+            </div>
+
+            <div
+              v-else-if="!standingRounds.length"
+              class="rounded-2xl border border-dashed border-white/10 bg-[#0f1117] px-4 py-10 text-center"
+            >
+              <p class="text-white/72 text-sm font-medium">暂无比赛数据</p>
+              <p class="text-white/42 mt-2 text-xs tracking-[0.08em]">
+                录入首轮比赛后，这里会展示 3 支球队的累计积分走势与总计。
+              </p>
+            </div>
+
+            <div v-else class="space-y-5">
+              <div>
+                <div class="mb-3 flex items-center justify-between">
+                  <h3 class="text-sm font-semibold text-white">总积分走势</h3>
+                  <span class="text-xs tracking-[0.1em] text-white/40">
+                    总计 {{ grandTotalPoints }} 分
+                  </span>
+                </div>
+                <div class="grid gap-3 md:grid-cols-3">
+                  <article
+                    v-for="team in standingTeams"
+                    :key="team.teamId"
+                    class="overflow-hidden rounded-2xl border p-4"
+                    :style="{
+                      borderColor:
+                        standingTeamAccents[team.teamCode]?.border || 'rgba(255,255,255,0.1)',
+                      background: `linear-gradient(135deg, ${
+                        standingTeamAccents[team.teamCode]?.glow || 'rgba(255,255,255,0.08)'
+                      }, rgba(255,255,255,0.03))`,
+                    }"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-xs uppercase tracking-[0.12em] text-white/45">总积分</p>
+                        <h4 class="mt-2 text-lg font-semibold text-white">{{ team.teamName }}</h4>
+                      </div>
+                      <div class="text-right">
+                        <div class="text-3xl font-black leading-none text-white">
+                          {{ team.totalPoints }}
+                        </div>
+                        <div class="mt-1 text-[11px] tracking-[0.14em] text-white/45">
+                          {{ team.roundPoints.length }} 轮
+                        </div>
+                      </div>
+                    </div>
+                    <div class="bg-white/8 mt-4 h-2 overflow-hidden rounded-full">
+                      <div
+                        class="h-full rounded-full transition-all duration-500"
+                        :style="{
+                          width: `${(team.totalPoints / maxStandingPoints) * 100}%`,
+                          backgroundColor:
+                            standingTeamAccents[team.teamCode]?.fill ||
+                            teamColors[activeTeam].primary,
+                        }"
+                      ></div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+
+              <div class="border-white/8 overflow-hidden rounded-2xl border bg-[#0f1117]">
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-left text-sm text-white/80">
+                    <thead
+                      class="bg-white/[0.03] text-xs uppercase tracking-[0.14em] text-white/40"
+                    >
+                      <tr>
+                        <th class="px-4 py-3 font-medium">球队</th>
+                        <th
+                          v-for="round in standingRounds"
+                          :key="round.id"
+                          class="px-4 py-3 text-center font-medium"
+                        >
+                          {{ round.label }}
+                        </th>
+                        <th class="px-4 py-3 text-center font-medium">总积分</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="team in standingTeams"
+                        :key="team.teamId"
+                        class="border-t border-white/[0.06]"
+                      >
+                        <th class="px-4 py-4 font-semibold text-white">{{ team.teamName }}</th>
+                        <td
+                          v-for="(point, pointIndex) in team.roundPoints"
+                          :key="`${team.teamId}-${pointIndex}`"
+                          class="text-white/72 px-4 py-4 text-center"
+                        >
+                          {{ point }}
+                        </td>
+                        <td class="px-4 py-4 text-center font-semibold text-white">
+                          {{ team.totalPoints }}
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot class="border-t border-white/[0.08] bg-white/[0.02]">
+                      <tr>
+                        <th class="px-4 py-4 font-semibold text-white">总计</th>
+                        <td
+                          v-for="(point, pointIndex) in totalRowPoints"
+                          :key="`total-${pointIndex}`"
+                          class="px-4 py-4 text-center font-semibold text-white"
+                        >
+                          {{ point }}
+                        </td>
+                        <td class="px-4 py-4 text-center font-black text-white">
+                          {{ grandTotalPoints }}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
 
           <!-- Gallery -->
           <div class="mb-6">
