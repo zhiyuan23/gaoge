@@ -84,9 +84,6 @@ const standingTableRows = computed(() =>
     points: orderedStandingTeams.value.map((team) => team.roundPoints?.[roundIndex] ?? 0),
   })),
 )
-const grandTotalPoints = computed(() =>
-  standingTeams.value.reduce((sum, team) => sum + (team.totalPoints ?? 0), 0),
-)
 const maxStandingPoints = computed(() =>
   Math.max(1, ...orderedStandingTeams.value.map((team) => team.totalPoints ?? 0)),
 )
@@ -107,6 +104,37 @@ const standingTeamAccents = {
     fill: '#ef4444',
   },
 }
+
+const getStandingTeamTrophyCount = (team) =>
+  team.roundPoints?.filter((point) => point === 2).length ?? 0
+// const leadingStandingTeamCode = computed(() => {
+//   const [leader, runnerUp] = [...orderedStandingTeams.value].sort((leftTeam, rightTeam) => {
+//     if ((rightTeam.totalPoints ?? 0) !== (leftTeam.totalPoints ?? 0)) {
+//       return (rightTeam.totalPoints ?? 0) - (leftTeam.totalPoints ?? 0)
+//     }
+
+//     return getStandingTeamTrophyCount(rightTeam) - getStandingTeamTrophyCount(leftTeam)
+//   })
+
+//   if (!leader) {
+//     return ''
+//   }
+
+//   if (!runnerUp) {
+//     return leader.teamCode
+//   }
+
+//   const leaderPoints = leader.totalPoints ?? 0
+//   const runnerUpPoints = runnerUp.totalPoints ?? 0
+//   const leaderTrophies = getStandingTeamTrophyCount(leader)
+//   const runnerUpTrophies = getStandingTeamTrophyCount(runnerUp)
+
+//   if (leaderPoints === runnerUpPoints && leaderTrophies === runnerUpTrophies) {
+//     return ''
+//   }
+
+//   return leader.teamCode
+// })
 
 const nextSlide = () => {
   const total = currentTeamData.value.gallery.length
@@ -300,7 +328,7 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
               :style="{ '--hero-image-offset': `${currentTeamData.heroImageOffsetX}%` }"
             />
             <div
-              class="absolute inset-0 bg-gradient-to-t from-[#090a0d] via-[#090a0d]/30 to-transparent"
+              class="bg-linear-to-t absolute inset-0 from-[#090a0d] via-[#090a0d]/30 to-transparent"
             ></div>
             <div
               class="bg-linear-to-r absolute inset-0 from-[#090a0d]/60 via-transparent to-[#090a0d]/40"
@@ -366,7 +394,7 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
             <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div>
                 <h2 class="text-lg font-bold" :style="{ color: teamColors[activeTeam].primary }">
-                  赛季排行榜
+                  赛季积分榜
                 </h2>
                 <!-- <p class="mt-2 text-sm text-white/55">按赛季查看三支球队积分对比与每轮明细</p> -->
               </div>
@@ -404,7 +432,7 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
               v-if="standingsLoading"
               class="border-white/8 rounded-2xl border bg-[#0f1117] px-4 py-10 text-center text-sm text-white/55"
             >
-              排行榜加载中...
+              积分榜加载中...
             </div>
 
             <div
@@ -432,12 +460,6 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
 
             <div v-else class="space-y-5">
               <div>
-                <div class="mb-3 flex items-center justify-between">
-                  <h3 class="text-sm font-semibold text-white">总积分走势</h3>
-                  <span class="text-xs tracking-widest text-white/40">
-                    总计 {{ grandTotalPoints }} 分
-                  </span>
-                </div>
                 <div class="grid grid-cols-3 gap-2 md:gap-3">
                   <article
                     v-for="team in orderedStandingTeams"
@@ -457,18 +479,36 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
                           {{ team.teamCode }}
                         </p>
                         <h4
-                          class="mt-2 whitespace-nowrap text-[13px] font-semibold text-white md:text-lg"
+                          class="mt-2 whitespace-nowrap text-[14px] font-semibold text-white md:text-lg"
                         >
                           {{ team.teamName }}
                         </h4>
                       </div>
                       <div class="text-right">
-                        <div class="text-2xl font-black leading-none text-white md:text-3xl">
-                          {{ team.totalPoints }}
+                        <div
+                          class="relative items-end justify-end gap-1 px-1 text-2xl font-black leading-none text-white md:text-3xl"
+                        >
+                          <!-- <Icon
+                            v-if="team.teamCode === leadingStandingTeamCode"
+                            icon="mdi:crown"
+                            class="text-amber-200/12 absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2"
+                          /> -->
+                          <span class="relative">{{ team.totalPoints }}</span>
                         </div>
                       </div>
                     </div>
-                    <div class="bg-white/8 mt-4 h-2 overflow-hidden rounded-full">
+                    <div
+                      v-if="getStandingTeamTrophyCount(team)"
+                      class="mt-3 flex justify-end gap-1.5 text-amber-300"
+                    >
+                      <Icon
+                        v-for="trophyIndex in getStandingTeamTrophyCount(team)"
+                        :key="`${team.teamId}-trophy-${trophyIndex}`"
+                        icon="mdi:trophy"
+                        class="h-4 w-4"
+                      />
+                    </div>
+                    <div class="bg-white/8 mt-2.5 h-2 overflow-hidden rounded-full">
                       <div
                         class="h-full rounded-full transition-all duration-500"
                         :style="{
@@ -510,7 +550,19 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
                           :key="`${row.id}-${pointIndex}`"
                           class="text-white/72 px-4 py-4 text-center"
                         >
-                          {{ point }}
+                          <span
+                            v-if="point === 2"
+                            class="relative inline-flex h-8 w-8 items-center justify-center text-[11px] font-semibold text-amber-50"
+                          >
+                            <Icon
+                              icon="mdi:trophy"
+                              class="text-amber-200/12 absolute inset-0 h-full w-full translate-y-0.5"
+                            />
+                            <span class="relative">{{ point }}</span>
+                          </span>
+                          <span v-else>
+                            {{ point }}
+                          </span>
                         </td>
                       </tr>
                     </tbody>
@@ -556,7 +608,7 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
                   class="absolute inset-0 bg-black/20 transition-colors group-hover:bg-black/10"
                 ></div>
                 <div
-                  class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"
+                  class="bg-linear-to-t absolute inset-0 from-black/40 via-transparent to-transparent"
                 ></div>
               </div>
 

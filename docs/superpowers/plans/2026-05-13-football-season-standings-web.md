@@ -621,7 +621,7 @@ it('renders the standings section and totals after loading football data', async
 
   await flushPromises()
 
-  expect(wrapper.text()).toContain('赛季排行榜')
+  expect(wrapper.text()).toContain('赛季积分榜榜')
   expect(wrapper.text()).toContain('2026')
   expect(wrapper.text()).toContain('春季赛')
   expect(wrapper.text()).toContain('高歌国际')
@@ -739,7 +739,7 @@ Add this standings block below the existing team description section and before 
 >
   <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
     <div>
-      <h2 class="text-xl font-bold" :style="{ color: teamColors[activeTeam].primary }">赛季排行榜</h2>
+      <h2 class="text-xl font-bold" :style="{ color: teamColors[activeTeam].primary }">赛季积分榜榜</h2>
       <p class="mt-1 text-sm text-white/50">按赛季查看三支球队积分对比与每轮明细</p>
     </div>
     <div class="flex gap-2">

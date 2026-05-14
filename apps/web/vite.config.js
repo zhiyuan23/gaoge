@@ -11,6 +11,7 @@ export default defineConfig(({ mode, command }) => {
     plugins: [vue(), tailwindcss()],
     base: '/',
     server: {
+      open: true,
       proxy: proxyPrefix
         ? {
             [proxyPrefix]: {
