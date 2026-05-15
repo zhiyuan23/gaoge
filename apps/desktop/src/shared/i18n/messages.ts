@@ -185,7 +185,7 @@ const enUS = {
   'settings.theme.light': 'Light',
   'settings.theme.dark': 'Dark',
   'settings.theme.system': 'System',
-  'settings.language.title': 'Interface Language',
+  'settings.language.title': 'Interface language',
   'settings.language.zh-CN': 'Simplified Chinese',
   'settings.language.en-US': 'English',
   'settings.startup.title': 'Startup view',
