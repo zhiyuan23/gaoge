@@ -56,7 +56,7 @@ describe('usePreferenceStore', () => {
     })
   })
 
-  it('hydrates persisted local preferences and ignores invalid values', async () => {
+  it('hydrates persisted local preferences', async () => {
     bridgeMocks.getSetting.mockImplementation(async (key: string) => {
       const values: Record<string, string> = {
         [desktopPreferenceKeys.autoCheckUpdates]: 'false',
@@ -87,6 +87,25 @@ describe('usePreferenceStore', () => {
       sidebarLabels: 'hide',
       startupView: 'tasks',
       themeMode: 'system',
+    })
+  })
+
+  it('ignores invalid persisted local preferences and falls back to defaults', async () => {
+    bridgeMocks.getSetting.mockResolvedValue('invalid')
+
+    await usePreferenceStore.getState().hydrate()
+
+    expect(usePreferenceStore.getState()).toMatchObject({
+      autoCheckUpdates: defaultDesktopPreferences.autoCheckUpdates,
+      confirmActions: defaultDesktopPreferences.confirmActions,
+      density: defaultDesktopPreferences.density,
+      enableNotifications: defaultDesktopPreferences.enableNotifications,
+      fontSize: defaultDesktopPreferences.fontSize,
+      language: defaultDesktopPreferences.language,
+      reduceMotion: defaultDesktopPreferences.reduceMotion,
+      sidebarLabels: defaultDesktopPreferences.sidebarLabels,
+      startupView: defaultDesktopPreferences.startupView,
+      themeMode: defaultDesktopPreferences.themeMode,
     })
   })
 
