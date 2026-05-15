@@ -8,6 +8,7 @@ apps/electron/test-results
 apps/desktop/test-results
 *.tsbuildinfo
 .DS_Store
+.pnpm-store
 !.env.example
 !.env*.example
 apps/api/.env
