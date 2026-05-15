@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+
+:root {
+  --app-bg: linear-gradient(180deg, #fbfbf8 0%, #f4f3ee 100%);
+  --chrome-bg: #f3f2ed;
+  --panel-bg: #fff;
+  --panel-muted: #f7f6f1;
+  --panel-hover: #eeede7;
+  --panel-shadow: 0 20px 70px rgb(31 31 31 / 8%);
+  --text-primary: #20201d;
+  --text-secondary: #4e4d48;
+  --text-muted: #77746b;
+  --border-soft: #dedbd0;
+  --accent-surface: #ece8dd;
+  --accent-border: #d7d1c2;
+  --accent-strong: #4c4638;
+  --link-active-bg: #e8e5dc;
+  --link-active-text: #1f1f1c;
+  --link-active-border: #d6d1c5;
+  --link-active-shadow: rgb(31 31 31 / 10%);
+
+  color: var(--text-primary);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --app-bg: linear-gradient(180deg, #171715 0%, #1d1c19 100%);
+  --chrome-bg: #20201d;
+  --panel-bg: #24231f;
+  --panel-muted: #2a2925;
+  --panel-hover: #32312d;
+  --panel-shadow: 0 22px 80px rgb(0 0 0 / 34%);
+  --text-primary: #f4f1e8;
+  --text-secondary: #cac5b8;
+  --text-muted: #918c80;
+  --border-soft: #3c3932;
+  --accent-surface: #333026;
+  --accent-border: #4c4538;
+  --accent-strong: #ded6c3;
+  --link-active-bg: #343128;
+  --link-active-text: #f4f1e8;
+  --link-active-border: #50493b;
+  --link-active-shadow: rgb(0 0 0 / 22%);
+
+  color: var(--text-primary);
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  font-family:
+    "Avenir Next", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+    'PingFang SC', sans-serif;
+  color: var(--text-primary);
+  background: var(--app-bg);
+}
+
+body {
+  min-width: 360px;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-strong) 58%, transparent);
+  outline-offset: 2px;
+}
+
+.app-density-compact {
+  --desktop-sidebar-width: 232px;
+  --desktop-control-height: 32px;
+}
+
+.app-density-comfortable {
+  --desktop-sidebar-width: 248px;
+  --desktop-control-height: 40px;
+}
+
+.app-font-small {
+  font-size: 14px;
+}
+
+.app-font-large {
+  font-size: 16px;
+}
+
+.app-reduce-motion *,
+.app-reduce-motion *::before,
+.app-reduce-motion *::after {
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+}
+
+.app-drag-region {
+  -webkit-app-region: drag;
+}
+
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}

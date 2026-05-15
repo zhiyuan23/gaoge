@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
 
 import { resetPreferenceStore } from './state/preferences-store'
@@ -81,4 +81,42 @@ test('opens the settings dialog from the sidebar footer', async () => {
   expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
   expect(screen.getByRole('tab', { name: 'General' })).toBeInTheDocument()
   expect(screen.getByRole('tab', { name: 'Appearance' })).toBeInTheDocument()
+})
+
+test('applies local appearance classes to the shell container', async () => {
+  bridgeMocks.getSetting.mockImplementation(async (key: string) => {
+    if (key === 'desktop-language') {
+      return 'en-US'
+    }
+
+    if (key === 'desktop-density') {
+      return 'compact'
+    }
+
+    if (key === 'desktop-font-size') {
+      return 'large'
+    }
+
+    if (key === 'desktop-reduce-motion') {
+      return 'true'
+    }
+
+    if (key === 'desktop-sidebar-labels') {
+      return 'hide'
+    }
+
+    return null
+  })
+
+  render(<App />)
+
+  const workspace = await screen.findByRole('region', { name: 'Workspace placeholder' })
+  const shell = workspace.closest('.app-density-compact')
+
+  expect(shell).toHaveClass('app-font-large')
+  expect(shell).toHaveClass('app-reduce-motion')
+
+  await waitFor(() => {
+    expect(screen.queryByText('Local desktop workspace')).not.toBeInTheDocument()
+  })
 })
