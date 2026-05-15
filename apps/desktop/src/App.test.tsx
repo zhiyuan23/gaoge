@@ -72,3 +72,13 @@ test('switches the right workspace placeholder from the sidebar menu', async () 
   expect(screen.getByRole('heading', { name: 'Tasks' })).toBeInTheDocument()
   expect(screen.getByText('Task automation will appear here later.')).toBeInTheDocument()
 })
+
+test('opens the settings dialog from the sidebar footer', async () => {
+  render(<App />)
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Settings' }))
+
+  expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: 'General' })).toBeInTheDocument()
+  expect(screen.getByRole('tab', { name: 'Appearance' })).toBeInTheDocument()
+})

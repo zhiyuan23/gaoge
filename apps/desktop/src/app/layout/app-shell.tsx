@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
+import { SettingsDialog } from '@/features/codex-shell/settings-dialog'
 import { Sidebar } from '@/features/codex-shell/sidebar'
 import { WorkspacePlaceholder } from '@/features/codex-shell/workspace-placeholder'
 import type { ShellMenuKey } from '@/shared/config/preferences'
@@ -13,9 +14,12 @@ export function AppShell() {
   const sidebarLabels = usePreferenceStore((state) => state.sidebarLabels)
   const startupView = usePreferenceStore((state) => state.startupView)
   const [activeMenu, setActiveMenu] = useState<ShellMenuKey>(startupView)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const initializedFromStartupView = useRef(false)
 
   useEffect(() => {
-    if (hydrated) {
+    if (hydrated && !initializedFromStartupView.current) {
+      initializedFromStartupView.current = true
       setActiveMenu(startupView)
     }
   }, [hydrated, startupView])
@@ -35,12 +39,13 @@ export function AppShell() {
       <Sidebar
         activeMenu={activeMenu}
         labels={sidebarLabels}
-        onOpenSettings={() => undefined}
+        onOpenSettings={() => setSettingsOpen(true)}
         onSelectMenu={setActiveMenu}
       />
       <main className="min-h-screen min-w-0 flex-1 overflow-y-auto">
         <WorkspacePlaceholder activeMenu={activeMenu} />
       </main>
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }
