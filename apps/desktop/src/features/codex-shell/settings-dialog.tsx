@@ -11,7 +11,7 @@ import type {
 import { useTranslation } from '@/shared/i18n/use-translation'
 import { usePreferenceStore } from '@/state/preferences-store'
 
-import { type SettingsSectionKey,settingsSections, shellMenuItems } from './shell-options'
+import { type SettingsSectionKey, settingsSections, shellMenuItems } from './shell-options'
 
 interface SettingsDialogProps {
   open: boolean

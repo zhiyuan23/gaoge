@@ -3,6 +3,10 @@ node_modules
 **/.turbo
 dist
 coverage
+.superpowers
+apps/electron/test-results
+apps/electron/electron.vite.config.*.mjs
+apps/desktop/test-results
 .changeset/*.md
 pnpm-lock.yaml
 apps/admin/public/tinymce/**
