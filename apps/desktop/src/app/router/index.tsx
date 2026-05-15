@@ -1,11 +1,11 @@
 import { createHashRouter, Navigate } from 'react-router-dom'
 
-import { AppShell } from '@/app/layout/app-shell'
+import { HomePage } from '@/pages/home/page'
 
 export const appRouter = createHashRouter([
   {
     path: '/',
-    element: <AppShell />,
+    element: <HomePage />,
   },
   {
     path: '/settings',
