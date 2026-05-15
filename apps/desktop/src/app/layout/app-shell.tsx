@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { SettingsDialog } from '@/features/codex-shell/settings-dialog'
-import { Sidebar } from '@/features/codex-shell/sidebar'
-import { WorkspacePlaceholder } from '@/features/codex-shell/workspace-placeholder'
+import { Sidebar } from '@/app/shell/sidebar'
+import { WorkspacePlaceholder } from '@/app/shell/workspace-placeholder'
+import { SettingsDialog } from '@/features/settings/settings-dialog'
 import type { ShellMenuKey } from '@/shared/config/preferences'
 import { usePreferenceStore } from '@/state/preferences-store'
 
@@ -27,7 +27,7 @@ export function AppShell() {
   return (
     <div
       className={[
-        'flex min-h-screen bg-[image:var(--app-bg)] text-[color:var(--text-primary)] transition-colors',
+        'bg-(--app-bg) text-(--text-primary) flex min-h-screen transition-colors',
         density === 'compact' ? 'app-density-compact' : 'app-density-comfortable',
         fontSize === 'small' ? 'app-font-small' : '',
         fontSize === 'large' ? 'app-font-large' : '',
@@ -42,7 +42,11 @@ export function AppShell() {
         onOpenSettings={() => setSettingsOpen(true)}
         onSelectMenu={setActiveMenu}
       />
-      <main className="min-h-screen min-w-0 flex-1 overflow-y-auto">
+      <main className="bg-(--workspace-bg) flex min-h-screen min-w-0 flex-1 flex-col overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="app-drag-region border-(--border-subtle) bg-(--workspace-bg) h-12 shrink-0 border-b"
+        />
         <WorkspacePlaceholder activeMenu={activeMenu} />
       </main>
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />

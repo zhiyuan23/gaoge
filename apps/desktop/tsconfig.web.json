@@ -1,0 +1,14 @@
+{
+  "extends": "../../packages/configs/typescript-config/web.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "composite": true,
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"]
+}

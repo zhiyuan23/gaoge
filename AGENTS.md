@@ -10,8 +10,9 @@
 - `apps/api` 与 `apps/admin` 已完成首轮迁入，并保持球员信息 CRUD 可运行
 - `apps/web` 已完成从平级 `gaoge-web` 的首轮迁入，当前为真实 Vite/Vue 前台项目
 - `apps/miniapp` 已完成从平级 `gaoge-miniapp` 的首轮迁入，当前为真实 uni-app/Vue 前台项目
+- `apps/desktop` 已完成首轮接入，当前为真实 Electron/React 桌面项目
 - `packages/*` 目前仍以第一阶段共享层骨架为主
-- 根目录工作流已按应用拆分为独立部署入口，`api`、`web`、`admin`、`miniapp` 应分别维护自己的发布流程
+- 根目录工作流已按应用拆分为独立部署入口，`api`、`web`、`admin`、`miniapp`、`desktop` 应分别维护自己的发布流程
 
 后续继续引入新的真实项目，或显著调整 `web/admin/api/miniapp` 的目录职责时，必须同步更新本文件，确保 AI 协作规则与真实代码结构一致。
 
@@ -41,6 +42,7 @@
 - `apps/web`
 - `apps/miniapp`
 - `apps/api`
+- `apps/desktop`
 
 规则：
 
@@ -127,7 +129,9 @@ AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 - `pnpm dev:web`
 - `pnpm dev:miniapp`
 - `pnpm dev:api`
-- `pnpm dev:admin-api`
+- `pnpm dev:desktop`
+- `pnpm dev:desktop-api`
+- `pnpm build:desktop`
 - `pnpm lint`
 - `pnpm lint:fix`
 - `pnpm lint:style`

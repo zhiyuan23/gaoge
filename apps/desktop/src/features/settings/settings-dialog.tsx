@@ -8,10 +8,11 @@ import type {
   SidebarLabels,
   ThemeMode,
 } from '@/shared/config/preferences'
+import { shellMenuItems } from '@/shared/config/shell'
 import { useTranslation } from '@/shared/i18n/use-translation'
 import { usePreferenceStore } from '@/state/preferences-store'
 
-import { type SettingsSectionKey, settingsSections, shellMenuItems } from './shell-options'
+import { type SettingsSectionKey, settingsSections } from './settings-options'
 
 interface SettingsDialogProps {
   open: boolean
@@ -40,7 +41,7 @@ function RadioGroup<T extends string>({
 }: RadioGroupProps<T>) {
   return (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-semibold text-[color:var(--text-primary)]">{legend}</legend>
+      <legend className="text-(--text-primary) text-sm font-semibold">{legend}</legend>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <label
@@ -48,13 +49,13 @@ function RadioGroup<T extends string>({
             className={[
               'flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm transition',
               option.value === value
-                ? 'border-[color:var(--accent-border)] bg-[color:var(--accent-surface)] text-[color:var(--accent-strong)]'
-                : 'border-[color:var(--border-soft)] bg-[color:var(--panel-bg)] text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)]',
+                ? 'border-(--accent-border) bg-(--accent-surface) text-(--accent-strong)'
+                : 'border-(--border-soft) bg-(--panel-bg) text-(--text-secondary) hover:text-(--text-primary)',
             ].join(' ')}
           >
             <input
               checked={option.value === value}
-              className="accent-[color:var(--accent-strong)]"
+              className="accent-(--accent-strong)"
               name={name}
               onChange={() => onChange(option.value)}
               type="radio"
@@ -75,10 +76,10 @@ interface CheckboxFieldProps {
 
 function CheckboxField({ checked, label, onChange }: CheckboxFieldProps) {
   return (
-    <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--panel-bg)] px-3 text-sm text-[color:var(--text-primary)]">
+    <label className="border-(--border-soft) bg-(--panel-bg) text-(--text-primary) flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border px-3 text-sm">
       <input
         checked={checked}
-        className="accent-[color:var(--accent-strong)]"
+        className="accent-(--accent-strong)"
         onChange={(event) => onChange(event.currentTarget.checked)}
         type="checkbox"
       />
@@ -156,20 +157,17 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       <section
         aria-labelledby="settings-dialog-title"
         aria-modal="true"
-        className="grid max-h-[90vh] w-full max-w-4xl grid-cols-1 overflow-hidden rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--panel-bg)] shadow-2xl md:grid-cols-[220px_1fr]"
+        className="border-(--border-soft) bg-(--panel-bg) grid max-h-[90vh] w-full max-w-4xl grid-cols-1 overflow-hidden rounded-xl border shadow-2xl md:grid-cols-[220px_1fr]"
         role="dialog"
       >
-        <div className="border-b border-[color:var(--border-soft)] bg-[color:var(--chrome-bg)] p-4 md:border-b-0 md:border-r">
+        <div className="border-(--border-soft) bg-(--chrome-bg) border-b p-4 md:border-b-0 md:border-r">
           <div className="flex items-center justify-between gap-3">
-            <h2
-              className="text-lg font-semibold text-[color:var(--text-primary)]"
-              id="settings-dialog-title"
-            >
+            <h2 className="text-(--text-primary) text-lg font-semibold" id="settings-dialog-title">
               {t('settings.title')}
             </h2>
             <button
               aria-label={t('settings.close')}
-              className="rounded-lg border border-[color:var(--border-soft)] px-3 py-1 text-sm text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)] md:hidden"
+              className="border-(--border-soft) text-(--text-secondary) hover:text-(--text-primary) rounded-lg border px-3 py-1 text-sm transition md:hidden"
               onClick={onClose}
               type="button"
             >
@@ -188,8 +186,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   className={[
                     'rounded-lg border px-3 py-2 text-left text-sm font-medium transition',
                     selected
-                      ? 'border-[color:var(--link-active-border)] bg-[color:var(--link-active-bg)] text-[color:var(--link-active-text)]'
-                      : 'border-transparent text-[color:var(--text-secondary)] hover:border-[color:var(--border-soft)] hover:bg-[color:var(--panel-hover)] hover:text-[color:var(--text-primary)]',
+                      ? 'border-(--link-active-border) bg-(--link-active-bg) text-(--link-active-text)'
+                      : 'text-(--text-secondary) hover:border-(--border-soft) hover:bg-(--panel-hover) hover:text-(--text-primary) border-transparent',
                   ].join(' ')}
                   onClick={() => setActiveSection(section.key)}
                   role="tab"
@@ -202,11 +200,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           </div>
         </div>
 
-        <div className="flex min-h-[560px] flex-col overflow-y-auto">
-          <div className="hidden justify-end border-b border-[color:var(--border-soft)] p-4 md:flex">
+        <div className="min-h-140 flex flex-col overflow-y-auto">
+          <div className="border-(--border-soft) hidden justify-end border-b p-4 md:flex">
             <button
               aria-label={t('settings.close')}
-              className="rounded-lg border border-[color:var(--border-soft)] px-3 py-1 text-sm text-[color:var(--text-secondary)] transition hover:text-[color:var(--text-primary)]"
+              className="border-(--border-soft) text-(--text-secondary) hover:text-(--text-primary) rounded-lg border px-3 py-1 text-sm transition"
               onClick={onClose}
               type="button"
             >
@@ -322,7 +320,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
             ) : null}
           </div>
 
-          <footer className="border-t border-[color:var(--border-soft)] px-5 py-4 text-sm text-[color:var(--text-secondary)]">
+          <footer className="border-(--border-soft) text-(--text-secondary) border-t px-5 py-4 text-sm">
             {status}
           </footer>
         </div>
@@ -340,11 +338,11 @@ interface StaticSectionProps {
 function StaticSection({ buttonLabel, copy, onAction }: StaticSectionProps) {
   return (
     <div className="space-y-4">
-      <p className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--panel-muted)] p-4 text-sm text-[color:var(--text-primary)]">
+      <p className="border-(--border-soft) bg-(--panel-muted) text-(--text-primary) rounded-lg border p-4 text-sm">
         {copy}
       </p>
       <button
-        className="rounded-lg border border-[color:var(--accent-border)] bg-[color:var(--accent-surface)] px-4 py-2 text-sm font-medium text-[color:var(--accent-strong)] transition hover:bg-[color:var(--panel-hover)]"
+        className="border-(--accent-border) bg-(--accent-surface) text-(--accent-strong) hover:bg-(--panel-hover) rounded-lg border px-4 py-2 text-sm font-medium transition"
         onClick={onAction}
         type="button"
       >

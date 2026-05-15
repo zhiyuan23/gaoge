@@ -6,7 +6,7 @@
 
 在 `apps/` 下新增一个独立的 Electron 桌面应用，为高歌体系提供新的桌面端入口，并满足以下前提：
 
-- 应用目录位于 `apps/electron`
+- 应用目录位于 `apps/desktop`
 - 应用本身独立运行、独立构建、独立发布
 - 渲染层使用 `React`
 - 首发平台为 macOS 与 Windows
@@ -25,7 +25,7 @@
 - 根目录已经提供统一的 `lint`、`typecheck`、`build` 聚合命令
 - 当前 `apps/*` 明确禁止横向依赖，真实应用应通过 `packages/*` 共享稳定能力
 
-这意味着 `apps/electron` 应当被视为新的真实应用，而不是从 `apps/web` 上临时套一个桌面壳，也不适合在首版就把大量 Electron 细节沉到 `packages/*`。
+这意味着 `apps/desktop` 应当被视为新的真实应用，而不是从 `apps/web` 上临时套一个桌面壳，也不适合在首版就把大量 Electron 细节沉到 `packages/*`。
 
 ## 范围
 
@@ -108,7 +108,7 @@
 
 确认采用方案 B，也就是：
 
-- `apps/electron` 作为独立桌面应用接入 monorepo
+- `apps/desktop` 作为独立桌面应用接入 monorepo
 - 产品形态采用“在线优先 + 本地正式持久化 + 离线能力可渐进增强”
 - 架构采用 Electron 经典三层：
   - `main` 处理桌面与系统能力
@@ -154,7 +154,7 @@
 
 ## 应用定位
 
-`apps/electron` 是高歌体系中的独立桌面客户端。
+`apps/desktop` 是高歌体系中的独立桌面客户端。
 
 它的职责是：
 
@@ -173,10 +173,10 @@
 
 ## 目录设计
 
-建议 `apps/electron` 采用如下目录：
+建议 `apps/desktop` 采用如下目录：
 
 ```text
-apps/electron/
+apps/desktop/
   package.json
   tsconfig.json
   tsconfig.node.json
@@ -414,10 +414,10 @@ apps/electron/
 
 ## 依赖与共享边界
 
-`apps/electron` 遵循当前仓库既有单向依赖规则：
+`apps/desktop` 遵循当前仓库既有单向依赖规则：
 
 ```text
-apps/electron -> sdk/ui/server/shared/configs
+apps/desktop -> sdk/ui/server/shared/configs
 ```
 
 因此：
@@ -433,14 +433,14 @@ apps/electron -> sdk/ui/server/shared/configs
 
 - 稳定 DTO、通用 schema、纯函数工具，后续可沉到 `packages/shared/*`
 - 远端 API 客户端能力稳定后，可沉到 `packages/sdk/*`
-- Electron 专属能力始终留在 `apps/electron`
+- Electron 专属能力始终留在 `apps/desktop`
 - 没有至少两个应用稳定复用之前，不新增新的共享包
 
 ## 构建与发布设计
 
 ### 应用内脚本
 
-`apps/electron/package.json` 至少维护以下脚本：
+`apps/desktop/package.json` 至少维护以下脚本：
 
 - `dev`
 - `build`
@@ -466,9 +466,9 @@ apps/electron -> sdk/ui/server/shared/configs
 
 根目录建议补充以下命令：
 
-- `pnpm dev:electron`
-- `pnpm dev:electron-api`
-- `pnpm build:electron`
+- `pnpm dev:desktop`
+- `pnpm dev:desktop-api`
+- `pnpm build:desktop`
 
 接入原则如下：
 
@@ -584,7 +584,7 @@ Electron 首版测试分三层：
 
 第一阶段包含：
 
-- `apps/electron` 基础工程骨架
+- `apps/desktop` 基础工程骨架
 - `main + preload + renderer` 三层跑通
 - `React + TypeScript` 渲染层接入
 - 基础路由、Provider 和应用启动框架
@@ -617,7 +617,7 @@ Electron 首版测试分三层：
 
 本方案确认：
 
-- `apps/electron` 作为独立桌面应用接入 monorepo
+- `apps/desktop` 作为独立桌面应用接入 monorepo
 - 使用 `React + TypeScript` 作为渲染层
 - 使用 `electron-vite + electron-builder` 作为开发与打包基础
 - 使用 `Tailwind CSS + shadcn/ui` 作为首版 UI 路线

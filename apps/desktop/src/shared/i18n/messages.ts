@@ -2,7 +2,7 @@ import type { Language } from '@/shared/config/preferences'
 
 const zhCN = {
   'shell.brand.eyebrow': 'Gaoge OS',
-  'shell.brand.title': 'Codex',
+  'shell.brand.title': 'Gaoge',
   'shell.brand.subtitle': '本地桌面工作区',
   'shell.brand.description': '本地数据、桌面能力与业务入口收敛到统一桌面壳。',
   'shell.menu.chats': '对话',
@@ -132,7 +132,7 @@ const zhCN = {
 
 const enUS = {
   'shell.brand.eyebrow': 'Gaoge OS',
-  'shell.brand.title': 'Codex',
+  'shell.brand.title': 'Gaoge',
   'shell.brand.subtitle': 'Local desktop workspace',
   'shell.brand.description':
     'Bring local data, desktop controls, and business entry points into one stable shell.',

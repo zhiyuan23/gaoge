@@ -51,7 +51,7 @@ beforeEach(() => {
   window.history.replaceState(null, '', '/#/')
 })
 
-test('renders a Codex-style desktop shell from saved preferences', async () => {
+test('renders a Gaoge-style desktop shell from saved preferences', async () => {
   render(<App />)
 
   expect(await screen.findByRole('button', { name: 'Chats' })).toBeInTheDocument()

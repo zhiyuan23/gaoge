@@ -13,8 +13,9 @@
 
 - `apps/api`：已迁入的 NestJS 服务端，当前包含球员信息 CRUD
 - `apps/admin`：已迁入的 Vue 3 管理后台，当前已接通球员信息 CRUD
-- `apps/web`：后续迁入的 Vue Web 应用
-- `apps/miniapp`：后续迁入的 uni-app 小程序应用
+- `apps/web`：已迁入的 Vue Web 应用
+- `apps/miniapp`：已迁入的 uni-app 小程序应用
+- `apps/desktop`：已接入的 Electron + React 桌面应用底座
 - `packages/shared/*`：类型、常量、工具函数、校验契约
 - `packages/sdk/*`：接口客户端与契约生成边界
 - `packages/ui/tokens`：跨端设计令牌
@@ -53,3 +54,32 @@
 - `apps/api` 保留 `.env.example`
 - 本地运行时请复制对应示例文件生成真实 `.env*` 文件；真实环境变量不提交到 git
 - 本次迁移后，已将原单仓库的本地环境变量复制到当前工作区，仅用于你当前机器上的运行，不会进入版本库
+
+## 本地运行
+
+### 安装依赖
+
+在仓库根目录执行：
+
+```bash
+pnpm install
+```
+
+### 启动 Electron
+
+Electron 首次运行前，除了安装工作区依赖，还需要放行并补跑原生依赖/二进制安装脚本。否则 `pnpm dev:desktop` 可能会报 `Electron uninstall` 或 `Electron failed to install correctly`。
+
+在仓库根目录依次执行：
+
+```bash
+pnpm approve-builds
+pnpm install:desktop-native
+pnpm dev:desktop
+```
+
+`pnpm approve-builds` 时请允许：
+
+- `electron`
+- `better-sqlite3`
+
+`pnpm install:desktop-native` 会通过 `electron-builder install-app-deps` 按 Electron 自身的 ABI 重建 `better-sqlite3` 这类原生依赖。普通的 `pnpm rebuild` 只会按当前 Node.js ABI 编译，仍然可能在 Electron 启动时报 `NODE_MODULE_VERSION` 不匹配。

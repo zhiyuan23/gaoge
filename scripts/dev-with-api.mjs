@@ -7,6 +7,7 @@ const ENTRY_FILE_PATH = fileURLToPath(import.meta.url)
 
 const TARGET_FILTERS = {
   admin: '@gaoge/app-admin',
+  desktop: '@gaoge/app-desktop',
   miniapp: '@gaoge/app-miniapp',
   web: '@gaoge/app-web',
 }

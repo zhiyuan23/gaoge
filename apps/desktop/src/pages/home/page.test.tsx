@@ -48,7 +48,7 @@ beforeEach(() => {
   resetPreferenceStore()
 })
 
-test('renders the Codex shell as the desktop home page', async () => {
+test('renders the Gaoge shell as the desktop home page', async () => {
   render(
     <AppProviders>
       <HomePage />
