@@ -52,12 +52,6 @@
           "style": {
             "navigationBarTitleText": "记录详情"
           }
-        },
-        {
-          "path": "scan/index",
-          "style": {
-            "navigationBarTitleText": "扫码"
-          }
         }
       ]
     }
