@@ -9,8 +9,8 @@ const IMPORT_RECORD_DATE = new Date('2026-05-20T00:00:00.000Z')
 const SPLIT_SEASON_LABEL = '26赛季春季赛（6）'
 const LEGACY_EXPECTED_TOTALS = {
   income: 126000,
-  expense: 75500,
-  balance: 50500,
+  expense: 75698,
+  balance: 50302,
 }
 
 type LegacyExpenseType = 'equipment' | 'activity' | 'other_expense'
