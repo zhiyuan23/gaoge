@@ -10,7 +10,6 @@ export interface AssetRecordSearch extends SearchFormData {
   keyword: string
   direction: AssetRecordDirection | ''
   recordType: AssetRecordType | ''
-  seasonLabel: string
   status: AssetRecordStatus | ''
   dateRange: string[]
 }
@@ -20,7 +19,6 @@ export interface AssetRecordFormModel {
   direction: AssetRecordDirection
   recordType: AssetRecordType
   amount: number | null
-  seasonLabel: string
   matchLabel: string
   isWaived: boolean
   title: string

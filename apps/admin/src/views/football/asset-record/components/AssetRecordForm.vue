@@ -156,15 +156,10 @@ defineExpose({
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem label="赛季标签">
-          <ElInput v-model="model.seasonLabel" placeholder="如：26赛季春季赛" />
-        </ElFormItem>
-      </ElCol>
-      <ElCol :span="12">
         <ElFormItem label="场次标签">
           <ElInput
             v-model="model.matchLabel"
-            :placeholder="model.recordType === 'match_fee' ? '如：第1场' : '可选填写'"
+            :placeholder="model.recordType === 'match_fee' ? '如：2026年春季赛第1轮' : '可选填写'"
           />
         </ElFormItem>
       </ElCol>

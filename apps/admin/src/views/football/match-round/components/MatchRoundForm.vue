@@ -98,6 +98,16 @@ defineExpose({
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
+        <ElFormItem label="建设费收取">
+          <ElSwitch
+            v-model="model.collectTeamFee"
+            inline-prompt
+            active-text="收取"
+            inactive-text="不收"
+          />
+        </ElFormItem>
+      </ElCol>
+      <ElCol :span="12">
         <ElFormItem label="比赛场地">
           <ElInput v-model="model.venue" placeholder="请输入比赛场地" />
         </ElFormItem>

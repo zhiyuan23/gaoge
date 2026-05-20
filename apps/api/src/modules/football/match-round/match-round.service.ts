@@ -8,6 +8,7 @@ import { PrismaService } from '@/common/prisma/prisma.service'
 import type { CreateMatchRoundDto, MatchRoundResultDto } from './dto/create-match-round.dto'
 import type { UpdateMatchRoundDto } from './dto/update-match-round.dto'
 
+const TEAM_FEE_AMOUNT = 2000
 const MATCH_ROUND_INCLUDE = {
   results: {
     include: {
@@ -42,6 +43,12 @@ export class MatchRoundService {
           ...result,
         })),
       })
+
+      if (data.collectTeamFee) {
+        await tx.footballAssetRecord.create({
+          data: buildMatchFeeAssetRecord(data),
+        })
+      }
 
       const created = await tx.matchRound.findUnique({
         where: { id: round.id },
@@ -164,12 +171,16 @@ function normalizeNullableText(value: string | null | undefined) {
 }
 
 function normalizeCreateRoundPayload(
-  dto: Pick<CreateMatchRoundDto, 'year' | 'season' | 'round' | 'matchDate' | 'venue' | 'remark'>,
+  dto: Pick<
+    CreateMatchRoundDto,
+    'year' | 'season' | 'round' | 'collectTeamFee' | 'matchDate' | 'venue' | 'remark'
+  >,
 ) {
   return {
     year: dto.year,
     season: dto.season,
     round: dto.round,
+    collectTeamFee: dto.collectTeamFee ?? true,
     matchDate: dto.matchDate,
     venue: normalizeNullableText(dto.venue),
     remark: normalizeNullableText(dto.remark),
@@ -177,12 +188,16 @@ function normalizeCreateRoundPayload(
 }
 
 function normalizeUpdateRoundPayload(
-  dto: Pick<UpdateMatchRoundDto, 'year' | 'season' | 'round' | 'matchDate' | 'venue' | 'remark'>,
+  dto: Pick<
+    UpdateMatchRoundDto,
+    'year' | 'season' | 'round' | 'collectTeamFee' | 'matchDate' | 'venue' | 'remark'
+  >,
 ) {
   return {
     ...(dto.year !== undefined ? { year: dto.year } : {}),
     ...(dto.season !== undefined ? { season: dto.season } : {}),
     ...(dto.round !== undefined ? { round: dto.round } : {}),
+    ...(dto.collectTeamFee !== undefined ? { collectTeamFee: dto.collectTeamFee } : {}),
     ...(dto.matchDate !== undefined ? { matchDate: dto.matchDate } : {}),
     ...(dto.venue !== undefined ? { venue: normalizeNullableText(dto.venue) } : {}),
     ...(dto.remark !== undefined ? { remark: normalizeNullableText(dto.remark) } : {}),
@@ -283,6 +298,7 @@ function serializeMatchRound(round: {
   year: number
   season: string
   round: number
+  collectTeamFee: boolean
   matchDate: Date
   venue: string | null
   remark: string | null
@@ -302,6 +318,7 @@ function serializeMatchRound(round: {
     year: round.year,
     season: round.season,
     round: round.round,
+    collectTeamFee: round.collectTeamFee,
     matchDate: round.matchDate,
     venue: round.venue,
     remark: round.remark,
@@ -313,6 +330,29 @@ function serializeMatchRound(round: {
       points: result.points,
       teamName: result.team?.name,
     })),
+  }
+}
+
+function buildMatchFeeAssetRecord(round: {
+  year: number
+  season: string
+  round: number
+  matchDate: Date
+}) {
+  const matchLabel = `${round.year}年${round.season}第${round.round}轮`
+
+  return {
+    direction: 'income',
+    recordType: 'match_fee',
+    amount: TEAM_FEE_AMOUNT,
+    seasonLabel: null,
+    matchLabel,
+    isWaived: false,
+    title: '球队建设费',
+    description: null,
+    recordDate: round.matchDate,
+    status: 'confirmed',
+    creatorId: null,
   }
 }
 

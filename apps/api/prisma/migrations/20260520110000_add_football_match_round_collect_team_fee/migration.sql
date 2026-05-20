@@ -1,0 +1,2 @@
+ALTER TABLE "MatchRound"
+ADD COLUMN "collectTeamFee" BOOLEAN NOT NULL DEFAULT true;

@@ -103,6 +103,35 @@ const currentPage = ref(props.page)
 // 每页条数
 const internalPageSize = ref(props.pageSize)
 
+function normalizeColumnWidth(column: TableColumn): TableColumn {
+  const { fixedWidth, width, minWidth, ...rest } = column
+
+  if (typeof fixedWidth === 'number') {
+    return {
+      ...rest,
+      minWidth,
+      width: fixedWidth,
+    }
+  }
+
+  if (typeof minWidth === 'number') {
+    return {
+      ...rest,
+      minWidth,
+      width,
+    }
+  }
+
+  if (typeof width === 'number') {
+    return {
+      ...rest,
+      minWidth: width,
+    }
+  }
+
+  return rest
+}
+
 // 最终列配置（加上序号列）
 const finalColumns = computed(() => {
   const prefixColumns: TableColumn[] = []
@@ -130,15 +159,18 @@ const finalColumns = computed(() => {
   }
 
   const normalizedColumns = props.columns.map((col) => {
+    const normalizedWidthColumn = normalizeColumnWidth(col)
+
     if (!col.actions?.length) {
-      return col
+      return normalizedWidthColumn
     }
 
     return {
-      ...col,
-      width: Math.max(col.width ?? 0, ACTION_COLUMN_MIN_WIDTH),
-      fixed: col.fixed ?? 'right',
-      visible: (col.visible ?? true) && hasVisibleActions(col.actions, props.data, auth),
+      ...normalizedWidthColumn,
+      minWidth: Math.max(normalizedWidthColumn.minWidth ?? 0, ACTION_COLUMN_MIN_WIDTH),
+      fixed: normalizedWidthColumn.fixed ?? 'right',
+      visible:
+        (normalizedWidthColumn.visible ?? true) && hasVisibleActions(col.actions, props.data, auth),
     }
   })
 

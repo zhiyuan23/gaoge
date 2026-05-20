@@ -38,7 +38,7 @@ export class AssetRecordService {
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
-        orderBy: [{ recordDate: 'desc' }, { createdAt: 'desc' }],
+        orderBy: [{ recordDate: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
       }),
       this.prisma.footballAssetRecord.count({ where }),
     ])

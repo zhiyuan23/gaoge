@@ -356,6 +356,7 @@ model MatchRound {
   season    String
   round     Int
   id        Int                @id @default(autoincrement())
+  collectTeamFee Boolean       @default(true)
   matchDate DateTime
   venue     String?
   remark    String?

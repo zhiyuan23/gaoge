@@ -29,6 +29,10 @@ export function formatRound(value: number | null) {
   return `第${value}轮`
 }
 
+export function formatCollectTeamFee(value: boolean | null | undefined) {
+  return value === false ? '不收取' : '收取'
+}
+
 function findRankResult(row: MatchRound, rank: 1 | 2 | 3) {
   return row.results.find((item) => item.rank === rank)
 }
@@ -76,17 +80,18 @@ export const MATCH_ROUND_TABLE_COLUMNS: TableColumn[] = [
   { label: '赛季', prop: 'season', width: 100, align: 'center' },
   { label: '场次', prop: 'round', width: 100, slot: 'round', align: 'center' },
   { label: '比赛日期', prop: 'matchDate', width: 120, slot: 'matchDate' },
-  { label: '场地', prop: 'venue', width: 180 },
-  { label: '冠军', prop: 'champion', width: 180, slot: 'champion' },
-  { label: '亚军', prop: 'runnerUp', width: 180, slot: 'runnerUp' },
-  { label: '季军', prop: 'thirdPlace', width: 180, slot: 'thirdPlace' },
+  { label: '建设费', prop: 'collectTeamFee', width: 100, slot: 'collectTeamFee', align: 'center' },
+  { label: '冠军', prop: 'champion', width: 120, slot: 'champion', align: 'center' },
+  { label: '亚军', prop: 'runnerUp', width: 120, slot: 'runnerUp', align: 'center' },
+  { label: '季军', prop: 'thirdPlace', width: 120, slot: 'thirdPlace', align: 'center' },
+  { label: '场地', prop: 'venue', width: 150 },
   { label: '备注', prop: 'remark', width: 220 },
   { label: '创建时间', prop: 'createdAt', width: 170, slot: 'createdAt' },
   { label: '更新时间', prop: 'updatedAt', width: 170, slot: 'updatedAt' },
   {
     label: '操作',
     prop: 'actions',
-    width: 96,
+    fixedWidth: 120,
     fixed: 'right',
     align: 'center',
     actions: [

@@ -39,20 +39,18 @@ export function formatSignedCurrency(direction: string, value: number | null) {
 
 export const ASSET_RECORD_TABLE_COLUMNS: TableColumn[] = [
   { label: '记录日期', prop: 'recordDate', width: 120, slot: 'recordDate' },
+  { label: '标题', prop: 'title', width: 200 },
+  { label: '金额', prop: 'amount', width: 110, slot: 'amount', align: 'right' },
   { label: '方向', prop: 'direction', width: 92, slot: 'direction', align: 'center' },
   { label: '类型', prop: 'recordType', width: 110, slot: 'recordType', align: 'center' },
-  { label: '金额', prop: 'amount', width: 110, slot: 'amount', align: 'right' },
-  { label: '赛季标签', prop: 'seasonLabel', width: 140 },
-  { label: '场次标签', prop: 'matchLabel', width: 120 },
-  { label: '状态', prop: 'status', width: 96, slot: 'status', align: 'center' },
-  { label: '标题', prop: 'title', width: 160 },
-  { label: '备注', prop: 'description', width: 180 },
+  { label: '场次标签', prop: 'matchLabel', width: 180 },
+  { label: '备注', prop: 'description', width: 300 },
   { label: '创建时间', prop: 'createdAt', width: 170, slot: 'createdAt' },
   { label: '更新时间', prop: 'updatedAt', width: 170, slot: 'updatedAt' },
   {
     label: '操作',
     prop: 'actions',
-    width: 96,
+    fixedWidth: 120,
     fixed: 'right',
     align: 'center',
     actions: [

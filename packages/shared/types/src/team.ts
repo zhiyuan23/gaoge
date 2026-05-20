@@ -164,6 +164,7 @@ export type MatchRoundSeason = '春季赛' | '夏季赛' | '秋季赛' | '冬季
  * @property year 年度。
  * @property season 赛季。
  * @property round 场次。
+ * @property collectTeamFee 是否收取球队建设费。
  * @property matchDate 比赛日期时间。
  * @property venue 比赛场地。
  * @property remark 备注。
@@ -176,6 +177,7 @@ export interface MatchRound {
   year: number
   season: MatchRoundSeason
   round: number
+  collectTeamFee?: boolean
   matchDate: DateTimeString
   venue: string | null
   remark: string | null
@@ -190,6 +192,7 @@ export interface MatchRound {
  * @property year 年度。
  * @property season 赛季。
  * @property round 场次。
+ * @property collectTeamFee 是否收取球队建设费；未传时默认收取。
  * @property matchDate 比赛日期，格式 YYYY-MM-DD。
  * @property venue 比赛场地；传 null 表示显式清空。
  * @property remark 备注；传 null 表示显式清空。
@@ -199,6 +202,7 @@ export interface MatchRoundPayload {
   year: number
   season: MatchRoundSeason
   round: number
+  collectTeamFee?: boolean
   matchDate: string
   venue?: string | null
   remark?: string | null
@@ -210,6 +214,7 @@ export interface UpdateMatchRoundPayload {
   year?: number
   season?: MatchRoundSeason
   round?: number
+  collectTeamFee?: boolean
   matchDate?: string
   venue?: string | null
   remark?: string | null

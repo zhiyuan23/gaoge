@@ -11,8 +11,16 @@ export interface TableAction {
 export interface TableColumn {
   prop?: string
   label: string
+  /**
+   * 默认列宽语义：最小宽度。
+   * 旧配置里大量使用 width 表达“建议宽度”，这里继续兼容该写法。
+   */
   width?: number
   minWidth?: number
+  /**
+   * 需要严格固定列宽时使用，对应 Element Plus 的 width。
+   */
+  fixedWidth?: number
   slot?: string
   type?: string
   link?: boolean | ((row: any) => string)

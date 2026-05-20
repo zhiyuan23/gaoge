@@ -25,6 +25,7 @@ import type { MatchRoundSearch } from './model/types'
 import { createMatchRoundSearchFields } from './schemas/search'
 import {
   formatChampion,
+  formatCollectTeamFee,
   formatDateTime,
   formatMatchDate,
   formatRound,
@@ -230,6 +231,11 @@ watch(tableData, () => {
         >
           <template #matchDate="{ row }">
             {{ formatMatchDate(row.matchDate) }}
+          </template>
+          <template #collectTeamFee="{ row }">
+            <ElTag :type="row.collectTeamFee === false ? 'info' : 'success'">
+              {{ formatCollectTeamFee(row.collectTeamFee) }}
+            </ElTag>
           </template>
           <template #round="{ row }">
             {{ formatRound(row.round) }}

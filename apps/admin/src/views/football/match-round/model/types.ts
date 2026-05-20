@@ -20,6 +20,7 @@ export interface MatchRoundFormModel {
   year: number | null
   season: '春季赛' | '夏季赛' | '秋季赛' | '冬季赛' | ''
   round: number | null
+  collectTeamFee: boolean
   matchDate: string
   venue: string
   remark: string

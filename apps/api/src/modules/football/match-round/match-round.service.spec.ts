@@ -8,6 +8,9 @@ describe('MatchRoundService', () => {
       team: {
         count: jest.fn().mockResolvedValue(3),
       },
+      footballAssetRecord: {
+        create: jest.fn(),
+      },
       matchRound: {
         create: jest.fn(),
         update: jest.fn(),
@@ -48,6 +51,7 @@ describe('MatchRoundService', () => {
     year: 2026,
     season: '春季赛',
     round: 1,
+    collectTeamFee: true,
     matchDate: new Date('2026-04-28T20:00:00.000Z'),
     venue: '体育中心',
     remark: '周中补赛',
@@ -84,6 +88,7 @@ describe('MatchRoundService', () => {
   it('creates a match round in a transaction and derives points from rank', async () => {
     const { prisma, service, tx } = createService()
     tx.matchRound.create.mockResolvedValue({ id: 8 })
+    tx.footballAssetRecord.create.mockResolvedValue({ id: 18 })
     tx.matchRound.findUnique.mockResolvedValue({
       ...roundRecord,
       id: 8,
@@ -128,6 +133,7 @@ describe('MatchRoundService', () => {
         year: 2026,
         season: '春季赛',
         round: 2,
+        collectTeamFee: true,
         matchDate: new Date('2026-04-28T20:00:00.000Z'),
         venue: '体育中心',
         remark: null,
@@ -140,6 +146,62 @@ describe('MatchRoundService', () => {
         { matchRoundId: 8, teamId: 13, rank: 3, points: 0 },
       ],
     })
+    expect(tx.footballAssetRecord.create).toHaveBeenCalledWith({
+      data: {
+        direction: 'income',
+        recordType: 'match_fee',
+        amount: 2000,
+        seasonLabel: null,
+        matchLabel: '2026年春季赛第2轮',
+        isWaived: false,
+        title: '球队建设费',
+        description: null,
+        recordDate: new Date('2026-04-28T20:00:00.000Z'),
+        status: 'confirmed',
+        creatorId: null,
+      },
+    })
+  })
+
+  it('skips asset income creation when collectTeamFee is false', async () => {
+    const { service, tx } = createService()
+    tx.matchRound.create.mockResolvedValue({ id: 9 })
+    tx.matchRound.findUnique.mockResolvedValue({
+      ...roundRecord,
+      id: 9,
+      collectTeamFee: false,
+    })
+
+    await expect(
+      service.create({
+        year: 2026,
+        season: '春季赛',
+        round: 3,
+        collectTeamFee: false,
+        matchDate: new Date('2026-05-05T20:00:00.000Z'),
+        results: [
+          { teamId: 11, rank: 1 },
+          { teamId: 12, rank: 2 },
+          { teamId: 13, rank: 3 },
+        ],
+      } as any),
+    ).resolves.toMatchObject({
+      id: 9,
+      collectTeamFee: false,
+    })
+
+    expect(tx.matchRound.create).toHaveBeenCalledWith({
+      data: {
+        year: 2026,
+        season: '春季赛',
+        round: 3,
+        collectTeamFee: false,
+        matchDate: new Date('2026-05-05T20:00:00.000Z'),
+        venue: undefined,
+        remark: undefined,
+      },
+    })
+    expect(tx.footballAssetRecord.create).not.toHaveBeenCalled()
   })
 
   it('rejects results when a team id is zero or negative', async () => {
@@ -257,6 +319,7 @@ describe('MatchRoundService', () => {
           year: 2026,
           season: '春季赛',
           round: 1,
+          collectTeamFee: true,
           matchDate: new Date('2026-04-28T20:00:00.000Z'),
           venue: '体育中心',
           remark: '周中补赛',
@@ -330,6 +393,7 @@ describe('MatchRoundService', () => {
       year: 2026,
       season: '春季赛',
       round: 1,
+      collectTeamFee: true,
       matchDate: new Date('2026-04-28T20:00:00.000Z'),
       venue: '体育中心',
       remark: '周中补赛',
@@ -375,6 +439,7 @@ describe('MatchRoundService', () => {
         year: 2026,
         season: '夏季赛',
         round: 3,
+        collectTeamFee: false,
         venue: '  ',
         remark: '',
         results: [
@@ -398,6 +463,7 @@ describe('MatchRoundService', () => {
         year: 2026,
         season: '夏季赛',
         round: 3,
+        collectTeamFee: false,
         venue: null,
         remark: null,
       },
@@ -414,6 +480,7 @@ describe('MatchRoundService', () => {
         { matchRoundId: 1, teamId: 6, rank: 2, points: 1 },
       ],
     })
+    expect(tx.footballAssetRecord.create).not.toHaveBeenCalled()
   })
 
   it('updates only the main round when results are omitted', async () => {
@@ -429,6 +496,7 @@ describe('MatchRoundService', () => {
         year: 2026,
         season: '秋季赛',
         round: 4,
+        collectTeamFee: false,
         venue: ' 新场地 ',
       } as any),
     ).resolves.toMatchObject({
@@ -445,6 +513,7 @@ describe('MatchRoundService', () => {
         year: 2026,
         season: '秋季赛',
         round: 4,
+        collectTeamFee: false,
         venue: '新场地',
       },
     })

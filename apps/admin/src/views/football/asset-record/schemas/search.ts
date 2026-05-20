@@ -35,12 +35,6 @@ export function createAssetRecordSearchFields(): SearchField[] {
       },
     },
     {
-      key: 'seasonLabel',
-      label: '赛季标签',
-      type: 'input',
-      placeholder: '请输入赛季标签',
-    },
-    {
       key: 'status',
       label: '状态',
       type: 'select',

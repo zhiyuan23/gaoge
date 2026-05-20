@@ -69,7 +69,7 @@ describe('AssetRecordService', () => {
       },
       skip: 1,
       take: 1,
-      orderBy: [{ recordDate: 'desc' }, { createdAt: 'desc' }],
+      orderBy: [{ recordDate: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
     })
   })
 

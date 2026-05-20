@@ -24,6 +24,7 @@ export const SYSTEM_PERMISSION_TABLE_COLUMNS: TableColumn[] = [
   {
     label: '操作',
     prop: 'actions',
+    fixedWidth: 120,
     fixed: 'right',
     align: 'center',
     actions: [

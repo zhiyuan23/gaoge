@@ -23,7 +23,7 @@ export const TEAM_TABLE_COLUMNS: TableColumn[] = [
   {
     label: '操作',
     prop: 'actions',
-    width: 96,
+    fixedWidth: 120,
     fixed: 'right',
     align: 'center',
     actions: [

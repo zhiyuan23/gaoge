@@ -7,7 +7,6 @@ export const ASSET_RECORD_DEFAULT_SEARCH: AssetRecordSearch = {
   keyword: '',
   direction: '',
   recordType: '',
-  seasonLabel: '',
   status: '',
   dateRange: [],
 }
@@ -58,7 +57,6 @@ export function createEmptyAssetRecordForm(
     direction,
     recordType: getDefaultRecordType(direction),
     amount: direction === 'income' ? 20 : null,
-    seasonLabel: '',
     matchLabel: '',
     isWaived: false,
     title: '',

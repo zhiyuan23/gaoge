@@ -60,6 +60,7 @@ export function createEmptyMatchRoundForm(teams: Team[] = []): MatchRoundFormMod
     year: new Date().getFullYear(),
     season: '',
     round: 1,
+    collectTeamFee: true,
     matchDate: '',
     venue: '',
     remark: '',

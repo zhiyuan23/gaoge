@@ -66,7 +66,6 @@ const {
       keyword: String(formData.keyword ?? ''),
       direction: (formData.direction as AssetRecordDirection | '') || '',
       recordType: formData.recordType || '',
-      seasonLabel: String(formData.seasonLabel ?? ''),
       status: formData.status || '',
       dateRange: Array.isArray(formData.dateRange) ? formData.dateRange : [],
     }
@@ -103,13 +102,6 @@ const summaryCards = computed<EsSummaryCardItem[]>(() => [
     value: formatCurrency(summary.value.balance),
     badge: '余',
     color: 'sky',
-  },
-  {
-    key: 'waived',
-    label: '免收场次',
-    value: `${summary.value.waivedMatchCount} 场`,
-    badge: '免',
-    color: 'amber',
   },
 ])
 

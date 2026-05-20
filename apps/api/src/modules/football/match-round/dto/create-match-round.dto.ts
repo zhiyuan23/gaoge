@@ -3,6 +3,7 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsDate,
   IsIn,
   IsInt,
@@ -38,6 +39,10 @@ export class CreateMatchRoundDto {
   @Min(1)
   @Max(15)
   round: number
+
+  @IsOptional()
+  @IsBoolean()
+  collectTeamFee?: boolean
 
   @Type(() => Date)
   @IsDate()
