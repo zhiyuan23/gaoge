@@ -9,7 +9,7 @@ import type { SystemUserFormModel, SystemUserSearch } from './types'
 export function buildSystemUserSearchParams(search: SystemUserSearch): SystemUserListParams {
   return {
     keyword: search.keyword.trim() || undefined,
-    role: search.role || undefined,
+    roleId: search.roleId || undefined,
     status: search.status || undefined,
   }
 }
@@ -20,7 +20,7 @@ export function buildSystemUserCreatePayload(model: SystemUserFormModel): Create
     password: model.password,
     nickname: model.nickname.trim(),
     avatarUrl: model.avatarUrl.trim() || undefined,
-    role: model.role,
+    roleIds: model.roleIds,
     status: model.status,
   }
 }
@@ -29,6 +29,6 @@ export function buildSystemUserUpdatePayload(model: SystemUserFormModel): Update
   return {
     nickname: model.nickname.trim(),
     avatarUrl: model.avatarUrl.trim() || undefined,
-    role: model.role,
+    roleIds: model.roleIds,
   }
 }

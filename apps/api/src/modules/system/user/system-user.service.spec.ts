@@ -28,7 +28,20 @@ describe('SystemUserService', () => {
         create: jest.fn(),
         update: jest.fn(),
       },
-      $transaction: jest.fn((actions: Promise<unknown>[]) => Promise.all(actions)),
+      role: {
+        findMany: jest.fn(),
+      },
+      userRole: {
+        deleteMany: jest.fn(),
+        createMany: jest.fn(),
+      },
+      $transaction: jest.fn(async (input: ((tx: any) => Promise<unknown>) | Promise<unknown>[]) => {
+        if (typeof input === 'function') {
+          return input(prisma)
+        }
+
+        return Promise.all(input)
+      }),
     }
 
     const service = new SystemUserService(prisma as any)
@@ -51,24 +64,24 @@ describe('SystemUserService', () => {
         page: '2',
         pageSize: '30',
         keyword: ' admin ',
-        role: 'admin',
+        roleId: '2',
         status: 'active',
       }),
     ).resolves.toEqual({
       page: 2,
       pageSize: 30,
       keyword: ' admin ',
-      role: 'admin',
+      roleId: 2,
       status: 'active',
     })
   })
 
-  it('rejects invalid role, status, page, and pageSize list query params', async () => {
+  it('rejects invalid roleId, status, page, and pageSize list query params', async () => {
     await expect(
       transformListQuery({
         page: '0',
         pageSize: '-1',
-        role: 'owner',
+        roleId: '0',
         status: 'disabled',
       }),
     ).rejects.toBeInstanceOf(BadRequestException)
@@ -155,6 +168,9 @@ describe('SystemUserService', () => {
   it('creates user with hashed password and trimmed account and nickname', async () => {
     const { prisma, service } = createService()
     prisma.user.findFirst.mockResolvedValue(null)
+    prisma.role.findMany.mockResolvedValue([
+      { id: 2, code: 'super_admin', name: '超级管理员', status: 'active' },
+    ])
     prisma.user.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: 9,
       openid: null,
@@ -165,13 +181,14 @@ describe('SystemUserService', () => {
       createdAt: new Date('2026-05-06T00:00:00.000Z'),
       updatedAt: new Date('2026-05-06T00:00:00.000Z'),
       ...data,
+      roles: [{ id: 2, code: 'super_admin', name: '超级管理员', status: 'active' }],
     }))
 
     const result = await service.create({
       account: '  manager  ',
       password: 'Admin@123456',
       nickname: '  Ops Lead  ',
-      role: 'admin',
+      roleIds: [2],
       status: 'active',
     })
 
@@ -195,18 +212,33 @@ describe('SystemUserService', () => {
         account: true,
         nickname: true,
         avatarUrl: true,
-        role: true,
+        userRoles: {
+          select: {
+            role: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+                status: true,
+              },
+            },
+          },
+        },
         status: true,
         lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
       },
     })
+    expect(prisma.userRole.createMany).toHaveBeenCalledWith({
+      data: [{ userId: 9, roleId: 2 }],
+      skipDuplicates: true,
+    })
     expect(result).toMatchObject({
       id: 9,
       account: 'manager',
       nickname: 'Ops Lead',
-      role: 'admin',
+      roles: [{ id: 2, code: 'super_admin', name: '超级管理员', status: 'active' }],
       status: 'active',
     })
     await expect(
@@ -227,7 +259,7 @@ describe('SystemUserService', () => {
         account: 'manager',
         password: '   ',
         nickname: 'Ops Lead',
-        role: 'admin',
+        roleIds: [2],
         status: 'active',
       }),
     ).rejects.toBeInstanceOf(BadRequestException)
@@ -241,7 +273,7 @@ describe('SystemUserService', () => {
       id: 7,
       account: 'editor',
       nickname: 'Editor',
-      role: 'user',
+      roles: [],
       status: 'inactive',
       deletedAt: new Date('2026-05-06T00:00:00.000Z'),
     })
@@ -254,7 +286,7 @@ describe('SystemUserService', () => {
         account: true,
         nickname: true,
         avatarUrl: true,
-        role: true,
+        userRoles: expect.any(Object),
         status: true,
         lastLoginAt: true,
         createdAt: true,
@@ -270,12 +302,12 @@ describe('SystemUserService', () => {
       id: 8,
       account: null,
       nickname: 'Miniapp User',
-      role: 'user',
+      roles: [],
       status: 'active',
       deletedAt: null,
     })
 
-    await expect(service.update(8, { nickname: 'Ops', role: 'admin' })).rejects.toBeInstanceOf(
+    await expect(service.update(8, { nickname: 'Ops', roleIds: [2] })).rejects.toBeInstanceOf(
       NotFoundException,
     )
     await expect(service.updateStatus(8, { status: 'inactive' })).rejects.toBeInstanceOf(
@@ -295,7 +327,7 @@ describe('SystemUserService', () => {
       id: 1,
       account: 'admin',
       nickname: 'Administrator',
-      role: 'admin',
+      roles: [{ id: 2, code: 'super_admin', name: '超级管理员', status: 'active' }],
       status: 'active',
       deletedAt: null,
     })
@@ -310,7 +342,7 @@ describe('SystemUserService', () => {
       id: 1,
       account: 'admin',
       nickname: 'Administrator',
-      role: 'admin',
+      roles: [{ id: 2, code: 'super_admin', name: '超级管理员', status: 'active' }],
       status: 'active',
       deletedAt: null,
     })
@@ -327,13 +359,16 @@ describe('SystemUserService', () => {
       id: 1,
       account: 'admin',
       nickname: 'Administrator',
-      role: 'admin',
+      roles: [{ id: 2, code: 'super_admin', name: '超级管理员', status: 'active' }],
       status: 'active',
       deletedAt: null,
     })
+    prisma.role.findMany.mockResolvedValue([
+      { id: 3, code: 'system_viewer', name: '系统只读', status: 'active' },
+    ])
 
     await expect(
-      service.update(1, { nickname: 'Administrator', role: 'user' }),
+      service.update(1, { nickname: 'Administrator', roleIds: [3] }),
     ).rejects.toBeInstanceOf(BadRequestException)
     expect(prisma.user.update).not.toHaveBeenCalled()
   })
@@ -344,7 +379,7 @@ describe('SystemUserService', () => {
       id: 7,
       account: 'editor',
       nickname: 'Editor',
-      role: 'user',
+      roles: [],
       status: 'active',
       deletedAt: null,
     })
@@ -362,7 +397,7 @@ describe('SystemUserService', () => {
       id: 7,
       account: 'editor',
       nickname: 'Editor',
-      role: 'user',
+      roles: [],
       status: 'active',
       deletedAt: null,
     })
@@ -370,7 +405,11 @@ describe('SystemUserService', () => {
       id: 7,
       account: 'editor',
       nickname: 'Editor',
-      role: 'user',
+      avatarUrl: null,
+      lastLoginAt: null,
+      createdAt: new Date('2026-05-06T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-06T00:00:00.000Z'),
+      roles: [],
       status: 'inactive',
       deletedAt: new Date('2026-05-06T00:00:00.000Z'),
     })
@@ -384,7 +423,7 @@ describe('SystemUserService', () => {
         account: true,
         nickname: true,
         avatarUrl: true,
-        role: true,
+        userRoles: expect.any(Object),
         status: true,
         lastLoginAt: true,
         createdAt: true,
@@ -403,7 +442,7 @@ describe('SystemUserService', () => {
         account: true,
         nickname: true,
         avatarUrl: true,
-        role: true,
+        userRoles: expect.any(Object),
         status: true,
         lastLoginAt: true,
         createdAt: true,
@@ -430,10 +469,10 @@ describe('SystemUserService', () => {
       'account',
       'nickname',
       'password',
-      'role',
+      'roleIds',
       'status',
     ])
-    expect(updateErrors.map((error) => error.property).sort()).toEqual(['nickname', 'role'])
+    expect(updateErrors.map((error) => error.property).sort()).toEqual(['nickname', 'roleIds'])
     expect(updateStatusErrors.map((error) => error.property)).toEqual(['status'])
     expect(resetPasswordErrors.map((error) => error.property)).toEqual(['newPassword'])
   })

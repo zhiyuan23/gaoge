@@ -1,3 +1,4 @@
+import type { Plugin } from 'vue'
 import VxeUI from 'vxe-pc-ui'
 import VxeUITable from 'vxe-table'
 
@@ -25,7 +26,7 @@ import '@/utils/systemCopyright'
 import 'virtual:svg-icons-register'
 
 const app = createApp(App)
-app.use(VxeUI).use(VxeUITable)
+app.use(VxeUI as unknown as Plugin).use(VxeUITable as unknown as Plugin)
 app.use(pinia)
 app.use(router)
 app.use(uiProvider)

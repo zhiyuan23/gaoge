@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt'
 
 import type {
   AuthLoginResponse,
+  AuthRoleSummary,
   AuthUser,
   MiniappAuthUser,
   MiniappBindingSummary,
@@ -16,13 +17,6 @@ import { PrismaService } from '@/common/prisma/prisma.service'
 import { WechatService } from '@/common/wechat/wechat.service'
 
 import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from '../dto/login.dto'
-import {
-  basketballAdminPermissions,
-  basketballViewerPermissions,
-  footballAdminPermissions,
-  footballViewerPermissions,
-  systemPermissions,
-} from '../permissions'
 
 export interface JwtPayload {
   sub: number
@@ -56,13 +50,18 @@ export class AuthService {
       throw new UnauthorizedException('账号或密码错误')
     }
 
-    if (user.deletedAt || user.status !== 'active' || !['admin', 'viewer'].includes(user.role)) {
+    if (user.deletedAt || user.status !== 'active' || !user.account) {
       throw new UnauthorizedException('当前账号无后台权限')
     }
 
     const isPasswordValid = await verifyPassword(loginDto.password, user.passwordHash)
     if (!isPasswordValid) {
       throw new UnauthorizedException('账号或密码错误')
+    }
+
+    const roles = await this.getActiveRoles(user.id)
+    if (roles.length === 0) {
+      throw new UnauthorizedException('当前账号无后台权限')
     }
 
     const updatedUser = await this.prisma.user.update({
@@ -204,7 +203,7 @@ export class AuthService {
     refreshToken: string
     expiresIn: number
   }> {
-    const clientType = ['admin', 'viewer'].includes(user.role) ? 'admin' : 'miniapp'
+    const clientType = user.account ? 'admin' : 'miniapp'
     const payload: JwtPayload = {
       sub: user.id,
       openid: user.openid,
@@ -336,22 +335,18 @@ export class AuthService {
       throw new UnauthorizedException('用户不存在或已被禁用')
     }
 
+    const roles = await this.getActiveRoles(user.id)
+
     return {
-      permissions: this.buildPermissions(user.role),
-      role: this.toUserRole(user.role),
+      permissions: this.buildPermissionsFromRoles(roles),
+      role: this.toEffectiveUserRole(user, roles),
+      roles: roles.map((role) => ({
+        id: role.id,
+        code: role.code,
+        name: role.name,
+        status: role.status,
+      })),
     }
-  }
-
-  private buildPermissions(role: string) {
-    if (role === 'admin') {
-      return [...footballAdminPermissions, ...basketballAdminPermissions, ...systemPermissions]
-    }
-
-    if (role === 'viewer') {
-      return [...footballViewerPermissions, ...basketballViewerPermissions]
-    }
-
-    return []
   }
 
   private serializeUser(user: any): AuthUser {
@@ -408,5 +403,90 @@ export class AuthService {
     if (role === 'admin') return 'admin'
     if (role === 'viewer') return 'viewer'
     return 'user'
+  }
+
+  private async getActiveRoles(userId: number): Promise<
+    (AuthRoleSummary & {
+      rolePermissions: {
+        permission: {
+          code: string
+          status: string
+        }
+      }[]
+    })[]
+  > {
+    const userRoles = await this.prisma.userRole.findMany({
+      where: {
+        userId,
+        role: {
+          status: 'active',
+        },
+      },
+      select: {
+        role: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            status: true,
+            rolePermissions: {
+              where: {
+                permission: {
+                  status: 'active',
+                },
+              },
+              select: {
+                permission: {
+                  select: {
+                    code: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    return userRoles
+      .map((item: { role: any }) => item.role)
+      .filter((role: { status: string }) => role.status === 'active')
+      .map((role: any) => ({
+        ...role,
+        rolePermissions: role.rolePermissions.filter(
+          (item: { permission: { status: string } }) => item.permission.status === 'active',
+        ),
+      }))
+  }
+
+  private buildPermissionsFromRoles(
+    roles: {
+      rolePermissions: {
+        permission: {
+          code: string
+          status: string
+        }
+      }[]
+    }[],
+  ) {
+    return [
+      ...new Set(roles.flatMap((role) => role.rolePermissions.map((item) => item.permission.code))),
+    ].sort()
+  }
+
+  private toEffectiveUserRole(
+    user: { role: string; account?: string | null },
+    roles: AuthRoleSummary[],
+  ) {
+    if (roles.length > 0 && user.account) {
+      if (roles.length === 1 && roles[0]?.code === 'system_viewer') {
+        return 'viewer'
+      }
+
+      return 'admin'
+    }
+
+    return this.toUserRole(user.role)
   }
 }

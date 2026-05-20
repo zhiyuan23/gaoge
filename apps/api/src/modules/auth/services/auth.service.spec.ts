@@ -1,3 +1,7 @@
+import { UnauthorizedException } from '@nestjs/common'
+
+import { hashPassword } from '@/common/auth/password.util'
+
 import { AuthService } from './auth.service'
 
 describe('AuthService miniapp login', () => {
@@ -138,6 +142,154 @@ describe('AuthService miniapp login', () => {
         playerNumber: 7,
         nickname: '齐达内',
       },
+    })
+  })
+})
+
+describe('AuthService admin RBAC', () => {
+  const createService = () => {
+    const prisma = {
+      user: {
+        findUnique: jest.fn(),
+        findFirst: jest.fn(),
+        update: jest.fn(),
+      },
+      player: {
+        findFirst: jest.fn(),
+      },
+      refreshToken: {
+        create: jest.fn(),
+      },
+      userRole: {
+        findMany: jest.fn(),
+      },
+    }
+    const wechatService = {
+      getSessionByCode: jest.fn(),
+      decryptPhoneInfo: jest.fn(),
+    }
+    const jwtService = {
+      signAsync: jest.fn(),
+    }
+
+    return {
+      prisma,
+      wechatService,
+      jwtService,
+      service: new AuthService(wechatService as any, prisma as any, jwtService as any),
+    }
+  }
+
+  it('rejects admin login when the backend account has no active role', async () => {
+    const { service, prisma } = createService()
+
+    prisma.user.findFirst.mockResolvedValue({
+      id: 1,
+      account: 'admin',
+      passwordHash: await hashPassword('Admin@123456'),
+      role: 'admin',
+      status: 'active',
+      deletedAt: null,
+    })
+    prisma.userRole.findMany.mockResolvedValue([])
+
+    await expect(
+      service.adminLogin({
+        account: 'admin',
+        password: 'Admin@123456',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException)
+  })
+
+  it('aggregates permissions from multiple active roles and filters inactive entries', async () => {
+    const { service, prisma } = createService()
+
+    prisma.user.findUnique.mockResolvedValue({
+      id: 3,
+      account: 'ops',
+      openid: null,
+      nickname: 'Ops',
+      avatarUrl: null,
+      phone: null,
+      role: 'admin',
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: null,
+    })
+    prisma.userRole.findMany.mockResolvedValue([
+      {
+        role: {
+          id: 11,
+          code: 'super_admin',
+          name: '超级管理员',
+          status: 'active',
+          rolePermissions: [
+            {
+              permission: {
+                code: 'system.user.view',
+                status: 'active',
+              },
+            },
+            {
+              permission: {
+                code: 'system.role.view',
+                status: 'inactive',
+              },
+            },
+          ],
+        },
+      },
+      {
+        role: {
+          id: 12,
+          code: 'auditor',
+          name: '审计员',
+          status: 'active',
+          rolePermissions: [
+            {
+              permission: {
+                code: 'system.permission.view',
+                status: 'active',
+              },
+            },
+          ],
+        },
+      },
+      {
+        role: {
+          id: 13,
+          code: 'disabled',
+          name: '停用角色',
+          status: 'inactive',
+          rolePermissions: [
+            {
+              permission: {
+                code: 'system.menu.view',
+                status: 'active',
+              },
+            },
+          ],
+        },
+      },
+    ])
+
+    await expect(service.getPermission(3)).resolves.toEqual({
+      permissions: ['system.permission.view', 'system.user.view'],
+      role: 'admin',
+      roles: [
+        {
+          id: 11,
+          code: 'super_admin',
+          name: '超级管理员',
+          status: 'active',
+        },
+        {
+          id: 12,
+          code: 'auditor',
+          name: '审计员',
+          status: 'active',
+        },
+      ],
     })
   })
 })

@@ -10,6 +10,7 @@ import type { Prisma } from '@prisma/client'
 import { PrismaClient } from '@prisma/client'
 
 import { hashPassword } from '../src/common/auth/password.util'
+import { RbacSyncService } from '../src/modules/system/rbac/rbac-sync.service'
 
 const prisma = new PrismaClient()
 
@@ -31,11 +32,17 @@ const players: Prisma.PlayerCreateInput[] = [
 async function main() {
   console.log('🌱 开始播种数据...')
 
+  const rbacSyncService = new RbacSyncService(prisma as any)
+  const rbacResult = await rbacSyncService.syncBuiltIns()
+  console.log(
+    `🔐 已同步 RBAC 内置数据：roles=${rbacResult.roles}, permissions=${rbacResult.permissions}, menus=${rbacResult.menus}`,
+  )
+
   const adminAccount = process.env.ADMIN_ACCOUNT
   const adminPassword = process.env.ADMIN_PASSWORD
 
   if (adminAccount && adminPassword) {
-    await prisma.user.upsert({
+    const adminUser = await prisma.user.upsert({
       where: { account: adminAccount },
       update: {
         passwordHash: await hashPassword(adminPassword),
@@ -51,6 +58,24 @@ async function main() {
         nickname: '系统管理员',
       },
     })
+    const superAdminRole = await prisma.role.findUnique({
+      where: { code: 'super_admin' },
+    })
+    if (superAdminRole) {
+      await prisma.userRole.upsert({
+        where: {
+          userId_roleId: {
+            userId: adminUser.id,
+            roleId: superAdminRole.id,
+          },
+        },
+        update: {},
+        create: {
+          userId: adminUser.id,
+          roleId: superAdminRole.id,
+        },
+      })
+    }
     console.log(`👤 已初始化管理员账号：${adminAccount}`)
   } else {
     console.log('⚠️  未提供 ADMIN_ACCOUNT / ADMIN_PASSWORD，跳过管理员账号初始化')

@@ -219,11 +219,7 @@ function handleSelectionChange(rows: any[]) {
       <template v-for="col in finalColumns" :key="col.prop || col.type || col.label">
         <ElTableColumn v-if="col.type === 'selection' || col.type === 'index'" v-bind="col" />
 
-        <ElTableColumn
-          v-else-if="col.actions?.length && (col.visible ?? true)"
-          v-bind="col"
-          width="110"
-        >
+        <ElTableColumn v-else-if="col.actions?.length && (col.visible ?? true)" v-bind="col">
           <template #default="{ row }">
             <EsTableActionCell
               :actions="col.actions"

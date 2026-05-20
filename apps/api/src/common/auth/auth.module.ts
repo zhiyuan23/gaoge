@@ -8,6 +8,7 @@ import { PrismaModule } from '../prisma/prisma.module'
 import { WechatModule } from '../wechat/wechat.module'
 
 import { JwtStrategy } from './jwt.strategy'
+import { PermissionsGuard } from './permissions.guard'
 import { RolesGuard } from './roles.guard'
 
 @Module({
@@ -26,7 +27,7 @@ import { RolesGuard } from './roles.guard'
     PrismaModule,
     WechatModule,
   ],
-  providers: [JwtStrategy, Reflector, RolesGuard],
-  exports: [JwtModule, PassportModule, RolesGuard],
+  providers: [JwtStrategy, Reflector, RolesGuard, PermissionsGuard],
+  exports: [JwtModule, PassportModule, RolesGuard, PermissionsGuard],
 })
 export class AuthModule {}

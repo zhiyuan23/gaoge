@@ -1,6 +1,15 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { Type } from 'class-transformer'
+import {
+  ArrayMinSize,
+  IsArray,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator'
 
-import type { UserRole, UserStatus } from '@gaoge/shared-types'
+import type { UserStatus } from '@gaoge/shared-types'
 
 export class CreateSystemUserDto {
   @IsString()
@@ -19,8 +28,11 @@ export class CreateSystemUserDto {
   @IsString()
   avatarUrl?: string
 
-  @IsIn(['user', 'admin', 'viewer'])
-  role: UserRole
+  @IsArray()
+  @ArrayMinSize(1)
+  @Type(() => Number)
+  @IsInt({ each: true })
+  roleIds: number[]
 
   @IsIn(['active', 'inactive'])
   status: UserStatus

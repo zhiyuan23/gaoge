@@ -42,6 +42,13 @@ export interface AuthUser {
   lastLoginAt: DateTimeString | null
 }
 
+export interface AuthRoleSummary {
+  id: number
+  code: string
+  name: string
+  status: UserStatus
+}
+
 /**
  * 登录接口响应数据。
  *
@@ -161,4 +168,5 @@ export interface MiniappBindOptionsResponse {
 export interface PermissionResponse {
   permissions: string[]
   role: UserRole
+  roles: AuthRoleSummary[]
 }

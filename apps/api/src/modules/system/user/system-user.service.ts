@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common'
 import type { Prisma } from '@prisma/client'
 
-import type { SystemUserListParams } from '@gaoge/shared-types'
+import type { SystemUser, SystemUserListParams } from '@gaoge/shared-types'
 
 import { hashPassword } from '@/common/auth/password.util'
 import { PrismaService } from '@/common/prisma/prisma.service'
@@ -16,12 +16,25 @@ import type { ResetSystemUserPasswordDto } from './dto/reset-system-user-passwor
 import type { UpdateSystemUserDto } from './dto/update-system-user.dto'
 import type { UpdateSystemUserStatusDto } from './dto/update-system-user-status.dto'
 
+const roleSummarySelect = {
+  id: true,
+  code: true,
+  name: true,
+  status: true,
+} satisfies Prisma.RoleSelect
+
 const systemUserSelect = {
   id: true,
   account: true,
   nickname: true,
   avatarUrl: true,
-  role: true,
+  userRoles: {
+    select: {
+      role: {
+        select: roleSummarySelect,
+      },
+    },
+  },
   status: true,
   lastLoginAt: true,
   createdAt: true,
@@ -33,6 +46,10 @@ const systemUserLookupSelect = {
   deletedAt: true,
 } satisfies Prisma.UserSelect
 
+type SystemUserRecord = Prisma.UserGetPayload<{
+  select: typeof systemUserSelect
+}>
+
 type SystemUserLookupRecord = Prisma.UserGetPayload<{
   select: typeof systemUserLookupSelect
 }>
@@ -41,12 +58,17 @@ type BackendSystemUserLookupRecord = SystemUserLookupRecord & {
   account: string
 }
 
+type RoleSummaryRecord = Prisma.RoleGetPayload<{
+  select: typeof roleSummarySelect
+}>
+
 @Injectable()
 export class SystemUserService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateSystemUserDto) {
     const account = normalizeRequiredText(dto.account, '账号不能为空')
+    const passwordHash = await hashPassword(normalizeRequiredPassword(dto.password, '密码不能为空'))
     const existingUser = await this.prisma.user.findFirst({
       where: {
         account,
@@ -58,17 +80,27 @@ export class SystemUserService {
       throw new ConflictException('账号已存在')
     }
 
-    return this.prisma.user.create({
-      data: {
-        account,
-        passwordHash: await hashPassword(normalizeRequiredPassword(dto.password, '密码不能为空')),
-        nickname: normalizeRequiredText(dto.nickname, '昵称不能为空'),
-        avatarUrl: normalizeOptionalText(dto.avatarUrl),
-        role: dto.role,
-        status: dto.status,
-      },
-      select: systemUserSelect,
+    const roles = await this.loadRoles(dto.roleIds)
+
+    const createdUser = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          account,
+          passwordHash,
+          nickname: normalizeRequiredText(dto.nickname, '昵称不能为空'),
+          avatarUrl: normalizeOptionalText(dto.avatarUrl),
+          role: deriveLegacyRole(roles),
+          status: dto.status,
+        },
+        select: systemUserSelect,
+      })
+
+      await this.replaceUserRoles(tx, user.id, dto.roleIds)
+
+      return user
     })
+
+    return serializeSystemUser(createdUser, roles)
   }
 
   async findAll(params: SystemUserListParams = {}) {
@@ -87,26 +119,36 @@ export class SystemUserService {
     ])
 
     return {
-      list,
+      list: list.map((item) => serializeSystemUser(item)),
       total,
     }
   }
 
   async update(id: number, dto: UpdateSystemUserDto) {
     const user = await this.findOneOrThrow(id)
-    if (user.account === 'admin' && user.role === 'admin' && dto.role !== 'admin') {
+    const roles = await this.loadRoles(dto.roleIds)
+
+    if (user.account === 'admin' && !hasSuperAdminRole(roles)) {
       throw new BadRequestException('默认 admin 账号不允许降级')
     }
 
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        nickname: normalizeRequiredText(dto.nickname, '昵称不能为空'),
-        avatarUrl: normalizeOptionalText(dto.avatarUrl),
-        role: dto.role,
-      },
-      select: systemUserSelect,
+    const updatedUser = await this.prisma.$transaction(async (tx) => {
+      const nextUser = await tx.user.update({
+        where: { id },
+        data: {
+          nickname: normalizeRequiredText(dto.nickname, '昵称不能为空'),
+          avatarUrl: normalizeOptionalText(dto.avatarUrl),
+          role: deriveLegacyRole(roles),
+        },
+        select: systemUserSelect,
+      })
+
+      await this.replaceUserRoles(tx, id, dto.roleIds)
+
+      return nextUser
     })
+
+    return serializeSystemUser(updatedUser, roles)
   }
 
   async updateStatus(id: number, dto: UpdateSystemUserStatusDto) {
@@ -115,19 +157,21 @@ export class SystemUserService {
       throw new BadRequestException('默认 admin 账号不允许停用')
     }
 
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
         status: dto.status,
       },
       select: systemUserSelect,
     })
+
+    return serializeSystemUser(updatedUser)
   }
 
   async resetPassword(id: number, dto: ResetSystemUserPasswordDto) {
     await this.findOneOrThrow(id)
 
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
         passwordHash: await hashPassword(
@@ -136,6 +180,8 @@ export class SystemUserService {
       },
       select: systemUserSelect,
     })
+
+    return serializeSystemUser(updatedUser)
   }
 
   async remove(id: number) {
@@ -144,7 +190,7 @@ export class SystemUserService {
       throw new BadRequestException('默认 admin 账号不允许删除')
     }
 
-    return this.prisma.user.update({
+    const removedUser = await this.prisma.user.update({
       where: { id },
       data: {
         account: buildDeletedAccount(user.account, user.id),
@@ -153,6 +199,8 @@ export class SystemUserService {
       },
       select: systemUserSelect,
     })
+
+    return serializeSystemUser(removedUser)
   }
 
   private async findOneOrThrow(id: number): Promise<BackendSystemUserLookupRecord> {
@@ -166,6 +214,38 @@ export class SystemUserService {
     }
 
     return user as BackendSystemUserLookupRecord
+  }
+
+  private async loadRoles(roleIds: number[]) {
+    const normalizedRoleIds = normalizeRoleIds(roleIds)
+
+    const roles = await this.prisma.role.findMany({
+      where: {
+        id: {
+          in: normalizedRoleIds,
+        },
+      },
+      select: roleSummarySelect,
+    })
+
+    if (roles.length !== normalizedRoleIds.length) {
+      throw new BadRequestException('存在无效角色')
+    }
+
+    return roles.sort((a, b) => normalizedRoleIds.indexOf(a.id) - normalizedRoleIds.indexOf(b.id))
+  }
+
+  private async replaceUserRoles(tx: Prisma.TransactionClient, userId: number, roleIds: number[]) {
+    await tx.userRole.deleteMany({
+      where: { userId },
+    })
+    await tx.userRole.createMany({
+      data: normalizeRoleIds(roleIds).map((roleId) => ({
+        userId,
+        roleId,
+      })),
+      skipDuplicates: true,
+    })
   }
 }
 
@@ -195,9 +275,18 @@ function normalizeRequiredPassword(value: unknown, message: string) {
   return value
 }
 
+function normalizeRoleIds(roleIds: number[]) {
+  const normalized = [...new Set(roleIds.map((item) => Number(item)).filter((item) => item > 0))]
+  if (normalized.length === 0) {
+    throw new BadRequestException('至少选择一个角色')
+  }
+
+  return normalized
+}
+
 function buildSystemUserWhere(params: SystemUserListParams) {
   const keyword = normalizeOptionalText(params.keyword)
-  const role = normalizeOptionalText(params.role)
+  const roleId = normalizePositiveInteger(params.roleId, 0)
   const status = normalizeOptionalText(params.status)
   const where: Prisma.UserWhereInput = {
     account: {
@@ -214,8 +303,12 @@ function buildSystemUserWhere(params: SystemUserListParams) {
 
     where.OR = [{ account: keywordFilter }, { nickname: keywordFilter }]
   }
-  if (role) {
-    where.role = role
+  if (roleId > 0) {
+    where.userRoles = {
+      some: {
+        roleId,
+      },
+    }
   }
   if (status) {
     where.status = status
@@ -227,4 +320,29 @@ function buildSystemUserWhere(params: SystemUserListParams) {
 function buildDeletedAccount(account: string | null | undefined, id: number) {
   const normalizedAccount = normalizeOptionalText(account) ?? 'user'
   return `${normalizedAccount}__deleted__${id}`
+}
+
+function hasSuperAdminRole(roles: RoleSummaryRecord[]) {
+  return roles.some((role) => role.code === 'super_admin')
+}
+
+function deriveLegacyRole(roles: RoleSummaryRecord[]) {
+  return roles.length === 1 && roles[0]?.code === 'system_viewer' ? 'viewer' : 'admin'
+}
+
+function serializeSystemUser(
+  user: SystemUserRecord,
+  fallbackRoles?: RoleSummaryRecord[],
+): SystemUser {
+  return {
+    id: user.id,
+    account: user.account ?? '',
+    nickname: user.nickname,
+    avatarUrl: user.avatarUrl,
+    roles: (fallbackRoles ?? user.userRoles?.map((item) => item.role) ?? []) as SystemUser['roles'],
+    status: user.status as SystemUser['status'],
+    lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
+  }
 }

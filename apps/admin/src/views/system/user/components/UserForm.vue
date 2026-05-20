@@ -2,7 +2,7 @@
 import type { FormInstance, FormRules } from 'element-plus'
 
 import type { SystemUserFormModel } from '../model/types'
-import { SYSTEM_USER_ROLE_OPTIONS, SYSTEM_USER_STATUS_OPTIONS } from '../schemas/search'
+import { SYSTEM_USER_STATUS_OPTIONS } from '../schemas/search'
 
 defineOptions({
   name: 'SystemUserForm',
@@ -10,6 +10,10 @@ defineOptions({
 
 const props = defineProps<{
   mode: 'create' | 'edit'
+  roleOptions: {
+    label: string
+    value: number
+  }[]
 }>()
 
 const model = defineModel<SystemUserFormModel>('model', { required: true })
@@ -66,10 +70,17 @@ defineExpose({
     <ElFormItem label="头像地址" prop="avatarUrl">
       <ElInput v-model="model.avatarUrl" placeholder="请输入头像 URL" />
     </ElFormItem>
-    <ElFormItem label="角色" prop="role">
-      <ElSelect v-model="model.role" class="w-full">
+    <ElFormItem label="角色" prop="roleIds">
+      <ElSelect
+        v-model="model.roleIds"
+        class="w-full"
+        multiple
+        collapse-tags
+        collapse-tags-tooltip
+        :max-collapse-tags="3"
+      >
         <ElOption
-          v-for="item in SYSTEM_USER_ROLE_OPTIONS"
+          v-for="item in roleOptions"
           :key="item.value"
           :label="item.label"
           :value="item.value"

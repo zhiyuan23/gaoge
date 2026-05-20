@@ -16,10 +16,10 @@ export default {
       noAuth: true,
     }),
 
-  profile: () => api.get('auth/profile'),
+  profile: () => api.get('auth/profile', { toast: false }),
 
   // 获取权限
-  permission: () => api.get('auth/permission'),
+  permission: () => api.get('auth/permission', { toast: false }),
 
   logout: () => api.post('auth/logout', {}),
 

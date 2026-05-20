@@ -1,18 +1,13 @@
 import type { SearchField } from '@/components/common/EsSearch/types'
 
-import { ADMIN_ROLE_OPTIONS } from '../constants'
-
-export const SYSTEM_USER_ROLE_OPTIONS = [
-  ...ADMIN_ROLE_OPTIONS,
-  { label: '普通用户', value: 'user' },
-]
-
 export const SYSTEM_USER_STATUS_OPTIONS = [
   { label: '启用', value: 'active' },
   { label: '停用', value: 'inactive' },
 ]
 
-export function createSystemUserSearchFields(): SearchField[] {
+export function createSystemUserSearchFields(
+  roleOptions: { label: string; value: number }[],
+): SearchField[] {
   return [
     {
       key: 'keyword',
@@ -21,11 +16,11 @@ export function createSystemUserSearchFields(): SearchField[] {
       placeholder: '账号 / 昵称',
     },
     {
-      key: 'role',
+      key: 'roleId',
       label: '角色',
       type: 'select',
       placeholder: '全部',
-      options: SYSTEM_USER_ROLE_OPTIONS,
+      options: roleOptions,
     },
     {
       key: 'status',

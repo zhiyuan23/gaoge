@@ -9,7 +9,7 @@ const routes: RouteRecordRaw = {
   component: Layout,
   name: 'system',
   meta: {
-    title: '系统管理',
+    title: '用户权限',
     icon: 'ri:settings-3-line',
   },
   children: [

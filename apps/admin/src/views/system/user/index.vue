@@ -6,6 +6,7 @@ meta:
 <script setup lang="ts">
 import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
 
+import systemRoleApi from '@/api/system/role'
 import type { SystemUser } from '@/api/system/user'
 import systemUserApi from '@/api/system/user'
 import type { SearchFormData } from '@/components/common/EsSearch/types'
@@ -24,7 +25,7 @@ import type { SystemUserSearch } from './model/types'
 import { createSystemUserSearchFields } from './schemas/search'
 import { formatDateTime, SYSTEM_USER_TABLE_COLUMNS } from './schemas/table'
 import { SYSTEM_USER_PERMISSIONS } from './auth'
-import { ROLE_LABELS } from './constants'
+import { formatRoleNames } from './constants'
 
 defineOptions({
   name: 'SystemUser',
@@ -35,6 +36,7 @@ const resetLoading = ref(false)
 const selectionDataList = ref<SystemUser[]>([])
 const resetPasswordVisible = ref(false)
 const resetTarget = ref<SystemUser | null>(null)
+const roleOptions = ref<{ label: string; value: number }[]>([])
 
 const {
   search,
@@ -53,7 +55,7 @@ const {
   normalizeSearch(formData: SearchFormData) {
     return {
       keyword: String(formData.keyword ?? ''),
-      role: String(formData.role ?? '') as SystemUserSearch['role'],
+      roleId: Number(formData.roleId ?? 0) || '',
       status: String(formData.status ?? '') as SystemUserSearch['status'],
     }
   },
@@ -125,7 +127,15 @@ async function handleResetPasswordSubmit(payload: { newPassword: string }) {
 }
 
 onMounted(() => {
-  fetchList()
+  Promise.all([
+    fetchList(),
+    systemRoleApi.list().then((list) => {
+      roleOptions.value = list.map((item) => ({
+        label: item.name,
+        value: item.id,
+      }))
+    }),
+  ])
 })
 </script>
 
@@ -134,7 +144,7 @@ onMounted(() => {
     <FaPageMain class="flex-1 overflow-auto" main-class="flex-1 flex flex-col overflow-auto">
       <EsSearch
         v-model="search"
-        :fields="createSystemUserSearchFields()"
+        :fields="createSystemUserSearchFields(roleOptions)"
         :default-visible-count="2"
         @search="handleSearch"
       />
@@ -165,7 +175,7 @@ onMounted(() => {
           @pagination-change="handlePaginationChange"
           @selection-change="handleSelectionChange"
         >
-          <template #role="{ row }">{{ ROLE_LABELS[row.role] ?? row.role }}</template>
+          <template #role="{ row }">{{ formatRoleNames(row.roles) }}</template>
           <template #status="{ row }">
             <ElTag :type="row.status === 'active' ? 'success' : 'info'">
               {{ row.status === 'active' ? '启用' : '停用' }}
@@ -182,6 +192,7 @@ onMounted(() => {
       :mode="dialogMode"
       :user="currentRow"
       :loading="submitLoading"
+      :role-options="roleOptions"
       @submit="handleSubmit"
     />
 

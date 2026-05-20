@@ -11,8 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common'
 
-import { Roles } from '@/common/auth/roles.decorator'
-import { RolesGuard } from '@/common/auth/roles.guard'
+import { RequirePermissions } from '@/common/auth/permissions.decorator'
+import { PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
 
 import { CreateSystemUserDto } from './dto/create-system-user.dto'
@@ -23,42 +23,42 @@ import { UpdateSystemUserStatusDto } from './dto/update-system-user-status.dto'
 import { SystemUserService } from './system-user.service'
 
 @Controller('system/users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class SystemUserController {
   constructor(private readonly systemUserService: SystemUserService) {}
 
   @Post()
-  @Roles('admin')
+  @RequirePermissions('system.user.create')
   create(@Body() dto: CreateSystemUserDto) {
     return this.systemUserService.create(dto)
   }
 
   @Get()
-  @Roles('admin', 'viewer')
+  @RequirePermissions('system.user.view')
   findAll(@Query() query: SystemUserListDto) {
     return this.systemUserService.findAll(query)
   }
 
   @Patch(':id')
-  @Roles('admin')
+  @RequirePermissions('system.user.update')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemUserDto) {
     return this.systemUserService.update(id, dto)
   }
 
   @Patch(':id/status')
-  @Roles('admin')
+  @RequirePermissions('system.user.enable', 'system.user.disable')
   updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemUserStatusDto) {
     return this.systemUserService.updateStatus(id, dto)
   }
 
   @Patch(':id/reset-password')
-  @Roles('admin')
+  @RequirePermissions('system.user.reset-password')
   resetPassword(@Param('id', ParseIntPipe) id: number, @Body() dto: ResetSystemUserPasswordDto) {
     return this.systemUserService.resetPassword(id, dto)
   }
 
   @Delete(':id')
-  @Roles('admin')
+  @RequirePermissions('system.user.delete')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.systemUserService.remove(id)
   }

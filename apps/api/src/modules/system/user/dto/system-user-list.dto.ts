@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer'
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator'
 
-import type { SystemUserListParams, UserRole, UserStatus } from '@gaoge/shared-types'
+import type { SystemUserListParams, UserStatus } from '@gaoge/shared-types'
 
 export class SystemUserListDto implements SystemUserListParams {
   @IsOptional()
@@ -21,8 +21,10 @@ export class SystemUserListDto implements SystemUserListParams {
   keyword?: string
 
   @IsOptional()
-  @IsIn(['user', 'admin', 'viewer'])
-  role?: UserRole
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  roleId?: number
 
   @IsOptional()
   @IsIn(['active', 'inactive'])

@@ -1,8 +1,8 @@
-import type { UserRole, UserStatus } from '@gaoge/shared-types'
+import type { UserStatus } from '@gaoge/shared-types'
 
 export interface SystemUserSearch {
   keyword: string
-  role: '' | UserRole
+  roleId: '' | number
   status: '' | UserStatus
 }
 
@@ -11,7 +11,7 @@ export interface SystemUserFormModel {
   password: string
   nickname: string
   avatarUrl: string
-  role: UserRole
+  roleIds: number[]
   status: UserStatus
 }
 

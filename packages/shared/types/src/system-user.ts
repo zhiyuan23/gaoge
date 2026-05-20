@@ -1,4 +1,4 @@
-import type { UserRole, UserStatus } from './auth.js'
+import type { AuthRoleSummary, UserStatus } from './auth.js'
 import type { DateTimeString } from './common.js'
 
 /**
@@ -8,7 +8,7 @@ import type { DateTimeString } from './common.js'
  * @property account 后台登录账号。
  * @property nickname 昵称。
  * @property avatarUrl 头像 URL。
- * @property role 用户角色。
+ * @property roles 用户角色列表。
  * @property status 用户状态。
  * @property lastLoginAt 最近登录时间，未登录过时为 null。
  * @property createdAt 创建时间。
@@ -19,7 +19,7 @@ export interface SystemUser {
   account: string
   nickname: string | null
   avatarUrl: string | null
-  role: UserRole
+  roles: AuthRoleSummary[]
   status: UserStatus
   lastLoginAt: DateTimeString | null
   createdAt: DateTimeString
@@ -31,7 +31,7 @@ export interface SystemUserListParams {
   page?: number | string
   pageSize?: number | string
   keyword?: string
-  role?: UserRole
+  roleId?: number | string
   status?: UserStatus
 }
 
@@ -48,7 +48,7 @@ export interface SystemUserListResponse {
  * @property password 初始登录密码。
  * @property nickname 昵称。
  * @property avatarUrl 头像 URL。
- * @property role 用户角色。
+ * @property roleIds 用户角色 ID 列表。
  * @property status 用户状态。
  */
 export interface CreateSystemUserPayload {
@@ -56,7 +56,7 @@ export interface CreateSystemUserPayload {
   password: string
   nickname: string
   avatarUrl?: string
-  role: UserRole
+  roleIds: number[]
   status: UserStatus
 }
 
@@ -65,12 +65,12 @@ export interface CreateSystemUserPayload {
  *
  * @property nickname 昵称。
  * @property avatarUrl 头像 URL。
- * @property role 用户角色。
+ * @property roleIds 用户角色 ID 列表。
  */
 export interface UpdateSystemUserPayload {
   nickname: string
   avatarUrl?: string
-  role: UserRole
+  roleIds: number[]
 }
 
 /** 更新系统用户状态时的提交参数。 */

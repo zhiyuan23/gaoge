@@ -12,6 +12,7 @@ export interface TableColumn {
   prop?: string
   label: string
   width?: number
+  minWidth?: number
   slot?: string
   type?: string
   link?: boolean | ((row: any) => string)

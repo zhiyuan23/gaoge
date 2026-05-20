@@ -15,6 +15,10 @@ const props = defineProps<{
   mode: 'create' | 'edit'
   user?: SystemUser | null
   loading?: boolean
+  roleOptions: {
+    label: string
+    value: number
+  }[]
 }>()
 
 const emit = defineEmits<{
@@ -61,8 +65,13 @@ watch(
 </script>
 
 <template>
-  <ElDialog v-model="visible" :title="mode === 'create' ? '新增用户' : '编辑用户'" width="640px">
-    <UserForm ref="formRef" v-model:model="formModel" :mode="mode" />
+  <ElDialog
+    v-model="visible"
+    :title="mode === 'create' ? '新增用户' : '编辑用户'"
+    width="640px"
+    destroy-on-close
+  >
+    <UserForm ref="formRef" v-model:model="formModel" :mode="mode" :role-options="roleOptions" />
     <template #footer>
       <ElButton @click="visible = false">取消</ElButton>
       <ElButton type="primary" :loading="loading" @click="handleSubmit">保存</ElButton>

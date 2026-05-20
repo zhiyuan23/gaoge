@@ -4,7 +4,7 @@ import type { SystemUserFormModel, SystemUserSearch } from './types'
 
 export const SYSTEM_USER_DEFAULT_SEARCH: SystemUserSearch = {
   keyword: '',
-  role: '',
+  roleId: '',
   status: '',
 }
 
@@ -14,7 +14,7 @@ export function createEmptySystemUserForm(): SystemUserFormModel {
     password: '',
     nickname: '',
     avatarUrl: '',
-    role: 'user',
+    roleIds: [],
     status: 'active',
   }
 }
@@ -25,7 +25,7 @@ export function createSystemUserFormFromRow(user: SystemUser): SystemUserFormMod
     password: '',
     nickname: user.nickname ?? '',
     avatarUrl: user.avatarUrl ?? '',
-    role: user.role,
+    roleIds: user.roles.map((role) => role.id),
     status: user.status,
   }
 }
