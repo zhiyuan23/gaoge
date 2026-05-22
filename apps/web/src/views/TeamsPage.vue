@@ -3,6 +3,8 @@ import { Icon } from '@iconify/vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import DetailButton from '@/components/DetailButton.vue'
+import PageHeaderBar from '@/components/PageHeaderBar.vue'
 import { teamColors, teamData, teams } from '@/data/teams'
 import { fetchFootballAssetSummary, fetchFootballStandings } from '@/utils/football'
 
@@ -157,14 +159,6 @@ const goToSlide = (index) => {
   currentSlide.value = index
 }
 
-const goBack = () => {
-  router.push('/')
-}
-
-const goToAssetPage = () => {
-  router.push('/teams/football/assets')
-}
-
 const switchTeam = (team) => {
   activeTeam.value = team.id
   currentSlide.value = 0
@@ -295,31 +289,7 @@ watch(isFootballTeam, loadAssetSummary, {
 
 <template>
   <div class="min-h-screen bg-[#090a0d] text-white">
-    <!-- Header -->
-    <header
-      class="fixed left-0 right-0 top-0 z-50 border-b border-white/5 bg-[#090a0d]/95 px-4 py-3 backdrop-blur-sm"
-    >
-      <div class="mx-auto flex max-w-6xl items-center justify-between">
-        <button
-          class="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition-all hover:bg-white/10 hover:text-white"
-          @click="goBack"
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          <span>返回</span>
-        </button>
-        <div class="text-sm font-bold tracking-[2px] text-white">GAOGE SPORTS</div>
-        <div class="w-17.5"></div>
-      </div>
-    </header>
+    <PageHeaderBar back-to="/" />
 
     <!-- Team Switcher -->
     <!-- PC: left side of content area, Mobile: bottom center -->
@@ -436,51 +406,41 @@ watch(isFootballTeam, loadAssetSummary, {
             v-if="isFootballTeam"
             class="border-white/8 mb-6 rounded-3xl border bg-white/5 p-4 md:p-6"
           >
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p class="text-xs uppercase tracking-[0.16em] text-white/40">Team Assets</p>
-                <h2
-                  class="mt-2 text-lg font-bold"
-                  :style="{ color: teamColors[activeTeam].primary }"
-                >
+            <div class="mb-5 flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <h2 class="text-lg font-bold" :style="{ color: teamColors[activeTeam].primary }">
                   球队资产
                 </h2>
-                <p class="mt-2 text-sm text-white/60">公开展示高歌FC当前收支总览与历史明细。</p>
+                <p class="mt-2 text-sm text-white/55">公开球队当前收支总览与历史明细。</p>
               </div>
-              <button
-                class="cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90"
-                :style="{
-                  backgroundColor: teamColors[activeTeam].primary,
-                  color: teamColors[activeTeam].text,
-                }"
-                @click="goToAssetPage"
-              >
-                查看明细
-              </button>
+              <DetailButton
+                :accent-color="teamColors[activeTeam].primary"
+                :accent-text-color="teamColors[activeTeam].text"
+                label="查看明细"
+                to="/teams/football/assets"
+              />
             </div>
 
-            <div v-if="assetSummaryLoading" class="mt-4 text-sm text-white/55">
-              资产总览加载中...
-            </div>
-            <div v-else-if="assetSummaryError" class="mt-4 text-sm text-rose-200">
+            <div v-if="assetSummaryLoading" class="text-sm text-white/55">资产总览加载中...</div>
+            <div v-else-if="assetSummaryError" class="text-sm text-rose-200">
               资产总览加载失败：{{ assetSummaryError }}
             </div>
-            <div v-else class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div class="border-white/8 rounded-2xl border bg-[#0f1117] p-3">
-                <p class="text-xs text-white/40">总收入</p>
-                <p class="mt-2 text-lg font-semibold text-emerald-300">
+            <div v-else class="grid grid-cols-3 gap-2 md:gap-3">
+              <div class="border-white/8 min-w-0 rounded-2xl border bg-[#0f1117] p-3">
+                <p class="text-[11px] text-white/40 md:text-xs">总收入</p>
+                <p class="mt-2 text-lg font-semibold leading-tight text-emerald-300 md:text-xl">
                   {{ formatCurrencyFromCent(assetSummary.totalIncome) }}
                 </p>
               </div>
-              <div class="border-white/8 rounded-2xl border bg-[#0f1117] p-3">
-                <p class="text-xs text-white/40">总支出</p>
-                <p class="mt-2 text-lg font-semibold text-rose-300">
+              <div class="border-white/8 min-w-0 rounded-2xl border bg-[#0f1117] p-3">
+                <p class="text-[11px] text-white/40 md:text-xs">总支出</p>
+                <p class="mt-2 text-lg font-semibold leading-tight text-rose-300 md:text-xl">
                   {{ formatCurrencyFromCent(assetSummary.totalExpense) }}
                 </p>
               </div>
-              <div class="border-white/8 rounded-2xl border bg-[#0f1117] p-3">
-                <p class="text-xs text-white/40">当前结余</p>
-                <p class="mt-2 text-lg font-semibold text-sky-300">
+              <div class="border-white/8 min-w-0 rounded-2xl border bg-[#0f1117] p-3">
+                <p class="text-[11px] text-white/40 md:text-xs">当前结余</p>
+                <p class="mt-2 text-lg font-semibold leading-tight text-sky-300 md:text-xl">
                   {{ formatCurrencyFromCent(assetSummary.balance) }}
                 </p>
               </div>
@@ -496,7 +456,7 @@ watch(isFootballTeam, loadAssetSummary, {
                 <h2 class="text-lg font-bold" :style="{ color: teamColors[activeTeam].primary }">
                   赛季积分榜
                 </h2>
-                <!-- <p class="mt-2 text-sm text-white/55">按赛季查看三支球队积分对比与每轮明细</p> -->
+                <p class="mt-2 text-sm text-white/55">按赛季查看三支球队积分对比与每轮明细。</p>
               </div>
               <div v-if="false" class="grid grid-cols-2 gap-3 md:w-auto">
                 <label

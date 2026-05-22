@@ -60,6 +60,23 @@ describe('TeamsPage', () => {
     expect(wrapper.text()).toContain('¥1,260.00')
     expect(wrapper.text()).toContain('¥756.98')
     expect(wrapper.text()).toContain('¥503.02')
+    expect(wrapper.findAll('section > div.mb-5')[0].classes()).toContain('items-start')
+    expect(wrapper.findAll('section > div.mb-5')[0].classes()).toContain('justify-between')
+    expect(wrapper.findAll('section > div.mb-5')[0].classes()).not.toContain('flex-col')
+    expect(wrapper.findAll('section .grid')[0].classes()).toContain('grid-cols-3')
+    expect(
+      wrapper
+        .findAll('button')
+        .find((button) => button.text().includes('查看明细'))
+        ?.classes(),
+    ).toContain('shrink-0')
+    expect(
+      wrapper
+        .findAll('button')
+        .find((button) => button.text().includes('查看明细'))
+        ?.classes(),
+    ).toContain('text-xs')
+    expect(wrapper.findAll('section .grid > div > p')[1].classes()).toContain('text-lg')
   })
 
   it('does not show the asset entry for the basketball team', async () => {
