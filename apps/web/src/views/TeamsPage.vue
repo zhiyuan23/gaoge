@@ -4,7 +4,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { teamColors, teamData, teams } from '@/data/teams'
-import { fetchFootballStandings } from '@/utils/football'
+import { fetchFootballAssetSummary, fetchFootballStandings } from '@/utils/football'
 
 const router = useRouter()
 const route = useRoute()
@@ -18,6 +18,13 @@ const seasonYear = ref(2026)
 const seasonName = ref('春季赛')
 const standingsLoading = ref(false)
 const standingsError = ref('')
+const assetSummary = ref({
+  totalIncome: 0,
+  totalExpense: 0,
+  balance: 0,
+})
+const assetSummaryLoading = ref(false)
+const assetSummaryError = ref('')
 let standingsRequestSequence = 0
 const standings = ref({
   season: {
@@ -154,6 +161,10 @@ const goBack = () => {
   router.push('/')
 }
 
+const goToAssetPage = () => {
+  router.push('/teams/football/assets')
+}
+
 const switchTeam = (team) => {
   activeTeam.value = team.id
   currentSlide.value = 0
@@ -222,6 +233,36 @@ const loadStandings = async () => {
   }
 }
 
+const formatCurrencyFromCent = (amount) =>
+  `¥${(amount / 100).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+
+const loadAssetSummary = async () => {
+  if (!isFootballTeam.value) {
+    assetSummary.value = {
+      totalIncome: 0,
+      totalExpense: 0,
+      balance: 0,
+    }
+    assetSummaryError.value = ''
+    assetSummaryLoading.value = false
+    return
+  }
+
+  assetSummaryLoading.value = true
+  assetSummaryError.value = ''
+
+  try {
+    assetSummary.value = await fetchFootballAssetSummary()
+  } catch (error) {
+    assetSummaryError.value = error instanceof Error ? error.message : '资产总览加载失败'
+  } finally {
+    assetSummaryLoading.value = false
+  }
+}
+
 // 触摸滑动事件处理
 const onTouchStart = (e) => {
   touchEndX.value = 0
@@ -244,6 +285,10 @@ const onTouchEnd = () => {
 }
 
 watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
+  immediate: true,
+})
+
+watch(isFootballTeam, loadAssetSummary, {
   immediate: true,
 })
 </script>
@@ -386,6 +431,61 @@ watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
               {{ currentTeamData.description }}
             </p>
           </div>
+
+          <section
+            v-if="isFootballTeam"
+            class="border-white/8 mb-6 rounded-3xl border bg-white/5 p-4 md:p-6"
+          >
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p class="text-xs uppercase tracking-[0.16em] text-white/40">Team Assets</p>
+                <h2
+                  class="mt-2 text-lg font-bold"
+                  :style="{ color: teamColors[activeTeam].primary }"
+                >
+                  球队资产
+                </h2>
+                <p class="mt-2 text-sm text-white/60">公开展示高歌FC当前收支总览与历史明细。</p>
+              </div>
+              <button
+                class="cursor-pointer rounded-full px-4 py-2 text-sm font-semibold transition-opacity hover:opacity-90"
+                :style="{
+                  backgroundColor: teamColors[activeTeam].primary,
+                  color: teamColors[activeTeam].text,
+                }"
+                @click="goToAssetPage"
+              >
+                查看明细
+              </button>
+            </div>
+
+            <div v-if="assetSummaryLoading" class="mt-4 text-sm text-white/55">
+              资产总览加载中...
+            </div>
+            <div v-else-if="assetSummaryError" class="mt-4 text-sm text-rose-200">
+              资产总览加载失败：{{ assetSummaryError }}
+            </div>
+            <div v-else class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div class="border-white/8 rounded-2xl border bg-[#0f1117] p-3">
+                <p class="text-xs text-white/40">总收入</p>
+                <p class="mt-2 text-lg font-semibold text-emerald-300">
+                  {{ formatCurrencyFromCent(assetSummary.totalIncome) }}
+                </p>
+              </div>
+              <div class="border-white/8 rounded-2xl border bg-[#0f1117] p-3">
+                <p class="text-xs text-white/40">总支出</p>
+                <p class="mt-2 text-lg font-semibold text-rose-300">
+                  {{ formatCurrencyFromCent(assetSummary.totalExpense) }}
+                </p>
+              </div>
+              <div class="border-white/8 rounded-2xl border bg-[#0f1117] p-3">
+                <p class="text-xs text-white/40">当前结余</p>
+                <p class="mt-2 text-lg font-semibold text-sky-300">
+                  {{ formatCurrencyFromCent(assetSummary.balance) }}
+                </p>
+              </div>
+            </div>
+          </section>
 
           <section
             v-if="isFootballTeam"
