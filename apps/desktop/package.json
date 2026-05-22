@@ -5,6 +5,7 @@
   "type": "module",
   "main": "dist/main/index.cjs",
   "scripts": {
+    "postinstall": "electron-builder install-app-deps",
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "build:dir": "pnpm build && electron-builder --dir --config builder.config.ts",
