@@ -4,6 +4,7 @@ import { validate } from 'class-validator'
 
 import { verifyPassword } from '@/common/auth/password.util'
 
+import { BatchSystemUserRolesDto } from './dto/batch-system-user-roles.dto'
 import { CreateSystemUserDto } from './dto/create-system-user.dto'
 import { ResetSystemUserPasswordDto } from './dto/reset-system-user-password.dto'
 import { SystemUserListDto } from './dto/system-user-list.dto'
@@ -451,6 +452,181 @@ describe('SystemUserService', () => {
     })
   })
 
+  it('replaces roles for multiple users and keeps legacy role field in sync', async () => {
+    const { prisma, service } = createService()
+
+    prisma.user.findMany.mockResolvedValue([
+      {
+        id: 10,
+        account: 'ops-1',
+        deletedAt: null,
+        userRoles: [
+          {
+            role: {
+              id: 2,
+              code: 'asset_admin',
+              name: '资产管理员',
+              status: 'active',
+            },
+          },
+        ],
+      },
+      {
+        id: 11,
+        account: 'ops-2',
+        deletedAt: null,
+        userRoles: [
+          {
+            role: {
+              id: 2,
+              code: 'asset_admin',
+              name: '资产管理员',
+              status: 'active',
+            },
+          },
+        ],
+      },
+    ])
+    prisma.role.findMany.mockResolvedValue([
+      {
+        id: 3,
+        code: 'system_viewer',
+        name: '系统只读',
+        status: 'active',
+      },
+    ])
+
+    await service.batchUpdateRoles({
+      userIds: [10, 11],
+      roleIds: [3],
+      mode: 'replace',
+    })
+
+    expect(prisma.userRole.deleteMany).toHaveBeenCalledWith({
+      where: {
+        userId: {
+          in: [10, 11],
+        },
+      },
+    })
+    expect(prisma.userRole.createMany).toHaveBeenCalledWith({
+      data: [
+        { userId: 10, roleId: 3 },
+        { userId: 11, roleId: 3 },
+      ],
+      skipDuplicates: true,
+    })
+    expect(prisma.user.update).toHaveBeenNthCalledWith(1, {
+      where: { id: 10 },
+      data: {
+        role: 'viewer',
+      },
+    })
+    expect(prisma.user.update).toHaveBeenNthCalledWith(2, {
+      where: { id: 11 },
+      data: {
+        role: 'viewer',
+      },
+    })
+  })
+
+  it('returns permission explanation grouped by role and aggregated capability source', async () => {
+    const { prisma, service } = createService()
+
+    prisma.user.findUnique.mockResolvedValue({
+      id: 10,
+      account: 'asset.ops',
+      nickname: '资产运维',
+      avatarUrl: null,
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: new Date('2026-05-20T00:00:00.000Z'),
+      createdAt: new Date('2026-05-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-21T00:00:00.000Z'),
+      userRoles: [
+        {
+          role: {
+            id: 2,
+            code: 'asset_admin',
+            name: '资产管理员',
+            status: 'active',
+          },
+        },
+      ],
+    })
+    prisma.role.findMany.mockResolvedValue([
+      {
+        id: 2,
+        code: 'asset_admin',
+        name: '资产管理员',
+        status: 'active',
+        rolePermissions: [
+          {
+            permission: {
+              id: 11,
+              code: 'system.role.view',
+              name: '查看角色',
+              module: 'system',
+              resource: 'role',
+              action: 'view',
+              description: 'system.role.view',
+              status: 'active',
+              isBuiltIn: true,
+              menuPermissions: [
+                {
+                  menu: {
+                    id: 2,
+                    title: '角色中心',
+                    path: '/system/role',
+                    routeName: 'systemRole',
+                  },
+                },
+              ],
+            },
+          },
+          {
+            permission: {
+              id: 12,
+              code: 'system.role.assign-permission',
+              name: '分配权限',
+              module: 'system',
+              resource: 'role',
+              action: 'assign-permission',
+              description: 'system.role.assign-permission',
+              status: 'active',
+              isBuiltIn: true,
+              menuPermissions: [],
+            },
+          },
+        ],
+      },
+    ])
+
+    const detail = await service.getPermissionExplanation(10)
+
+    expect(detail.user.account).toBe('asset.ops')
+    expect(detail.roles).toEqual([
+      expect.objectContaining({
+        code: 'asset_admin',
+      }),
+    ])
+    expect(detail.roles[0]?.menus).toEqual([
+      expect.objectContaining({
+        title: '角色中心',
+      }),
+    ])
+    expect(detail.permissions).toEqual([
+      expect.objectContaining({
+        code: 'system.role.view',
+        viaRoles: ['资产管理员'],
+      }),
+      expect.objectContaining({
+        code: 'system.role.assign-permission',
+        viaRoles: ['资产管理员'],
+      }),
+    ])
+  })
+
   it('requires the approved Task 2 fields in DTOs', async () => {
     const createErrors = await validate(
       plainToInstance(CreateSystemUserDto, {
@@ -464,6 +640,7 @@ describe('SystemUserService', () => {
     )
     const updateStatusErrors = await validate(plainToInstance(UpdateSystemUserStatusDto, {}))
     const resetPasswordErrors = await validate(plainToInstance(ResetSystemUserPasswordDto, {}))
+    const batchRoleErrors = await validate(plainToInstance(BatchSystemUserRolesDto, {}))
 
     expect(createErrors.map((error) => error.property).sort()).toEqual([
       'account',
@@ -475,5 +652,10 @@ describe('SystemUserService', () => {
     expect(updateErrors.map((error) => error.property).sort()).toEqual(['nickname', 'roleIds'])
     expect(updateStatusErrors.map((error) => error.property)).toEqual(['status'])
     expect(resetPasswordErrors.map((error) => error.property)).toEqual(['newPassword'])
+    expect(batchRoleErrors.map((error) => error.property).sort()).toEqual([
+      'mode',
+      'roleIds',
+      'userIds',
+    ])
   })
 })

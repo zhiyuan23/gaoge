@@ -33,17 +33,25 @@ export const SYSTEM_USER_TABLE_COLUMNS: TableColumn[] = [
         label: '启用',
         auth: SYSTEM_USER_PERMISSIONS.enable,
         type: 'success',
+        visible: (row) => row.status === 'inactive',
       },
       {
         key: 'disable',
         label: '停用',
         auth: SYSTEM_USER_PERMISSIONS.disable,
         type: 'warning',
+        visible: (row) => row.status === 'active',
       },
       {
         key: 'resetPassword',
         label: '重置密码',
         auth: SYSTEM_USER_PERMISSIONS.resetPassword,
+        type: 'primary',
+      },
+      {
+        key: 'permissionExplanation',
+        label: '权限来源',
+        auth: SYSTEM_USER_PERMISSIONS.update,
         type: 'primary',
       },
       {

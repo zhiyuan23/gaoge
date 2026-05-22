@@ -41,6 +41,54 @@ export interface SystemUserListResponse {
   total: number
 }
 
+export type SystemUserBatchRoleMode = 'append' | 'replace'
+
+export interface BatchSystemUserRolesPayload {
+  userIds: number[]
+  roleIds: number[]
+  mode: SystemUserBatchRoleMode
+}
+
+export interface SystemUserExplanationMenu {
+  id: number
+  title: string
+  path: string
+  routeName: string
+}
+
+export interface SystemUserExplanationPermission {
+  id: number
+  code: string
+  name: string
+  module: string
+  resource: string
+  action: string
+}
+
+export interface SystemUserPermissionExplanationRole {
+  id: number
+  code: string
+  name: string
+  status: UserStatus
+  menus: SystemUserExplanationMenu[]
+  permissions: SystemUserExplanationPermission[]
+}
+
+export interface SystemUserPermissionExplanationSummaryMenu extends SystemUserExplanationMenu {
+  viaRoles: string[]
+}
+
+export interface SystemUserPermissionExplanationSummaryPermission extends SystemUserExplanationPermission {
+  viaRoles: string[]
+}
+
+export interface SystemUserPermissionExplanation {
+  user: SystemUser
+  roles: SystemUserPermissionExplanationRole[]
+  menus: SystemUserPermissionExplanationSummaryMenu[]
+  permissions: SystemUserPermissionExplanationSummaryPermission[]
+}
+
 /**
  * 创建系统用户时的提交参数。
  *

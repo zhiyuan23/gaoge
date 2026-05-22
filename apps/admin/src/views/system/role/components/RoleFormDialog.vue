@@ -14,6 +14,7 @@ const props = defineProps<{
   modelValue: boolean
   mode: 'create' | 'edit'
   role?: SystemRole | null
+  initialValue?: Partial<SystemRoleFormModel> | null
   loading?: boolean
 }>()
 
@@ -51,7 +52,10 @@ watch(
     formModel.value =
       props.mode === 'edit' && props.role
         ? createSystemRoleFormFromRow(props.role)
-        : createEmptySystemRoleForm()
+        : {
+            ...createEmptySystemRoleForm(),
+            ...props.initialValue,
+          }
     nextTick(() => {
       formRef.value?.clearValidate()
     })

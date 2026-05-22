@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common'
 import type { Prisma } from '@prisma/client'
 
-import type { SystemUser, SystemUserListParams } from '@gaoge/shared-types'
+import type {
+  BatchSystemUserRolesPayload,
+  SystemUser,
+  SystemUserListParams,
+  SystemUserPermissionExplanation,
+} from '@gaoge/shared-types'
 
 import { hashPassword } from '@/common/auth/password.util'
 import { PrismaService } from '@/common/prisma/prisma.service'
@@ -121,6 +126,245 @@ export class SystemUserService {
     return {
       list: list.map((item) => serializeSystemUser(item)),
       total,
+    }
+  }
+
+  async batchUpdateRoles(payload: BatchSystemUserRolesPayload) {
+    const userIds = normalizeIdList(payload.userIds, '至少选择一个用户')
+    const roles = await this.loadRoles(payload.roleIds)
+    const users = await this.prisma.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+        account: {
+          not: null,
+        },
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        account: true,
+        userRoles: {
+          select: {
+            role: {
+              select: roleSummarySelect,
+            },
+          },
+        },
+      },
+    })
+
+    if (users.length !== userIds.length) {
+      throw new NotFoundException('系统用户不存在')
+    }
+
+    const nextRoleIdsByUserId = new Map<number, number[]>()
+    const legacyRoleByUserId = new Map<number, ReturnType<typeof deriveLegacyRole>>()
+
+    for (const userId of userIds) {
+      const user = users.find((item) => item.id === userId)
+      if (!user || !user.account) {
+        throw new NotFoundException('系统用户不存在')
+      }
+
+      const currentRoles = user.userRoles.map((item) => item.role)
+      const nextRoles = payload.mode === 'replace' ? roles : mergeRoleSummaries(currentRoles, roles)
+
+      if (user.account === 'admin' && !hasSuperAdminRole(nextRoles)) {
+        throw new BadRequestException('默认 admin 账号不允许降级')
+      }
+
+      nextRoleIdsByUserId.set(
+        user.id,
+        nextRoles.map((item) => item.id),
+      )
+      legacyRoleByUserId.set(user.id, deriveLegacyRole(nextRoles))
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      if (payload.mode === 'replace') {
+        await tx.userRole.deleteMany({
+          where: {
+            userId: {
+              in: userIds,
+            },
+          },
+        })
+      }
+
+      await tx.userRole.createMany({
+        data: userIds.flatMap((userId) =>
+          (nextRoleIdsByUserId.get(userId) ?? []).map((roleId) => ({
+            userId,
+            roleId,
+          })),
+        ),
+        skipDuplicates: true,
+      })
+
+      for (const userId of userIds) {
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            role: legacyRoleByUserId.get(userId),
+          },
+        })
+      }
+    })
+
+    return {
+      userIds,
+      roleIds: roles.map((item) => item.id),
+      mode: payload.mode,
+    }
+  }
+
+  async getPermissionExplanation(id: number): Promise<SystemUserPermissionExplanation> {
+    const user = await this.findOneOrThrow(id)
+    const roleIds = user.userRoles.map((item) => item.role.id)
+    const roles = await this.prisma.role.findMany({
+      where: {
+        id: {
+          in: roleIds,
+        },
+      },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        status: true,
+        rolePermissions: {
+          select: {
+            permission: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+                module: true,
+                resource: true,
+                action: true,
+                menuPermissions: {
+                  select: {
+                    menu: {
+                      select: {
+                        id: true,
+                        title: true,
+                        path: true,
+                        routeName: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    const roleOrder = new Map(roleIds.map((roleId, index) => [roleId, index]))
+    const sortedRoles = roles.sort(
+      (left, right) => (roleOrder.get(left.id) ?? 0) - (roleOrder.get(right.id) ?? 0),
+    )
+    const menusById = new Map<
+      number,
+      {
+        id: number
+        title: string
+        path: string
+        routeName: string
+        viaRoles: Set<string>
+      }
+    >()
+    const permissionsByCode = new Map<
+      string,
+      {
+        id: number
+        code: string
+        name: string
+        module: string
+        resource: string
+        action: string
+        viaRoles: Set<string>
+      }
+    >()
+
+    const roleExplanation = sortedRoles.map((role) => {
+      const permissionList = role.rolePermissions.map((item) => item.permission)
+      const menuList = dedupeById(
+        permissionList.flatMap((permission) =>
+          permission.menuPermissions.map((entry) => ({
+            id: entry.menu.id,
+            title: entry.menu.title,
+            path: entry.menu.path,
+            routeName: entry.menu.routeName,
+          })),
+        ),
+      )
+
+      permissionList.forEach((permission) => {
+        const existingPermission = permissionsByCode.get(permission.code) ?? {
+          id: permission.id,
+          code: permission.code,
+          name: permission.name,
+          module: permission.module,
+          resource: permission.resource,
+          action: permission.action,
+          viaRoles: new Set<string>(),
+        }
+        existingPermission.viaRoles.add(role.name)
+        permissionsByCode.set(permission.code, existingPermission)
+
+        permission.menuPermissions.forEach((entry) => {
+          const existingMenu = menusById.get(entry.menu.id) ?? {
+            id: entry.menu.id,
+            title: entry.menu.title,
+            path: entry.menu.path,
+            routeName: entry.menu.routeName,
+            viaRoles: new Set<string>(),
+          }
+          existingMenu.viaRoles.add(role.name)
+          menusById.set(entry.menu.id, existingMenu)
+        })
+      })
+
+      return {
+        id: role.id,
+        code: role.code,
+        name: role.name,
+        status: role.status as SystemUserPermissionExplanation['roles'][number]['status'],
+        menus: menuList,
+        permissions: permissionList.map((permission) => ({
+          id: permission.id,
+          code: permission.code,
+          name: permission.name,
+          module: permission.module,
+          resource: permission.resource,
+          action: permission.action,
+        })),
+      }
+    })
+
+    return {
+      user: serializeSystemUser(user),
+      roles: roleExplanation,
+      menus: [...menusById.values()].map((item) => ({
+        id: item.id,
+        title: item.title,
+        path: item.path,
+        routeName: item.routeName,
+        viaRoles: [...item.viaRoles],
+      })),
+      permissions: [...permissionsByCode.values()].map((item) => ({
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        module: item.module,
+        resource: item.resource,
+        action: item.action,
+        viaRoles: [...item.viaRoles],
+      })),
     }
   }
 
@@ -276,9 +520,20 @@ function normalizeRequiredPassword(value: unknown, message: string) {
 }
 
 function normalizeRoleIds(roleIds: number[]) {
-  const normalized = [...new Set(roleIds.map((item) => Number(item)).filter((item) => item > 0))]
+  const normalized = normalizeIdList(roleIds, '至少选择一个角色')
   if (normalized.length === 0) {
     throw new BadRequestException('至少选择一个角色')
+  }
+
+  return normalized
+}
+
+function normalizeIdList(values: number[], message: string) {
+  const normalized = [
+    ...new Set((values ?? []).map((item) => Number(item)).filter((item) => item > 0)),
+  ]
+  if (normalized.length === 0) {
+    throw new BadRequestException(message)
   }
 
   return normalized
@@ -328,6 +583,29 @@ function hasSuperAdminRole(roles: RoleSummaryRecord[]) {
 
 function deriveLegacyRole(roles: RoleSummaryRecord[]) {
   return roles.length === 1 && roles[0]?.code === 'system_viewer' ? 'viewer' : 'admin'
+}
+
+function mergeRoleSummaries(currentRoles: RoleSummaryRecord[], appendedRoles: RoleSummaryRecord[]) {
+  const merged = new Map<number, RoleSummaryRecord>()
+
+  currentRoles.forEach((role) => {
+    merged.set(role.id, role)
+  })
+  appendedRoles.forEach((role) => {
+    merged.set(role.id, role)
+  })
+
+  return [...merged.values()]
+}
+
+function dedupeById<T extends { id: number }>(items: T[]) {
+  const map = new Map<number, T>()
+
+  items.forEach((item) => {
+    map.set(item.id, item)
+  })
+
+  return [...map.values()]
 }
 
 function serializeSystemUser(

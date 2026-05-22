@@ -9,10 +9,19 @@ const routes: RouteRecordRaw = {
   component: Layout,
   name: 'system',
   meta: {
-    title: '用户权限',
+    title: '权限中心',
     icon: 'ri:settings-3-line',
   },
   children: [
+    {
+      path: 'role',
+      name: 'systemRole',
+      component: () => import('@/views/system/role/index.vue'),
+      meta: {
+        title: '角色中心',
+        auth: ['system.role.view'],
+      },
+    },
     {
       path: 'user',
       name: 'systemUser',
@@ -20,15 +29,6 @@ const routes: RouteRecordRaw = {
       meta: {
         title: '用户管理',
         auth: ['system.user.view'],
-      },
-    },
-    {
-      path: 'role',
-      name: 'systemRole',
-      component: () => import('@/views/system/role/index.vue'),
-      meta: {
-        title: '角色管理',
-        auth: ['system.role.view'],
       },
     },
     {

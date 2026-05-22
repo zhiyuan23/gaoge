@@ -7,12 +7,18 @@ meta:
 import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
 
 import systemRoleApi from '@/api/system/role'
-import type { SystemUser } from '@/api/system/user'
+import type {
+  BatchSystemUserRolesPayload,
+  SystemUser,
+  SystemUserPermissionExplanation,
+} from '@/api/system/user'
 import systemUserApi from '@/api/system/user'
 import type { SearchFormData } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
 import { useListPage } from '@/composables/useListPage'
 
+import BatchRoleDialog from './components/BatchRoleDialog.vue'
+import PermissionExplanationDrawer from './components/PermissionExplanationDrawer.vue'
 import ResetPasswordDialog from './components/ResetPasswordDialog.vue'
 import UserFormDialog from './components/UserFormDialog.vue'
 import { SYSTEM_USER_DEFAULT_SEARCH } from './model/defaults'
@@ -33,9 +39,15 @@ defineOptions({
 
 const submitLoading = ref(false)
 const resetLoading = ref(false)
+const batchRoleLoading = ref(false)
+const explanationLoading = ref(false)
 const selectionDataList = ref<SystemUser[]>([])
 const resetPasswordVisible = ref(false)
+const batchRoleVisible = ref(false)
+const batchRoleMode = ref<BatchSystemUserRolesPayload['mode']>('append')
+const permissionExplanationVisible = ref(false)
 const resetTarget = ref<SystemUser | null>(null)
+const permissionExplanation = ref<SystemUserPermissionExplanation | null>(null)
 const roleOptions = ref<{ label: string; value: number }[]>([])
 
 const {
@@ -96,6 +108,16 @@ async function handleAction(row: SystemUser, key: string) {
     resetPasswordVisible.value = true
     return
   }
+  if (key === 'permissionExplanation') {
+    permissionExplanationVisible.value = true
+    explanationLoading.value = true
+    try {
+      permissionExplanation.value = await systemUserApi.permissionExplanation(row.id)
+    } finally {
+      explanationLoading.value = false
+    }
+    return
+  }
   if (key === 'delete') {
     await ElMessageBox.confirm(`确定删除账号 ${row.account} 吗？`, '删除确认', {
       type: 'warning',
@@ -110,6 +132,33 @@ async function handleAction(row: SystemUser, key: string) {
 
 function handleSelectionChange(rows: SystemUser[]) {
   selectionDataList.value = rows
+}
+
+function openBatchRoleDialog(mode: BatchSystemUserRolesPayload['mode']) {
+  if (selectionDataList.value.length === 0) {
+    return
+  }
+
+  batchRoleMode.value = mode
+  batchRoleVisible.value = true
+}
+
+async function handleBatchRoleSubmit(
+  payload: Pick<BatchSystemUserRolesPayload, 'roleIds' | 'mode'>,
+) {
+  batchRoleLoading.value = true
+  try {
+    await systemUserApi.batchUpdateRoles({
+      userIds: selectionDataList.value.map((item) => item.id),
+      roleIds: payload.roleIds,
+      mode: payload.mode,
+    })
+    ElMessage.success(payload.mode === 'append' ? '角色已批量追加' : '角色已批量替换')
+    batchRoleVisible.value = false
+    await fetchList()
+  } finally {
+    batchRoleLoading.value = false
+  }
 }
 
 async function handleResetPasswordSubmit(payload: { newPassword: string }) {
@@ -159,6 +208,22 @@ onMounted(() => {
           >
             新增用户
           </ElButton>
+          <ElButton
+            v-auth="SYSTEM_USER_PERMISSIONS.update"
+            plain
+            :disabled="selectionDataList.length === 0"
+            @click="openBatchRoleDialog('append')"
+          >
+            批量追加角色
+          </ElButton>
+          <ElButton
+            v-auth="SYSTEM_USER_PERMISSIONS.update"
+            plain
+            :disabled="selectionDataList.length === 0"
+            @click="openBatchRoleDialog('replace')"
+          >
+            批量替换角色
+          </ElButton>
         </template>
       </EsListToolbar>
 
@@ -200,6 +265,20 @@ onMounted(() => {
       v-model="resetPasswordVisible"
       :loading="resetLoading"
       @submit="handleResetPasswordSubmit"
+    />
+
+    <BatchRoleDialog
+      v-model="batchRoleVisible"
+      :mode="batchRoleMode"
+      :loading="batchRoleLoading"
+      :role-options="roleOptions"
+      @submit="handleBatchRoleSubmit"
+    />
+
+    <PermissionExplanationDrawer
+      v-model="permissionExplanationVisible"
+      :explanation="permissionExplanation"
+      :loading="explanationLoading"
     />
   </div>
 </template>

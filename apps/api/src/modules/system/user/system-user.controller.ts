@@ -15,6 +15,7 @@ import { RequirePermissions } from '@/common/auth/permissions.decorator'
 import { PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
 
+import { BatchSystemUserRolesDto } from './dto/batch-system-user-roles.dto'
 import { CreateSystemUserDto } from './dto/create-system-user.dto'
 import { ResetSystemUserPasswordDto } from './dto/reset-system-user-password.dto'
 import { SystemUserListDto } from './dto/system-user-list.dto'
@@ -37,6 +38,18 @@ export class SystemUserController {
   @RequirePermissions('system.user.view')
   findAll(@Query() query: SystemUserListDto) {
     return this.systemUserService.findAll(query)
+  }
+
+  @Patch('batch/roles')
+  @RequirePermissions('system.user.update')
+  batchUpdateRoles(@Body() dto: BatchSystemUserRolesDto) {
+    return this.systemUserService.batchUpdateRoles(dto)
+  }
+
+  @Get(':id/permission-explanation')
+  @RequirePermissions('system.user.view')
+  getPermissionExplanation(@Param('id', ParseIntPipe) id: number) {
+    return this.systemUserService.getPermissionExplanation(id)
   }
 
   @Patch(':id')
