@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
+import { BUILT_IN_PERMISSION_DEFINITIONS } from '@/modules/system/rbac/builtins'
+
 import { PrismaService } from '../prisma/prisma.service'
 
 export interface JwtPayload {
@@ -88,8 +90,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const roles = user.userRoles
       .map((item) => item.role)
       .filter((role) => role.status === 'active') as JwtRequestUserRole[]
+    const builtInPermissions = roles.some((role) => role.code === 'super_admin')
+      ? BUILT_IN_PERMISSION_DEFINITIONS.map((item) => item.code)
+      : []
     const permissions = [
-      ...new Set(roles.flatMap((role) => role.rolePermissions.map((item) => item.permission.code))),
+      ...new Set([
+        ...roles.flatMap((role) => role.rolePermissions.map((item) => item.permission.code)),
+        ...builtInPermissions,
+      ]),
     ]
 
     return {

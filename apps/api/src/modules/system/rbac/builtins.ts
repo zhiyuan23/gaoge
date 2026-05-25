@@ -68,6 +68,7 @@ const resourceLabels: Record<string, string> = {
   role: '角色',
   permission: '权限',
   menu: '菜单',
+  'wechat-share': '微信分享配置',
 }
 
 const actionLabels: Record<string, string> = {
@@ -149,6 +150,8 @@ const permissionCodes = [
   'system.menu.delete',
   'system.menu.sort',
   'system.menu.assign-permission',
+  'system.wechat-share.view',
+  'system.wechat-share.update',
 ] as const
 
 export const BUILT_IN_PERMISSION_DEFINITIONS: BuiltInPermissionDefinition[] = permissionCodes.map(
@@ -234,6 +237,33 @@ export const BUILT_IN_MENU_DEFINITIONS: BuiltInMenuDefinition[] = [
         visible: true,
         isBuiltIn: true,
         permissionCodes: ['system.permission.view'],
+      },
+    ],
+  },
+  {
+    name: 'wechat',
+    title: '微信管理',
+    icon: 'ri:wechat-2-line',
+    path: '/wechat',
+    routeName: 'wechat',
+    menuType: 'catalog',
+    sort: 10,
+    status: 'active',
+    visible: true,
+    isBuiltIn: true,
+    permissionCodes: [],
+    children: [
+      {
+        name: 'wechatShare',
+        title: '微信分享配置',
+        path: '/wechat/share',
+        routeName: 'wechatShare',
+        menuType: 'menu',
+        sort: 0,
+        status: 'active',
+        visible: true,
+        isBuiltIn: true,
+        permissionCodes: ['system.wechat-share.view'],
       },
     ],
   },

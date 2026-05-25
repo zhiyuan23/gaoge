@@ -15,6 +15,7 @@ import type {
 import { hashPassword, verifyPassword } from '@/common/auth/password.util'
 import { PrismaService } from '@/common/prisma/prisma.service'
 import { WechatService } from '@/common/wechat/wechat.service'
+import { BUILT_IN_PERMISSION_DEFINITIONS } from '@/modules/system/rbac/builtins'
 
 import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from '../dto/login.dto'
 
@@ -462,6 +463,7 @@ export class AuthService {
 
   private buildPermissionsFromRoles(
     roles: {
+      code?: string
       rolePermissions: {
         permission: {
           code: string
@@ -470,8 +472,15 @@ export class AuthService {
       }[]
     }[],
   ) {
+    const builtInPermissions = roles.some((role) => role.code === 'super_admin')
+      ? BUILT_IN_PERMISSION_DEFINITIONS.map((item) => item.code)
+      : []
+
     return [
-      ...new Set(roles.flatMap((role) => role.rolePermissions.map((item) => item.permission.code))),
+      ...new Set([
+        ...roles.flatMap((role) => role.rolePermissions.map((item) => item.permission.code)),
+        ...builtInPermissions,
+      ]),
     ].sort()
   }
 

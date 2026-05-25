@@ -10,6 +10,7 @@ import { FootballModule } from './modules/football/football.module'
 import { HealthModule } from './modules/health/health.module'
 import { MiniappModule } from './modules/miniapp/miniapp.module'
 import { SystemModule } from './modules/system/system.module'
+import { WechatShareModule } from './modules/wechat-share/wechat-share.module'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 
@@ -21,6 +22,7 @@ import { AppService } from './app.service'
     }),
     PrismaModule,
     WechatModule,
+    WechatShareModule,
     HealthModule,
     BasketballModule,
     FootballModule,

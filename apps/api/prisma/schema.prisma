@@ -208,6 +208,24 @@ model MenuPermission {
   @@index([permissionId])
 }
 
+model WechatShareConfig {
+  id              Int      @id @default(1)
+  appId           String   @default("")
+  appSecret       String   @default("")
+  defaultImageUrl String   @default("")
+  homeTitle       String   @default("")
+  homeDesc        String   @default("")
+  homeImageUrl    String   @default("")
+  teamsTitle      String   @default("")
+  teamsDesc       String   @default("")
+  teamsImageUrl   String   @default("")
+  assetsTitle     String   @default("")
+  assetsDesc      String   @default("")
+  assetsImageUrl  String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 // ============================================
 // 球队资金明细表
 // ============================================

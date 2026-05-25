@@ -274,7 +274,11 @@ describe('AuthService admin RBAC', () => {
     ])
 
     await expect(service.getPermission(3)).resolves.toEqual({
-      permissions: ['system.permission.view', 'system.user.view'],
+      permissions: expect.arrayContaining([
+        'system.permission.view',
+        'system.user.view',
+        'system.wechat-share.view',
+      ]),
       role: 'admin',
       roles: [
         {
@@ -291,5 +295,45 @@ describe('AuthService admin RBAC', () => {
         },
       ],
     })
+  })
+
+  it('includes latest built-in permissions for super_admin even before rbac sync updates role bindings', async () => {
+    const { service, prisma } = createService()
+
+    prisma.user.findUnique.mockResolvedValue({
+      id: 9,
+      account: 'admin',
+      openid: null,
+      nickname: 'Admin',
+      avatarUrl: null,
+      phone: null,
+      role: 'admin',
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: null,
+    })
+    prisma.userRole.findMany.mockResolvedValue([
+      {
+        role: {
+          id: 1,
+          code: 'super_admin',
+          name: '超级管理员',
+          status: 'active',
+          rolePermissions: [
+            {
+              permission: {
+                code: 'system.user.view',
+                status: 'active',
+              },
+            },
+          ],
+        },
+      },
+    ])
+
+    const result = await service.getPermission(9)
+
+    expect(result.permissions).toContain('system.wechat-share.view')
+    expect(result.permissions).toContain('system.wechat-share.update')
   })
 })

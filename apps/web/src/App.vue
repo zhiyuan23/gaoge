@@ -1,10 +1,26 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import { nextTick, watch } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+
+import { syncWechatShare } from '@/utils/wechatShare'
+
+const route = useRoute()
+
+watch(
+  () => route.fullPath,
+  async () => {
+    await nextTick()
+    await syncWechatShare(route)
+  },
+  {
+    immediate: true,
+  },
+)
 </script>
 
 <template>
-  <RouterView v-slot="{ Component, route }">
-    <div :class="{ 'overflow-hidden': route.path === '/' }">
+  <RouterView v-slot="{ Component, route: currentRoute }">
+    <div :class="{ 'overflow-hidden': currentRoute.path === '/' }">
       <transition name="slide-up" mode="out-in">
         <component :is="Component" />
       </transition>
