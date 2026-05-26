@@ -19,6 +19,16 @@
 		F1000000000000000000010A /* ProfileSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000020E /* ProfileSummary.swift */; };
 		F1000000000000000000010B /* MockDashboardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000020F /* MockDashboardRepository.swift */; };
 		F1000000000000000000010C /* WorkoutsFeatureModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000210 /* WorkoutsFeatureModel.swift */; };
+		F1000000000000000000010D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000211 /* AppTheme.swift */; };
+		F1000000000000000000010E /* HomeFeatureModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000212 /* HomeFeatureModel.swift */; };
+		F1000000000000000000010F /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000213 /* HomeView.swift */; };
+		F10000000000000000000110 /* WorkoutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000214 /* WorkoutsView.swift */; };
+		F10000000000000000000111 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000215 /* ProfileView.swift */; };
+		F10000000000000000000112 /* GlassTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000216 /* GlassTabBar.swift */; };
+		F10000000000000000000113 /* MetricRingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000217 /* MetricRingCard.swift */; };
+		F10000000000000000000114 /* SectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000218 /* SectionHeader.swift */; };
+		F10000000000000000000115 /* WorkoutCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000219 /* WorkoutCard.swift */; };
+		F10000000000000000000116 /* ProfileStatCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000021A /* ProfileStatCard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +58,16 @@
 		F1000000000000000000020E /* ProfileSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSummary.swift; sourceTree = "<group>"; };
 		F1000000000000000000020F /* MockDashboardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDashboardRepository.swift; sourceTree = "<group>"; };
 		F10000000000000000000210 /* WorkoutsFeatureModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsFeatureModel.swift; sourceTree = "<group>"; };
+		F10000000000000000000211 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		F10000000000000000000212 /* HomeFeatureModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFeatureModel.swift; sourceTree = "<group>"; };
+		F10000000000000000000213 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		F10000000000000000000214 /* WorkoutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsView.swift; sourceTree = "<group>"; };
+		F10000000000000000000215 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		F10000000000000000000216 /* GlassTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassTabBar.swift; sourceTree = "<group>"; };
+		F10000000000000000000217 /* MetricRingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricRingCard.swift; sourceTree = "<group>"; };
+		F10000000000000000000218 /* SectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeader.swift; sourceTree = "<group>"; };
+		F10000000000000000000219 /* WorkoutCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutCard.swift; sourceTree = "<group>"; };
+		F1000000000000000000021A /* ProfileStatCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStatCard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +104,7 @@
 				F10000000000000000000506 /* Core */,
 				F10000000000000000000507 /* Features */,
 				F10000000000000000000504 /* Resources */,
+				F1000000000000000000050D /* Shared */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -119,6 +140,7 @@
 		F10000000000000000000506 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				F1000000000000000000050E /* Styling */,
 				F1000000000000000000050A /* Models */,
 				F1000000000000000000050B /* Repositories */,
 			);
@@ -128,7 +150,9 @@
 		F10000000000000000000507 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				F1000000000000000000050F /* Home */,
 				F1000000000000000000050C /* Workouts */,
+				F10000000000000000000510 /* Profile */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -173,8 +197,54 @@
 			isa = PBXGroup;
 			children = (
 				F10000000000000000000210 /* WorkoutsFeatureModel.swift */,
+				F10000000000000000000214 /* WorkoutsView.swift */,
 			);
 			path = Workouts;
+			sourceTree = "<group>";
+		};
+		F1000000000000000000050D /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000511 /* Components */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		F1000000000000000000050E /* Styling */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000211 /* AppTheme.swift */,
+			);
+			path = Styling;
+			sourceTree = "<group>";
+		};
+		F1000000000000000000050F /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000212 /* HomeFeatureModel.swift */,
+				F10000000000000000000213 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		F10000000000000000000510 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000215 /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		F10000000000000000000511 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000216 /* GlassTabBar.swift */,
+				F10000000000000000000217 /* MetricRingCard.swift */,
+				F10000000000000000000218 /* SectionHeader.swift */,
+				F10000000000000000000219 /* WorkoutCard.swift */,
+				F1000000000000000000021A /* ProfileStatCard.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -282,6 +352,16 @@
 				F1000000000000000000010A /* ProfileSummary.swift in Sources */,
 				F1000000000000000000010B /* MockDashboardRepository.swift in Sources */,
 				F1000000000000000000010C /* WorkoutsFeatureModel.swift in Sources */,
+				F1000000000000000000010D /* AppTheme.swift in Sources */,
+				F1000000000000000000010E /* HomeFeatureModel.swift in Sources */,
+				F1000000000000000000010F /* HomeView.swift in Sources */,
+				F10000000000000000000110 /* WorkoutsView.swift in Sources */,
+				F10000000000000000000111 /* ProfileView.swift in Sources */,
+				F10000000000000000000112 /* GlassTabBar.swift in Sources */,
+				F10000000000000000000113 /* MetricRingCard.swift in Sources */,
+				F10000000000000000000114 /* SectionHeader.swift in Sources */,
+				F10000000000000000000115 /* WorkoutCard.swift in Sources */,
+				F10000000000000000000116 /* ProfileStatCard.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
