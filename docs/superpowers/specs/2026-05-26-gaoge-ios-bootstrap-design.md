@@ -173,7 +173,7 @@ apps/ios/
   README.md
   GaogeIOS.xcodeproj
 
-  GaogeIOS/
+  Sources/
     App/
       GaogeIOSApp.swift
       AppModel.swift
@@ -211,6 +211,10 @@ apps/ios/
       Assets.xcassets
       Preview Content/
         Preview Assets.xcassets
+
+  Tests/
+    MockDashboardRepositoryTests.swift
+    WorkoutsFeatureModelTests.swift
 ```
 
 目录职责如下：
@@ -225,8 +229,10 @@ apps/ios/
   放跨页面复用的 UI 组件
 - `Resources`
   放资源与预览素材
+- `Tests`
+  放首版最小必要单元测试
 
-这个结构的核心目标是让每个目录有清晰职责，同时保留足够低的上手成本。
+这个结构的核心目标是让应用根目录、源码根目录和测试目录边界清晰，避免出现 `apps/ios/GaogeIOS` 这种看起来重复的双层命名，同时保留足够低的上手成本。
 
 ## 页面与信息架构
 
