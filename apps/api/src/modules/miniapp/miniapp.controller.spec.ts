@@ -1,6 +1,6 @@
 import { GUARDS_METADATA, PATH_METADATA } from '@nestjs/common/constants'
 
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { MiniappController } from './miniapp.controller'
 

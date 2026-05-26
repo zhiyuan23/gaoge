@@ -15,7 +15,7 @@ import type { SystemPermissionListParams } from '@gaoge/shared-types'
 
 import { RequirePermissions } from '@/common/auth/permissions.decorator'
 import { PermissionsGuard } from '@/common/auth/permissions.guard'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateSystemPermissionDto } from './dto/create-system-permission.dto'
 import { UpdateSystemPermissionDto } from './dto/update-system-permission.dto'

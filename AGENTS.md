@@ -76,6 +76,14 @@
 
 当仓库结构、流程或命名规则发生明显变化时，应同步更新文档，而不是仅修改代码。
 
+当前文档分层约定：
+
+- `AGENTS.md` 只放仓库级 AI 协作规则、目录职责、依赖方向和必须优先遵守的全局约束
+- `docs/architecture/*` 放架构边界、分层关系和长期结构说明
+- `docs/conventions/*` 放面向人和 AI 的开发约定，尤其是按应用区分的实现规范，例如样式方案、页面结构、通用组件优先级
+
+当规则只在某个应用或某类页面内成立时，不要继续堆进 `AGENTS.md`，应写入对应的 `docs/conventions/*` 文档，并在需要时从 `AGENTS.md` 做索引。
+
 ## 依赖方向
 
 遵循单向依赖：
@@ -117,6 +125,21 @@ shared -> configs
   - 稳定的 Vue 区块顺序
 
 AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
+
+## 开发规范入口
+
+以下内容不在 `AGENTS.md` 内展开维护，而在 `docs/conventions/*` 中持续收敛：
+
+- [docs/conventions/README.md](docs/conventions/README.md)
+- [docs/conventions/api-module.md](docs/conventions/api-module.md)
+- [docs/conventions/admin-page-patterns.md](docs/conventions/admin-page-patterns.md)
+- [docs/conventions/frontend-styling.md](docs/conventions/frontend-styling.md)
+- [docs/conventions/admin-crud.md](docs/conventions/admin-crud.md)
+- [docs/conventions/shared-contracts.md](docs/conventions/shared-contracts.md)
+- [docs/conventions/env-and-config.md](docs/conventions/env-and-config.md)
+- [docs/conventions/testing-and-verification.md](docs/conventions/testing-and-verification.md)
+
+新增或调整应用级实现规范时，应优先更新这些文档，而不是继续向 `AGENTS.md` 追加细节。
 
 ## 后台表单弹窗约定
 
@@ -166,3 +189,9 @@ AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 - 命名规则变化
 - 提交、校验、格式化流程变化
 - AI 协作流程变化
+
+以下情况发生时，至少应同步更新对应的 `docs/conventions/*` 文档：
+
+- 某个应用新增或废弃样式方案，例如 `UnoCSS`、`Tailwind CSS` 的适用边界变化
+- 某类页面新增统一实现约定，例如 admin CRUD 页面默认组件、目录结构或交互骨架变化
+- 通用组件的推荐使用顺序变化，例如 `EsSearch`、`EsTable`、表单弹窗基座的优先级变化

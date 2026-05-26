@@ -17,7 +17,7 @@ import { PrismaService } from '@/common/prisma/prisma.service'
 import { WechatService } from '@/common/wechat/wechat.service'
 import { BUILT_IN_PERMISSION_DEFINITIONS } from '@/modules/system/rbac/builtins'
 
-import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from '../dto/login.dto'
+import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from './dto/login.dto'
 
 export interface JwtPayload {
   sub: number

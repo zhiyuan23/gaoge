@@ -15,7 +15,7 @@ import type { MatchRoundListParams } from '@gaoge/shared-types'
 
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateMatchRoundDto } from './dto/create-match-round.dto'
 import { UpdateMatchRoundDto } from './dto/update-match-round.dto'

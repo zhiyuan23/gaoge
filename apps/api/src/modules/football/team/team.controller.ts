@@ -15,7 +15,7 @@ import type { TeamListParams } from '@gaoge/shared-types'
 
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateTeamDto } from './dto/create-team.dto'
 import { UpdateTeamDto } from './dto/update-team.dto'

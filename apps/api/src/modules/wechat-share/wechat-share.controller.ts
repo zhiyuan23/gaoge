@@ -2,7 +2,7 @@ import { Body, Controller, Get, Put, Query, UseGuards } from '@nestjs/common'
 
 import { RequirePermissions } from '@/common/auth/permissions.decorator'
 import { PermissionsGuard } from '@/common/auth/permissions.guard'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { GetWechatSharePublicConfigDto } from './dto/get-wechat-share-public-config.dto'
 import { JssdkSignatureQueryDto } from './dto/jssdk-signature-query.dto'

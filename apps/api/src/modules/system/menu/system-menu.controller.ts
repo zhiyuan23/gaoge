@@ -12,7 +12,7 @@ import {
 
 import { RequirePermissions } from '@/common/auth/permissions.decorator'
 import { PermissionsGuard } from '@/common/auth/permissions.guard'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateSystemMenuDto } from './dto/create-system-menu.dto'
 import { UpdateSystemMenuDto } from './dto/update-system-menu.dto'

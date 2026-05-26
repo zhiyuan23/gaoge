@@ -13,9 +13,9 @@ import {
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
 
-import { AdminLoginDto, MiniappLoginDto, PhoneLoginDto, RefreshTokenDto } from '../dto/login.dto'
-import { JwtAuthGuard } from '../guards/jwt-auth.guard'
-import { AuthService } from '../services/auth.service'
+import { AdminLoginDto, MiniappLoginDto, PhoneLoginDto, RefreshTokenDto } from './dto/login.dto'
+import { AuthService } from './auth.service'
+import { JwtAuthGuard } from './jwt-auth.guard'
 
 @Controller('auth')
 export class AuthController {

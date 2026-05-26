@@ -14,7 +14,7 @@ import {
 
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateFundDto, QueryFundDto, UpdateFundDto } from './dto/fund.dto'
 import { FundService } from './fund.service'

@@ -13,7 +13,7 @@ import {
 
 import { RequirePermissions } from '@/common/auth/permissions.decorator'
 import { PermissionsGuard } from '@/common/auth/permissions.guard'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateSystemUserDto } from './dto/create-system-user.dto'
 import { ResetSystemUserPasswordDto } from './dto/reset-system-user-password.dto'

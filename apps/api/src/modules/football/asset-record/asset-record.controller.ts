@@ -14,7 +14,7 @@ import {
 
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
-import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { AssetRecordListDto } from './dto/asset-record-list.dto'
 import { CreateAssetRecordDto } from './dto/create-asset-record.dto'

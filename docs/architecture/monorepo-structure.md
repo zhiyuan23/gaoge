@@ -1,5 +1,15 @@
 # Monorepo 结构说明
 
+本文用于说明仓库顶层的 monorepo 分层和目录职责。
+
+它只回答三类问题：
+
+- 顶层有哪些应用和共享层
+- 它们各自负责什么
+- 它们之间允许怎样依赖
+
+它不展开描述某个应用内部的详细目录结构。应用内部结构应由对应的架构文档或应用文档单独维护。
+
 ## 核心原则
 
 按可部署应用组织，按共享能力复用。
@@ -10,6 +20,8 @@
 - `apps/admin`：Vue 3 管理后台应用
 - `apps/web`：Vue Web 应用
 - `apps/miniapp`：uni-app 小程序应用
+- `apps/desktop`：Electron + React 桌面应用
+- `apps/ios`：iOS + SwiftUI 原生应用
 
 ## 共享包层
 

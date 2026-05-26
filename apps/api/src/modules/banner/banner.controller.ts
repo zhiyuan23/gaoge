@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 
 import { CreateBannerDto, UpdateBannerDto } from './dto/create-banner.dto'
 import { BannerService } from './banner.service'
