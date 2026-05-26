@@ -10,6 +10,12 @@
 
 **Environment Note:** 当前 shell 需要显式使用 `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer`。当前 `CoreSimulatorService` 返回连接错误，因此本计划把 `xcodebuild build` 与 `xcodebuild test` 作为硬验证，`simctl` 设备可见性检查作为环境恢复后的补充验证。
 
+**Execution Notes (2026-05-26):**
+
+- 当前 Xcode 16.2 仅提供 `iPhoneSimulator18.2.sdk`，不包含 `glassEffect` API，因此 `GlassTabBar` 先以 Material 风格实现占位。
+- 当前环境没有 installed simulator runtime，也没有 available simulator device；`xcodebuild test` 无法在 `generic/platform=iOS Simulator` 上执行，所以本次用 `xcodebuild build-for-testing` 作为测试 target 的编译级验证。
+- `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun simctl list devices available` 最终仅返回 `== Devices ==`，可确认当前环境没有可用模拟器设备。
+
 ---
 
 ### Task 1: 创建 iOS 工程与最小可编译应用壳
@@ -27,7 +33,7 @@
 - Create: `apps/ios/Sources/Resources/Assets.xcassets/Contents.json`
 - Create: `apps/ios/Sources/Resources/Preview Content/Preview Assets.xcassets/Contents.json`
 
-- [ ] **Step 1: 先写失败的工程验证命令**
+- [x] **Step 1: 先写失败的工程验证命令**
 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
@@ -38,12 +44,12 @@ xcodebuild \
   build
 ```
 
-- [ ] **Step 2: 运行验证命令，确认当前失败**
+- [x] **Step 2: 运行验证命令，确认当前失败**
 
 Run: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' build`
 Expected: FAIL，因为 `apps/ios/GaogeIOS.xcodeproj` 尚不存在。
 
-- [ ] **Step 3: 创建最小工程骨架与根壳**
+- [x] **Step 3: 创建最小工程骨架与根壳**
 
 ```swift
 // apps/ios/Sources/App/GaogeIOSApp.swift
@@ -153,12 +159,12 @@ struct RootTabView: View {
 - `INFOPLIST_FILE = Sources/Resources/Info.plist`
 - `GENERATE_INFOPLIST_FILE = NO`
 
-- [ ] **Step 4: 重新运行工程验证，确认最小壳可编译**
+- [x] **Step 4: 重新运行工程验证，确认最小壳可编译**
 
 Run: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' build`
 Expected: PASS，生成 `Build succeeded`。
 
-- [ ] **Step 5: 提交这一批最小工程文件**
+- [x] **Step 5: 提交这一批最小工程文件**
 
 ```bash
 git add apps/ios
@@ -177,7 +183,7 @@ git commit -m "feat: scaffold gaoge ios app shell"
 - Create: `apps/ios/Sources/Core/Repositories/MockDashboardRepository.swift`
 - Create: `apps/ios/Sources/Features/Workouts/WorkoutsFeatureModel.swift`
 
-- [ ] **Step 1: 先写失败的单元测试**
+- [x] **Step 1: 先写失败的单元测试**
 
 ```swift
 // apps/ios/Tests/MockDashboardRepositoryTests.swift
@@ -214,12 +220,12 @@ final class WorkoutsFeatureModelTests: XCTestCase {
 }
 ```
 
-- [ ] **Step 2: 运行测试，确认当前失败**
+- [x] **Step 2: 运行测试，确认当前失败**
 
 Run: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' test`
 Expected: FAIL，因为 `MockDashboardRepository`、`WorkoutsFeatureModel` 和相关模型尚不存在。
 
-- [ ] **Step 3: 写最小实现让测试通过**
+- [x] **Step 3: 写最小实现让测试通过**
 
 ```swift
 // apps/ios/Sources/Core/Models/ActivitySummary.swift
@@ -311,12 +317,12 @@ final class WorkoutsFeatureModel {
 }
 ```
 
-- [ ] **Step 4: 重新运行测试，确认绿灯**
+- [x] **Step 4: 重新运行测试，确认绿灯**
 
 Run: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' test`
 Expected: PASS，`MockDashboardRepositoryTests` 与 `WorkoutsFeatureModelTests` 均通过。
 
-- [ ] **Step 5: 提交模型和仓库实现**
+- [x] **Step 5: 提交模型和仓库实现**
 
 ```bash
 git add apps/ios
@@ -340,7 +346,7 @@ git commit -m "feat: add gaoge ios mock data models"
 - Modify: `apps/ios/Sources/App/AppModel.swift`
 - Modify: `apps/ios/Sources/App/RootTabView.swift`
 
-- [ ] **Step 1: 先用编译失败锁定缺失的页面与组件**
+- [x] **Step 1: 先用编译失败锁定缺失的页面与组件**
 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
@@ -353,7 +359,7 @@ xcodebuild \
 
 Expected failure trigger after you update `RootTabView`: references to `HomeView`, `WorkoutsView`, `ProfileView`, and `GlassTabBar` are undefined.
 
-- [ ] **Step 2: 先把根导航切换到真实页面引用，再确认失败**
+- [x] **Step 2: 先把根导航切换到真实页面引用，再确认失败**
 
 ```swift
 // apps/ios/Sources/App/RootTabView.swift
@@ -386,7 +392,7 @@ struct RootTabView: View {
 Run: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' build`
 Expected: FAIL，因为页面与组件还未创建。
 
-- [ ] **Step 3: 写最小页面与共享组件实现**
+- [x] **Step 3: 写最小页面与共享组件实现**
 
 ```swift
 // apps/ios/Sources/Core/Styling/AppTheme.swift
@@ -663,7 +669,7 @@ final class AppModel {
 }
 ```
 
-- [ ] **Step 4: 运行构建和测试，确认 UI 骨架编译通过**
+- [x] **Step 4: 运行构建和测试，确认 UI 骨架编译通过**
 
 Run: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' build`
 Expected: PASS。
@@ -671,7 +677,7 @@ Expected: PASS。
 Run: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' test`
 Expected: PASS。
 
-- [ ] **Step 5: 提交 UI 骨架实现**
+- [x] **Step 5: 提交 UI 骨架实现**
 
 ```bash
 git add apps/ios
@@ -686,18 +692,18 @@ git commit -m "feat: add gaoge ios fitness shell ui"
 - Modify: `AGENTS.md`
 - Modify: `docs/superpowers/plans/2026-05-26-gaoge-ios-bootstrap.md`
 
-- [ ] **Step 1: 先写失败的命令入口检查**
+- [x] **Step 1: 先写失败的命令入口检查**
 
 ```bash
 node -e "const pkg=require('./package.json'); ['dev:ios','build:ios','typecheck:ios'].forEach(name=>{ if(!pkg.scripts[name]) throw new Error(name) })"
 ```
 
-- [ ] **Step 2: 运行检查，确认当前失败**
+- [x] **Step 2: 运行检查，确认当前失败**
 
 Run: `node -e "const pkg=require('./package.json'); ['dev:ios','build:ios','typecheck:ios'].forEach(name=>{ if(!pkg.scripts[name]) throw new Error(name) })"`
 Expected: FAIL，因为根脚本尚未添加。
 
-- [ ] **Step 3: 补充脚本和文档**
+- [x] **Step 3: 补充脚本和文档**
 
 ```json
 // package.json
@@ -735,7 +741,7 @@ Expected: FAIL，因为根脚本尚未添加。
 - 构建命令：`pnpm build:ios`
 ```
 
-- [ ] **Step 4: 运行最终验证**
+- [x] **Step 4: 运行最终验证**
 
 Run: `node -e "const pkg=require('./package.json'); ['dev:ios','build:ios','typecheck:ios'].forEach(name=>{ if(!pkg.scripts[name]) throw new Error(name) })"`
 Expected: PASS。
@@ -749,7 +755,7 @@ Expected: PASS。
 Run: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun simctl list devices available`
 Expected: 当前环境大概率返回 `CoreSimulatorService connection became invalid`。把这条结果记录为外部环境限制，不阻断已通过的编译与测试验证。
 
-- [ ] **Step 5: 提交仓库接入与文档更新**
+- [x] **Step 5: 提交仓库接入与文档更新**
 
 ```bash
 git add package.json AGENTS.md apps/ios/README.md docs/superpowers/plans/2026-05-26-gaoge-ios-bootstrap.md
