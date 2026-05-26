@@ -12,6 +12,13 @@
 		F10000000000000000000103 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000203 /* RootTabView.swift */; };
 		F10000000000000000000104 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000205 /* Assets.xcassets */; };
 		F10000000000000000000105 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000207 /* Preview Assets.xcassets */; };
+		F10000000000000000000106 /* MockDashboardRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000020A /* MockDashboardRepositoryTests.swift */; };
+		F10000000000000000000107 /* WorkoutsFeatureModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000020B /* WorkoutsFeatureModelTests.swift */; };
+		F10000000000000000000108 /* ActivitySummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000020C /* ActivitySummary.swift */; };
+		F10000000000000000000109 /* WorkoutItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000020D /* WorkoutItem.swift */; };
+		F1000000000000000000010A /* ProfileSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000020E /* ProfileSummary.swift */; };
+		F1000000000000000000010B /* MockDashboardRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000020F /* MockDashboardRepository.swift */; };
+		F1000000000000000000010C /* WorkoutsFeatureModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000210 /* WorkoutsFeatureModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,6 +41,13 @@
 		F10000000000000000000207 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		F10000000000000000000208 /* GaogeIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GaogeIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F10000000000000000000209 /* GaogeIOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GaogeIOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1000000000000000000020A /* MockDashboardRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDashboardRepositoryTests.swift; sourceTree = "<group>"; };
+		F1000000000000000000020B /* WorkoutsFeatureModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsFeatureModelTests.swift; sourceTree = "<group>"; };
+		F1000000000000000000020C /* ActivitySummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySummary.swift; sourceTree = "<group>"; };
+		F1000000000000000000020D /* WorkoutItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutItem.swift; sourceTree = "<group>"; };
+		F1000000000000000000020E /* ProfileSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSummary.swift; sourceTree = "<group>"; };
+		F1000000000000000000020F /* MockDashboardRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDashboardRepository.swift; sourceTree = "<group>"; };
+		F10000000000000000000210 /* WorkoutsFeatureModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutsFeatureModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +81,8 @@
 			isa = PBXGroup;
 			children = (
 				F10000000000000000000503 /* App */,
+				F10000000000000000000506 /* Core */,
+				F10000000000000000000507 /* Features */,
 				F10000000000000000000504 /* Resources */,
 			);
 			path = Sources;
@@ -100,9 +116,28 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		F10000000000000000000506 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				F1000000000000000000050A /* Models */,
+				F1000000000000000000050B /* Repositories */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		F10000000000000000000507 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				F1000000000000000000050C /* Workouts */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
 		F10000000000000000000508 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F1000000000000000000020A /* MockDashboardRepositoryTests.swift */,
+				F1000000000000000000020B /* WorkoutsFeatureModelTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -114,6 +149,32 @@
 				F10000000000000000000209 /* GaogeIOSTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		F1000000000000000000050A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F1000000000000000000020C /* ActivitySummary.swift */,
+				F1000000000000000000020D /* WorkoutItem.swift */,
+				F1000000000000000000020E /* ProfileSummary.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		F1000000000000000000050B /* Repositories */ = {
+			isa = PBXGroup;
+			children = (
+				F1000000000000000000020F /* MockDashboardRepository.swift */,
+			);
+			path = Repositories;
+			sourceTree = "<group>";
+		};
+		F1000000000000000000050C /* Workouts */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000210 /* WorkoutsFeatureModel.swift */,
+			);
+			path = Workouts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -216,6 +277,11 @@
 				F10000000000000000000101 /* GaogeIOSApp.swift in Sources */,
 				F10000000000000000000102 /* AppModel.swift in Sources */,
 				F10000000000000000000103 /* RootTabView.swift in Sources */,
+				F10000000000000000000108 /* ActivitySummary.swift in Sources */,
+				F10000000000000000000109 /* WorkoutItem.swift in Sources */,
+				F1000000000000000000010A /* ProfileSummary.swift in Sources */,
+				F1000000000000000000010B /* MockDashboardRepository.swift in Sources */,
+				F1000000000000000000010C /* WorkoutsFeatureModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,6 +289,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F10000000000000000000106 /* MockDashboardRepositoryTests.swift in Sources */,
+				F10000000000000000000107 /* WorkoutsFeatureModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +313,7 @@
 				CODE_SIGNING_REQUIRED = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Sources/Resources/Preview Content\"";
+				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Sources/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
@@ -256,6 +325,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -294,6 +364,7 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_TESTABILITY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -305,6 +376,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GaogeIOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GaogeIOS";
