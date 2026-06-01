@@ -114,8 +114,8 @@ const standingTeamAccents = {
   },
 }
 
-const getStandingTeamTrophyCount = (team) =>
-  team.roundPoints?.filter((point) => point === 2).length ?? 0
+// const getStandingTeamTrophyCount = (team) =>
+//   team.roundPoints?.filter((point) => point === 2).length ?? 0
 // const leadingStandingTeamCode = computed(() => {
 //   const [leader, runnerUp] = [...orderedStandingTeams.value].sort((leftTeam, rightTeam) => {
 //     if ((rightTeam.totalPoints ?? 0) !== (leftTeam.totalPoints ?? 0)) {
@@ -557,7 +557,7 @@ watch(isFootballTeam, loadAssetSummary, {
                         </div>
                       </div>
                     </div>
-                    <div
+                    <!-- <div
                       v-if="getStandingTeamTrophyCount(team)"
                       class="mt-3 flex justify-end gap-1.5 text-amber-300"
                     >
@@ -567,7 +567,7 @@ watch(isFootballTeam, loadAssetSummary, {
                         icon="mdi:trophy"
                         class="h-4 w-4"
                       />
-                    </div>
+                    </div> -->
                     <div class="bg-white/8 mt-2.5 h-2 overflow-hidden rounded-full">
                       <div
                         class="h-full rounded-full transition-all duration-500"
