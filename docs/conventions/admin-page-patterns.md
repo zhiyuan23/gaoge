@@ -2,6 +2,8 @@
 
 本规范只面向 `apps/admin`，用于统一页面装配层、权限接入和常见页面模式。
 
+AI 在处理 `apps/admin/src/views/*` 下的页面需求时，应先判断是否属于标准 CRUD 列表页；如果是，优先直接套用 [admin-crud.md](./admin-crud.md) 的组件和目录约定，而不是重新设计页面骨架。
+
 ## 适用范围
 
 适用于 `apps/admin/src/views/*` 下的大多数业务页面。
@@ -35,6 +37,7 @@ views/<domain>/<module>/
 - `model/*` 放页面内部类型和 mapper
 - `services/*` 放本页面局部服务辅助，例如远程 options
 - `auth.ts` 放权限常量和模块内权限辅助
+- 标准 CRUD 页面默认还应包含表单组件拆分，例如 `components/<Entity>Form.vue` 与 `components/<Entity>FormDialog.vue`
 
 ## 查询列表模式
 
