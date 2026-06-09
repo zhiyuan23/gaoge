@@ -12,6 +12,18 @@
       }
     },
     {
+      "path": "pages/discover/index",
+      "style": {
+        "navigationBarTitleText": "发现"
+      }
+    },
+    {
+      "path": "pages/message/index",
+      "style": {
+        "navigationBarTitleText": "消息"
+      }
+    },
+    {
       "path": "pages/profile/index",
       "style": {
         "navigationBarTitleText": "我的"
@@ -58,22 +70,34 @@
   ],
   "preloadRule": {},
   "tabBar": {
-    "custom": false,
-    "color": "#999999",
-    "selectedColor": "#3C9CFF",
+    "color": "#8E8E93",
+    "selectedColor": "#111827",
     "borderStyle": "black",
+    "backgroundColor": "#F5F7FB",
     "list": [
       {
         "text": "首页",
-        "pagePath": "pages/home/index"
+        "pagePath": "pages/home/index",
+        "iconPath": "static/images/tabbar/home.png",
+        "selectedIconPath": "static/images/tabbar/home-active.png"
       },
       {
-        "text": "球员列表",
-        "pagePath": "pages/football/player/index"
+        "text": "发现",
+        "pagePath": "pages/discover/index",
+        "iconPath": "static/images/tabbar/discover.png",
+        "selectedIconPath": "static/images/tabbar/discover-active.png"
+      },
+      {
+        "text": "消息",
+        "pagePath": "pages/message/index",
+        "iconPath": "static/images/tabbar/message.png",
+        "selectedIconPath": "static/images/tabbar/message-active.png"
       },
       {
         "text": "我的",
-        "pagePath": "pages/profile/index"
+        "pagePath": "pages/profile/index",
+        "iconPath": "static/images/tabbar/profile.png",
+        "selectedIconPath": "static/images/tabbar/profile-active.png"
       }
     ]
   },
