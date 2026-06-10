@@ -6,8 +6,8 @@ import type {
   AuthRoleSummary,
   AuthUser,
   MiniappAuthUser,
-  MiniappBindingSummary,
   MiniappLoginResponse,
+  MiniappPlayerSummary,
   PermissionResponse,
   UserRole,
 } from '@gaoge/shared-types'
@@ -112,15 +112,24 @@ export class AuthService {
         })
       }
 
-      const binding = await this.prisma.player.findFirst({
+      const player = await this.prisma.player.findFirst({
         where: { userId: user.id },
         select: {
           id: true,
           playerNumber: true,
           nickname: true,
           avatarUrl: true,
+          realName: true,
           subTeam: true,
+          jerseyName: true,
+          birthDate: true,
+          isAdmin: true,
+          position: true,
+          jerseySize: true,
           status: true,
+          remark: true,
+          createdAt: true,
+          updatedAt: true,
         },
       })
 
@@ -131,8 +140,8 @@ export class AuthService {
 
       return {
         ...tokens,
-        user: this.serializeMiniappUser(user, Boolean(binding)),
-        binding: this.serializeMiniappBinding(binding),
+        user: this.serializeMiniappUser(user, Boolean(player)),
+        player: this.serializeMiniappPlayer(player),
       }
     } catch (error: any) {
       this.logger.error('微信登录失败', { error: error.message, code: loginDto.code })
@@ -376,27 +385,45 @@ export class AuthService {
     }
   }
 
-  private serializeMiniappBinding(
-    binding: {
+  private serializeMiniappPlayer(
+    player: {
       id: number
       playerNumber: number | null
       nickname: string
       avatarUrl: string | null
+      realName: string | null
       subTeam: string | null
+      jerseyName: string | null
+      birthDate: Date | null
+      isAdmin: boolean
+      position: string | null
+      jerseySize: string | null
       status: string
+      remark: string | null
+      createdAt: Date
+      updatedAt: Date
     } | null,
-  ): MiniappBindingSummary | null {
-    if (!binding) {
+  ): MiniappPlayerSummary | null {
+    if (!player) {
       return null
     }
 
     return {
-      playerId: binding.id,
-      playerNumber: binding.playerNumber,
-      nickname: binding.nickname,
-      avatarUrl: binding.avatarUrl,
-      subTeam: binding.subTeam,
-      status: binding.status,
+      playerId: player.id,
+      playerNumber: player.playerNumber,
+      nickname: player.nickname,
+      avatarUrl: player.avatarUrl,
+      realName: player.realName,
+      subTeam: player.subTeam,
+      jerseyName: player.jerseyName,
+      birthDate: player.birthDate?.toISOString() ?? null,
+      isAdmin: player.isAdmin,
+      position: player.position,
+      jerseySize: player.jerseySize,
+      status: player.status,
+      remark: player.remark,
+      createdAt: player.createdAt.toISOString(),
+      updatedAt: player.updatedAt.toISOString(),
     }
   }
 

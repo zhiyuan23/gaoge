@@ -29,11 +29,24 @@ describe('MiniappController', () => {
     )
   })
 
+  it('maps updateProfile to /miniapp/me/profile', () => {
+    expect(Reflect.getMetadata(PATH_METADATA, MiniappController.prototype.updateProfile)).toBe(
+      'me/profile',
+    )
+  })
+
+  it('maps uploadAvatar to /miniapp/me/avatar', () => {
+    expect(Reflect.getMetadata(PATH_METADATA, MiniappController.prototype.uploadAvatar)).toBe(
+      'me/avatar',
+    )
+  })
+
   it('delegates /miniapp/me to the service with request.user.id', () => {
     const miniappService = {
       getMe: jest.fn().mockReturnValue({ ok: true }),
       listBindOptions: jest.fn(),
       bindFootballPlayer: jest.fn(),
+      updateProfile: jest.fn(),
     }
     const controller = new MiniappController(miniappService as any)
 
@@ -48,6 +61,7 @@ describe('MiniappController', () => {
       getMe: jest.fn(),
       listBindOptions: jest.fn().mockReturnValue({ list: [] }),
       bindFootballPlayer: jest.fn(),
+      updateProfile: jest.fn(),
     }
     const controller = new MiniappController(miniappService as any)
 
@@ -62,6 +76,7 @@ describe('MiniappController', () => {
       getMe: jest.fn(),
       listBindOptions: jest.fn(),
       bindFootballPlayer: jest.fn().mockReturnValue({ ok: true }),
+      updateProfile: jest.fn(),
     }
     const controller = new MiniappController(miniappService as any)
 
@@ -69,5 +84,30 @@ describe('MiniappController', () => {
 
     expect(result).toEqual({ ok: true })
     expect(miniappService.bindFootballPlayer).toHaveBeenCalledWith(6, 11)
+  })
+
+  it('delegates /miniapp/me/profile to the service with request.user.id and full player profile dto', () => {
+    const miniappService = {
+      getMe: jest.fn(),
+      listBindOptions: jest.fn(),
+      bindFootballPlayer: jest.fn(),
+      updateProfile: jest.fn().mockReturnValue({ ok: true }),
+    }
+    const controller = new MiniappController(miniappService as any)
+
+    const dto = {
+      nickname: '新昵称',
+      realName: '真实姓名',
+      subTeam: 'real',
+      jerseyName: 'NEW NAME',
+      birthDate: new Date('1990-06-10T00:00:00.000Z'),
+      position: 'midfielder',
+      jerseySize: 'L',
+      remark: '核心球员',
+    }
+    const result = controller.updateProfile({ user: { id: 9 } }, dto)
+
+    expect(result).toEqual({ ok: true })
+    expect(miniappService.updateProfile).toHaveBeenCalledWith(9, dto)
   })
 })

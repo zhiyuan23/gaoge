@@ -88,7 +88,7 @@
         "selectedIconPath": "static/images/tabbar/discover-active.png"
       },
       {
-        "text": "消息",
+        "text": "留言板",
         "pagePath": "pages/message/index",
         "iconPath": "static/images/tabbar/message.png",
         "selectedIconPath": "static/images/tabbar/message-active.png"

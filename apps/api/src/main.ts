@@ -1,13 +1,15 @@
 import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+import type { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 import { HttpExceptionFilter } from './common/http/http-exception.filter'
 import { ResponseInterceptor } from './common/http/response.interceptor'
+import { resolveUploadRoot, uploadPublicPrefix } from './common/storage/upload-path'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule)
 
   // 启用 CORS（跨域资源共享）
   app.enableCors({
@@ -45,6 +47,9 @@ async function bootstrap() {
   )
   app.useGlobalInterceptors(new ResponseInterceptor())
   app.useGlobalFilters(new HttpExceptionFilter())
+  app.useStaticAssets(resolveUploadRoot(), {
+    prefix: `${uploadPublicPrefix}/`,
+  })
 
   await app.listen(process.env.PORT ?? process.env.APP_PORT ?? 3000)
 }

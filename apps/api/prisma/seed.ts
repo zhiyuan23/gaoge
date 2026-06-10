@@ -6,28 +6,14 @@
  * pnpm ts-node prisma/seed.ts
  */
 
-import type { Prisma } from '@prisma/client'
 import { PrismaClient } from '@prisma/client'
 
 import { hashPassword } from '../src/common/auth/password.util'
 import { RbacSyncService } from '../src/modules/system/rbac/rbac-sync.service'
 
-const prisma = new PrismaClient()
+import { seedPlayers, shouldResetPlayers } from './seed-player-data'
 
-// 示例测试数据（可根据需要添加）
-const players: Prisma.PlayerCreateInput[] = [
-  // {
-  //   openid: 'test_openid_1',
-  //   nickname: '梅西',
-  //   realName: '里奥·梅西',
-  //   avatarUrl: 'https://example.com/avatar/messi.jpg',
-  //   subTeam: 'inter',
-  //   birthDate: new Date('1987-06-24'),
-  //   isAdmin: true,
-  //   position: '前锋',
-  //   jerseySize: 'L',
-  // },
-]
+const prisma = new PrismaClient()
 
 async function main() {
   console.log('🌱 开始播种数据...')
@@ -81,16 +67,18 @@ async function main() {
     console.log('⚠️  未提供 ADMIN_ACCOUNT / ADMIN_PASSWORD，跳过管理员账号初始化')
   }
 
-  // 清空现有数据
-  await prisma.player.deleteMany({})
-  console.log('🗑️  已清空现有球员数据')
+  if (shouldResetPlayers(seedPlayers)) {
+    await prisma.player.deleteMany({})
+    console.log('🗑️  已清空现有球员数据')
 
-  // 插入新数据
-  for (const playerData of players) {
-    const player = await prisma.player.create({
-      data: playerData,
-    })
-    console.log(`✅ 创建球员：${player.nickname}`)
+    for (const playerData of seedPlayers) {
+      const player = await prisma.player.create({
+        data: playerData,
+      })
+      console.log(`✅ 创建球员：${player.nickname}`)
+    }
+  } else {
+    console.log('⚠️  未配置球员 seed 数据，跳过球员数据重置')
   }
 
   const count = await prisma.player.count()

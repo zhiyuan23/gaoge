@@ -50,6 +50,7 @@
 - 普通业务模块优先通过 `ConfigService` 读取配置
 - `main.ts`、进程入口、脚本文件可直接读取少量 `process.env.*`
 - 数据库连接仍以 Prisma schema 和 `DATABASE_URL` 为事实来源
+- 上传目录这类部署相关路径必须使用显式环境变量配置；当前 API 上传根目录使用 `API_UPLOAD_ROOT`
 
 ## 脚本与工具约定
 

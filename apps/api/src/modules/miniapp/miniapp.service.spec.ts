@@ -13,6 +13,7 @@ describe('MiniappService', () => {
     const prisma = {
       user: {
         findFirst: jest.fn(),
+        update: jest.fn(),
       },
       player: {
         findMany: jest.fn(),
@@ -53,7 +54,7 @@ describe('MiniappService', () => {
         status: 'active',
         isBound: false,
       },
-      binding: null,
+      player: null,
     })
 
     expect(prisma.user.findFirst).toHaveBeenCalledWith({
@@ -81,8 +82,17 @@ describe('MiniappService', () => {
         playerNumber: true,
         nickname: true,
         avatarUrl: true,
+        realName: true,
         subTeam: true,
+        jerseyName: true,
+        birthDate: true,
+        isAdmin: true,
+        position: true,
+        jerseySize: true,
         status: true,
+        remark: true,
+        createdAt: true,
+        updatedAt: true,
       },
     })
   })
@@ -199,8 +209,17 @@ describe('MiniappService', () => {
       playerNumber: 9,
       nickname: '贝巴',
       avatarUrl: null,
+      realName: null,
       subTeam: 'united',
+      jerseyName: null,
+      birthDate: null,
+      isAdmin: false,
+      position: null,
+      jerseySize: null,
       status: 'active',
+      remark: null,
+      createdAt: new Date('2026-05-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-01T00:00:00.000Z'),
     })
 
     await expect(service.bindFootballPlayer(21, 7)).rejects.toBeInstanceOf(ConflictException)
@@ -214,11 +233,20 @@ describe('MiniappService', () => {
         playerNumber: true,
         nickname: true,
         avatarUrl: true,
+        realName: true,
         subTeam: true,
+        jerseyName: true,
+        birthDate: true,
+        isAdmin: true,
+        position: true,
+        jerseySize: true,
         status: true,
+        remark: true,
+        createdAt: true,
+        updatedAt: true,
       },
     })
-    expect(prisma.player.update).not.toHaveBeenCalled()
+    expect(tx.player.update).not.toHaveBeenCalled()
   })
 
   it('binds an unbound user inside a transaction and returns the bound me payload', async () => {
@@ -238,8 +266,17 @@ describe('MiniappService', () => {
       playerNumber: 24,
       nickname: '沃克',
       avatarUrl: 'https://example.com/p88.png',
+      realName: 'Kyle Walker',
       subTeam: 'real',
+      jerseyName: 'WALKER',
+      birthDate: new Date('1992-05-28T00:00:00.000Z'),
+      isAdmin: false,
+      position: 'defender',
+      jerseySize: 'XL',
       status: 'active',
+      remark: '速度快',
+      createdAt: new Date('2026-05-01T08:00:00.000Z'),
+      updatedAt: new Date('2026-05-12T09:30:00.000Z'),
       userId: null,
     })
     tx.player.update.mockResolvedValue({
@@ -247,8 +284,17 @@ describe('MiniappService', () => {
       playerNumber: 24,
       nickname: '沃克',
       avatarUrl: 'https://example.com/p88.png',
+      realName: 'Kyle Walker',
       subTeam: 'real',
+      jerseyName: 'WALKER',
+      birthDate: new Date('1992-05-28T00:00:00.000Z'),
+      isAdmin: false,
+      position: 'defender',
+      jerseySize: 'XL',
       status: 'active',
+      remark: '速度快',
+      createdAt: new Date('2026-05-01T08:00:00.000Z'),
+      updatedAt: new Date('2026-05-12T09:30:00.000Z'),
     })
 
     await expect(service.bindFootballPlayer(23, 24)).resolves.toEqual({
@@ -261,13 +307,22 @@ describe('MiniappService', () => {
         status: 'active',
         isBound: true,
       },
-      binding: {
+      player: {
         playerId: 88,
         playerNumber: 24,
         nickname: '沃克',
         avatarUrl: 'https://example.com/p88.png',
+        realName: 'Kyle Walker',
         subTeam: 'real',
+        jerseyName: 'WALKER',
+        birthDate: '1992-05-28T00:00:00.000Z',
+        isAdmin: false,
+        position: 'defender',
+        jerseySize: 'XL',
         status: 'active',
+        remark: '速度快',
+        createdAt: '2026-05-01T08:00:00.000Z',
+        updatedAt: '2026-05-12T09:30:00.000Z',
       },
     })
 
@@ -284,8 +339,17 @@ describe('MiniappService', () => {
         playerNumber: true,
         nickname: true,
         avatarUrl: true,
+        realName: true,
         subTeam: true,
+        jerseyName: true,
+        birthDate: true,
+        isAdmin: true,
+        position: true,
+        jerseySize: true,
         status: true,
+        remark: true,
+        createdAt: true,
+        updatedAt: true,
       },
     })
   })
@@ -315,8 +379,17 @@ describe('MiniappService', () => {
         playerNumber: true,
         nickname: true,
         avatarUrl: true,
+        realName: true,
         subTeam: true,
+        jerseyName: true,
+        birthDate: true,
+        isAdmin: true,
+        position: true,
+        jerseySize: true,
         status: true,
+        remark: true,
+        createdAt: true,
+        updatedAt: true,
       },
     })
     expect(tx.player.findFirst).toHaveBeenNthCalledWith(2, {
@@ -328,11 +401,165 @@ describe('MiniappService', () => {
         playerNumber: true,
         nickname: true,
         avatarUrl: true,
+        realName: true,
         subTeam: true,
+        jerseyName: true,
+        birthDate: true,
+        isAdmin: true,
+        position: true,
+        jerseySize: true,
         status: true,
+        remark: true,
+        createdAt: true,
+        updatedAt: true,
         userId: true,
       },
     })
+    expect(tx.player.update).not.toHaveBeenCalled()
+  })
+
+  it('updates the current bound player profile and returns the latest me payload', async () => {
+    const { service, prisma } = createService()
+
+    prisma.user.findFirst.mockResolvedValue({
+      id: 41,
+      openid: 'wx-openid-41',
+      nickname: '用户昵称',
+      avatarUrl: 'https://example.com/u41.png',
+      phone: '13700000000',
+      status: 'active',
+      deletedAt: null,
+    })
+    prisma.player.findFirst.mockResolvedValue({
+      id: 99,
+      playerNumber: 7,
+      nickname: '旧昵称',
+      avatarUrl: 'https://example.com/p99-old.png',
+      realName: 'Old Name',
+      subTeam: 'real',
+      jerseyName: 'OLD',
+      birthDate: new Date('1990-06-10T00:00:00.000Z'),
+      isAdmin: false,
+      position: 'midfielder',
+      jerseySize: 'M',
+      status: 'active',
+      remark: '旧备注',
+      createdAt: new Date('2026-05-01T08:00:00.000Z'),
+      updatedAt: new Date('2026-05-10T09:30:00.000Z'),
+    })
+    prisma.player.update.mockResolvedValue({
+      id: 99,
+      playerNumber: 7,
+      nickname: '新昵称',
+      avatarUrl: 'https://example.com/p99-new.png',
+      realName: 'New Name',
+      subTeam: 'real',
+      jerseyName: 'NEW',
+      birthDate: new Date('1991-06-11T00:00:00.000Z'),
+      isAdmin: false,
+      position: 'forward',
+      jerseySize: 'L',
+      status: 'active',
+      remark: '新备注',
+      createdAt: new Date('2026-05-01T08:00:00.000Z'),
+      updatedAt: new Date('2026-05-12T09:30:00.000Z'),
+    })
+
+    await expect(
+      service.updateProfile(41, {
+        nickname: '  新昵称  ',
+        realName: '  New Name  ',
+        subTeam: '  real  ',
+        jerseyName: '  NEW  ',
+        birthDate: new Date('1991-06-11T00:00:00.000Z'),
+        position: '  forward  ',
+        jerseySize: '  L  ',
+        remark: '  新备注  ',
+        avatarUrl: 'https://example.com/p99-new.png',
+      }),
+    ).resolves.toEqual({
+      user: {
+        id: 41,
+        openid: 'wx-openid-41',
+        nickname: '用户昵称',
+        avatarUrl: 'https://example.com/u41.png',
+        phone: '13700000000',
+        status: 'active',
+        isBound: true,
+      },
+      player: {
+        playerId: 99,
+        playerNumber: 7,
+        nickname: '新昵称',
+        avatarUrl: 'https://example.com/p99-new.png',
+        realName: 'New Name',
+        subTeam: 'real',
+        jerseyName: 'NEW',
+        birthDate: '1991-06-11T00:00:00.000Z',
+        isAdmin: false,
+        position: 'forward',
+        jerseySize: 'L',
+        status: 'active',
+        remark: '新备注',
+        createdAt: '2026-05-01T08:00:00.000Z',
+        updatedAt: '2026-05-12T09:30:00.000Z',
+      },
+    })
+
+    expect(prisma.player.update).toHaveBeenCalledWith({
+      where: {
+        id: 99,
+      },
+      data: {
+        nickname: '新昵称',
+        avatarUrl: 'https://example.com/p99-new.png',
+        realName: 'New Name',
+        subTeam: 'real',
+        jerseyName: 'NEW',
+        birthDate: new Date('1991-06-11T00:00:00.000Z'),
+        position: 'forward',
+        jerseySize: 'L',
+        remark: '新备注',
+      },
+      select: {
+        id: true,
+        playerNumber: true,
+        nickname: true,
+        avatarUrl: true,
+        realName: true,
+        subTeam: true,
+        jerseyName: true,
+        birthDate: true,
+        isAdmin: true,
+        position: true,
+        jerseySize: true,
+        status: true,
+        remark: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+    expect(prisma.user.update).not.toHaveBeenCalled()
+  })
+
+  it('rejects profile updates when the current user has not bound a player', async () => {
+    const { service, prisma } = createService()
+
+    prisma.user.findFirst.mockResolvedValue({
+      id: 51,
+      openid: 'wx-openid-51',
+      nickname: '未绑定用户',
+      avatarUrl: null,
+      phone: null,
+      status: 'active',
+      deletedAt: null,
+    })
+    prisma.player.findFirst.mockResolvedValue(null)
+
+    await expect(service.updateProfile(51, { nickname: '新昵称' })).rejects.toBeInstanceOf(
+      NotFoundException,
+    )
+
     expect(prisma.player.update).not.toHaveBeenCalled()
   })
 })

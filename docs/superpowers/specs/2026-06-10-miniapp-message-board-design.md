@@ -76,7 +76,6 @@ packages/shared/types/src/message-board-post.ts
 
 - `title`
 - `content`
-- `sport`
 - `tags`
 - `sourceName`
 - `sourceUrl`
@@ -86,7 +85,6 @@ packages/shared/types/src/message-board-post.ts
 
 其中：
 
-- `sport` 用于足球 / 篮球 / 全部筛选
 - `tags` 用于转会、伤病、签约、比赛日等主题筛选
 - `sourceName` / `sourceUrl` 对应罗马诺、Shams 这类来源信息
 - 不引入封面图，保证录入成本和信息流密度
@@ -127,7 +125,6 @@ packages/shared/types/src/message-board-post.ts
 id            Int        @id @default(autoincrement())
 title         String
 content       String
-sport         String
 tags          String[]
 sourceName    String
 sourceUrl     String?
@@ -141,7 +138,6 @@ updatedAt     DateTime   @updatedAt
 补充索引：
 
 - `@@index([status])`
-- `@@index([sport])`
 - `@@index([isPinned])`
 - `@@index([publishedAt])`
 
@@ -155,7 +151,6 @@ updatedAt     DateTime   @updatedAt
 
 ### 4.2 字段语义
 
-- `sport`：`football` / `basketball`
 - `tags`：自由文本数组，但后台提供推荐选项
 - `status`：`draft` / `published`
 - `publishedAt`：首次发布写入；草稿保持 `null`
@@ -166,7 +161,6 @@ updatedAt     DateTime   @updatedAt
 
 建议包含：
 
-- `MessageBoardSport`
 - `MessageBoardPostStatus`
 - `MessageBoardPost`
 - `MessageBoardPostPayload`
@@ -209,7 +203,7 @@ apps/api/src/modules/content/message-board-post/
 
 - `GET /content/message-board-posts`
   - 后台列表查询
-  - 支持 `page`、`pageSize`、`keyword`、`sport`、`status`、`tag`
+  - 支持 `page`、`pageSize`、`keyword`、`status`、`tag`
 - `GET /content/message-board-posts/:id`
   - 后台详情
 - `POST /content/message-board-posts`
@@ -245,7 +239,6 @@ apps/api/src/modules/miniapp/miniapp-public.controller.ts
 
 - `page`
 - `pageSize`
-- `sport`
 - `tag`
 
 返回约束：
@@ -265,7 +258,7 @@ apps/api/src/modules/miniapp/miniapp-public.controller.ts
 
 - 置顶优先
 - 其次按发布时间倒序
-- `sport` 和 `tag` 均为可选筛选
+- `tag` 为可选筛选
 
 ## 7. RBAC 与后台路由设计
 
@@ -345,14 +338,12 @@ apps/admin/src/api/content/message-board-post/index.ts
 搜索项：
 
 - 关键词
-- 运动类型
 - 状态
 - 标签
 
 表格列：
 
 - 标题
-- 运动类型
 - 标签
 - 来源
 - 状态
@@ -367,7 +358,6 @@ apps/admin/src/api/content/message-board-post/index.ts
 
 - 标题
 - 正文
-- 运动类型
 - 标签
 - 来源名称
 - 来源链接
@@ -444,7 +434,7 @@ apps/miniapp/src/pages/message-board/model.ts
    - 标题：`留言板`
    - 副标题：强调“最新转会、伤病、签约、比赛日更新”
 2. 筛选区
-   - 固定项：`全部`、`足球`、`篮球`
+   - 默认项：`全部`
    - 动态标签：来自服务端聚合出的常用标签或前端首版固定推荐项
 3. 消息流
    - 置顶消息带轻强调边框或标识
@@ -474,7 +464,7 @@ apps/miniapp/src/pages/message-board/model.ts
 ### 9.5 交互行为
 
 - 页面进入自动拉取首屏
-- 切换 `sport` 或 `tag` 时重置为第一页并刷新
+- 切换 `tag` 时重置为第一页并刷新
 - 支持分页加载更多
 - 筛选切换不跳新页
 - 来源链接若存在，后续可复用现有 webview 页面打开；第一版可先只展示文字，不强制跳转
@@ -492,7 +482,7 @@ apps/miniapp/src/pages/message-board/model.ts
 - 草稿创建
 - 发布写入 `publishedAt`
 - 小程序列表只返回已发布数据
-- `sport` / `tag` 筛选
+- `tag` 筛选
 - `isPinned + publishedAt` 排序
 
 ### 10.2 Admin
@@ -519,7 +509,7 @@ apps/miniapp/src/pages/message-board/model.ts
 - 后台存在独立“留言板”管理页面
 - 管理员可新增草稿、发布消息、编辑已发布消息、删除消息
 - 小程序 tabbar 页面已从 `message` 语义迁移为 `message-board`
-- 小程序留言板可按 `sport` 和 `tag` 筛选
+- 小程序留言板可按 `tag` 筛选
 - 小程序只显示已发布消息
 - 置顶消息优先展示
 - 整体目录结构清晰，没有把留言板资源塞进 `football/*`、`basketball/*` 或 `miniapp` 聚合业务实现中

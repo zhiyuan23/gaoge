@@ -68,22 +68,40 @@ export interface AuthLoginResponse {
 export type AdminLoginResponse = AuthLoginResponse
 
 /**
- * 小程序账号绑定的球员摘要信息。
+ * 小程序当前绑定球员摘要信息。
  *
  * @property playerId 球员 ID。
  * @property playerNumber 球员号码。
  * @property nickname 球员昵称。
  * @property avatarUrl 球员头像 URL。
+ * @property realName 真实姓名。
  * @property subTeam 子球队。
+ * @property jerseyName 球衣名称。
+ * @property birthDate 出生日期。
+ * @property isAdmin 是否管理员。
+ * @property position 场上位置。
+ * @property jerseySize 球衣尺码。
  * @property status 球员状态。
+ * @property remark 备注。
+ * @property createdAt 创建时间。
+ * @property updatedAt 更新时间。
  */
-export interface MiniappBindingSummary {
+export interface MiniappPlayerSummary {
   playerId: number
   playerNumber: number | null
   nickname: string
   avatarUrl: string | null
+  realName: string | null
   subTeam: string | null
+  jerseyName: string | null
+  birthDate: DateTimeString | null
+  isAdmin: boolean
+  position: string | null
+  jerseySize: string | null
   status: string
+  remark: string | null
+  createdAt: DateTimeString
+  updatedAt: DateTimeString
 }
 
 /**
@@ -114,25 +132,48 @@ export interface MiniappAuthUser {
  * @property refreshToken 刷新 token。
  * @property expiresIn accessToken 有效期，单位为秒。
  * @property user 当前登录的小程序用户。
- * @property binding 当前绑定的球员摘要，未绑定时为 null。
+ * @property player 当前绑定的球员摘要，未绑定时为 null。
  */
 export interface MiniappLoginResponse {
   accessToken: string
   refreshToken: string
   expiresIn: number
   user: MiniappAuthUser
-  binding: MiniappBindingSummary | null
+  player: MiniappPlayerSummary | null
 }
 
 /**
  * 小程序当前登录信息响应。
  *
  * @property user 当前登录的小程序用户。
- * @property binding 当前绑定的球员摘要，未绑定时为 null。
+ * @property player 当前绑定的球员摘要，未绑定时为 null。
  */
 export interface MiniappMeResponse {
   user: MiniappAuthUser
-  binding: MiniappBindingSummary | null
+  player: MiniappPlayerSummary | null
+}
+
+/**
+ * 小程序用户资料更新参数。
+ *
+ * @property nickname 球员昵称。
+ * @property realName 真实姓名。
+ * @property subTeam 子球队。
+ * @property jerseyName 球衣名称。
+ * @property birthDate 出生日期。
+ * @property position 场上位置。
+ * @property jerseySize 球衣尺码。
+ * @property remark 备注。
+ */
+export interface MiniappUpdateProfilePayload {
+  nickname?: string
+  realName?: string | null
+  subTeam?: string | null
+  jerseyName?: string | null
+  birthDate?: DateTimeString | null
+  position?: string | null
+  jerseySize?: string | null
+  remark?: string | null
 }
 
 /**

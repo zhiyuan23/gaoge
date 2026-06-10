@@ -42,13 +42,21 @@ const normalizeBaseUrl = () => {
 
 const createHeaders = (config: InternalRequestConfig) => {
   const token = storage.get('accessToken')
-  const headers: Record<string, string> = {
-    'content-type': config.json
-      ? 'application/json;charset=UTF-8'
-      : 'application/x-www-form-urlencoded',
-    ...(config.skipAuth || !token ? {} : { Authorization: `Bearer ${token}` }),
-    ...(config.header || {}),
-  }
+  const authHeaders = config.skipAuth || !token ? {} : { Authorization: `Bearer ${token}` }
+
+  const headers: Record<string, string> =
+    config.method === 'UPLOAD'
+      ? {
+          ...authHeaders,
+          ...(config.header || {}),
+        }
+      : {
+          'content-type': config.json
+            ? 'application/json;charset=UTF-8'
+            : 'application/x-www-form-urlencoded',
+          ...authHeaders,
+          ...(config.header || {}),
+        }
 
   return headers
 }

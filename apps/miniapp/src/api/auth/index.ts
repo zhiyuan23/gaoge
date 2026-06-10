@@ -2,6 +2,7 @@ import type {
   MiniappBindOptionsResponse,
   MiniappLoginResponse,
   MiniappMeResponse,
+  MiniappUpdateProfilePayload,
 } from '@gaoge/shared-types'
 
 import api from '@/api/request'
@@ -23,6 +24,15 @@ export const requestBindOptions = () =>
 
 export const bindFootballPlayer = (playerNumber: number) =>
   api.jsonPost<MiniappMeResponse>('/miniapp/football-player/bind', { playerNumber })
+
+export const updateMiniappProfile = (payload: MiniappUpdateProfilePayload) =>
+  api.jsonPost<MiniappMeResponse>('/miniapp/me/profile', payload)
+
+export const uploadMiniappAvatar = (filePath: string) =>
+  api.upload<MiniappMeResponse>('/miniapp/me/avatar', undefined, {
+    filePath,
+    name: 'file',
+  })
 
 export const logoutReq = () => api.post<{ message: string }>('/auth/logout')
 

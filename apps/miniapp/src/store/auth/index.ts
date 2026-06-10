@@ -9,20 +9,24 @@ const useAuthStore = defineStore('auth', () => {
   const me = ref<MiniappMeResponse | null>(null)
   const bootstrapping = ref(false)
 
+  const setMe = (payload: MiniappMeResponse | null) => {
+    me.value = payload
+  }
+
   const clearSession = () => {
     accessToken.value = ''
     refreshToken.value = ''
-    me.value = null
+    setMe(null)
     storage.clearAuth()
   }
 
   const setSession = (payload: MiniappLoginResponse) => {
     accessToken.value = payload.accessToken
     refreshToken.value = payload.refreshToken
-    me.value = {
+    setMe({
       user: payload.user,
-      binding: payload.binding,
-    }
+      player: payload.player,
+    })
 
     storage.set('accessToken', payload.accessToken)
     storage.set('refreshToken', payload.refreshToken)
@@ -51,9 +55,11 @@ const useAuthStore = defineStore('auth', () => {
   }
 
   const fetchMe = async () => {
-    me.value = await requestMe()
+    const payload = await requestMe()
 
-    return me.value
+    setMe(payload)
+
+    return payload
   }
 
   const ensureSession = async () => {
@@ -95,6 +101,7 @@ const useAuthStore = defineStore('auth', () => {
     refreshToken,
     me,
     bootstrapping,
+    setMe,
     setSession,
     silentLogin,
     fetchMe,

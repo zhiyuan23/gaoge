@@ -69,7 +69,7 @@ describe('AuthService miniapp login', () => {
         openid: 'wx-openid-1',
         isBound: false,
       },
-      binding: null,
+      player: null,
     })
 
     expect(prisma.player.findFirst).toHaveBeenCalledWith({
@@ -79,13 +79,22 @@ describe('AuthService miniapp login', () => {
         playerNumber: true,
         nickname: true,
         avatarUrl: true,
+        realName: true,
         subTeam: true,
+        jerseyName: true,
+        birthDate: true,
+        isAdmin: true,
+        position: true,
+        jerseySize: true,
         status: true,
+        remark: true,
+        createdAt: true,
+        updatedAt: true,
       },
     })
   })
 
-  it('returns binding info when the miniapp user is already linked to a football player', async () => {
+  it('returns player info when the miniapp user is already linked to a football player', async () => {
     const { service, prisma, wechatService, jwtService } = createService()
 
     wechatService.getSessionByCode.mockResolvedValue({
@@ -123,9 +132,18 @@ describe('AuthService miniapp login', () => {
       id: 18,
       playerNumber: 7,
       nickname: '齐达内',
-      avatarUrl: null,
+      avatarUrl: 'https://example.com/p18.png',
+      realName: 'Zinedine Zidane',
       subTeam: 'real',
+      jerseyName: 'ZIDANE',
+      birthDate: new Date('1990-06-10T00:00:00.000Z'),
+      isAdmin: true,
+      position: 'midfielder',
+      jerseySize: 'L',
       status: 'active',
+      remark: 'captain',
+      createdAt: new Date('2026-05-01T08:00:00.000Z'),
+      updatedAt: new Date('2026-05-12T09:30:00.000Z'),
     })
     prisma.refreshToken.create.mockResolvedValue({ id: 12 })
     jwtService.signAsync
@@ -137,10 +155,22 @@ describe('AuthService miniapp login', () => {
         id: 2,
         isBound: true,
       },
-      binding: {
+      player: {
         playerId: 18,
         playerNumber: 7,
         nickname: '齐达内',
+        avatarUrl: 'https://example.com/p18.png',
+        realName: 'Zinedine Zidane',
+        subTeam: 'real',
+        jerseyName: 'ZIDANE',
+        birthDate: '1990-06-10T00:00:00.000Z',
+        isAdmin: true,
+        position: 'midfielder',
+        jerseySize: 'L',
+        status: 'active',
+        remark: 'captain',
+        createdAt: '2026-05-01T08:00:00.000Z',
+        updatedAt: '2026-05-12T09:30:00.000Z',
       },
     })
   })

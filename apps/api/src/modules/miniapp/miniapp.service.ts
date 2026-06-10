@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -6,9 +7,9 @@ import {
 } from '@nestjs/common'
 
 import type {
-  MiniappBindingSummary,
   MiniappBindOptionsResponse,
   MiniappMeResponse,
+  MiniappPlayerSummary,
 } from '@gaoge/shared-types'
 
 import { PrismaService } from '@/common/prisma/prisma.service'
@@ -18,8 +19,17 @@ type MiniappPlayerBinding = {
   playerNumber: number | null
   nickname: string
   avatarUrl: string | null
+  realName: string | null
   subTeam: string | null
+  jerseyName: string | null
+  birthDate: Date | null
+  isAdmin: boolean
+  position: string | null
+  jerseySize: string | null
   status: string
+  remark: string | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 type MiniappPlayerWriteTarget = MiniappPlayerBinding & {
@@ -47,15 +57,45 @@ type MiniappUserQueryResult = {
 
 type MiniappPlayerDelegate = PrismaService['player']
 
+type MiniappProfileUpdatePayload = {
+  avatarUrl?: string | null
+  birthDate?: Date | string | null
+  jerseyName?: string | null
+  jerseySize?: string | null
+  nickname?: string
+  position?: string | null
+  realName?: string | null
+  remark?: string | null
+  subTeam?: string | null
+}
+
+const miniappPlayerProfileSelect = {
+  id: true,
+  playerNumber: true,
+  nickname: true,
+  avatarUrl: true,
+  realName: true,
+  subTeam: true,
+  jerseyName: true,
+  birthDate: true,
+  isAdmin: true,
+  position: true,
+  jerseySize: true,
+  status: true,
+  remark: true,
+  createdAt: true,
+  updatedAt: true,
+} as const
+
 @Injectable()
 export class MiniappService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getMe(userId: number): Promise<MiniappMeResponse> {
     const user = await this.findActiveUser(userId)
-    const binding = await this.findBindingByUserId(userId, this.prisma.player)
+    const player = await this.findBindingByUserId(userId, this.prisma.player)
 
-    return this.buildMeResponse(user, binding)
+    return this.buildMeResponse(user, player)
   }
 
   async listBindOptions(): Promise<MiniappBindOptionsResponse> {
@@ -89,6 +129,7 @@ export class MiniappService {
 
   async bindFootballPlayer(userId: number, playerNumber: number): Promise<MiniappMeResponse> {
     const user = await this.findActiveUser(userId)
+
     return this.prisma.$transaction(async (tx) => {
       const currentBinding = await this.findBindingByUserId(userId, tx.player)
 
@@ -96,35 +137,56 @@ export class MiniappService {
         throw new ConflictException('当前用户已绑定球员')
       }
 
-      const player = await this.findPlayerByNumber(playerNumber, tx.player)
+      const targetPlayer = await this.findPlayerByNumber(playerNumber, tx.player)
 
-      if (!player) {
+      if (!targetPlayer) {
         throw new NotFoundException('未找到对应球员')
       }
 
-      if (player.userId !== null) {
+      if (targetPlayer.userId !== null) {
         throw new ConflictException('该球员已被绑定')
       }
 
-      const binding = await tx.player.update({
+      const player = await tx.player.update({
         where: {
-          id: player.id,
+          id: targetPlayer.id,
         },
         data: {
           userId,
         },
-        select: {
-          id: true,
-          playerNumber: true,
-          nickname: true,
-          avatarUrl: true,
-          subTeam: true,
-          status: true,
-        },
+        select: miniappPlayerProfileSelect,
       })
 
-      return this.buildMeResponse(user, binding)
+      return this.buildMeResponse(user, player)
     })
+  }
+
+  async updateProfile(
+    userId: number,
+    payload: MiniappProfileUpdatePayload,
+  ): Promise<MiniappMeResponse> {
+    const user = await this.findActiveUser(userId)
+    const boundPlayer = await this.findBindingByUserId(userId, this.prisma.player)
+
+    if (!boundPlayer) {
+      throw new NotFoundException('当前用户未绑定球员')
+    }
+
+    const data = this.buildUpdatePlayerData(payload)
+
+    if (!Object.keys(data).length) {
+      return this.buildMeResponse(user, boundPlayer)
+    }
+
+    const player = await this.prisma.player.update({
+      where: {
+        id: boundPlayer.id,
+      },
+      data,
+      select: miniappPlayerProfileSelect,
+    })
+
+    return this.buildMeResponse(user, player)
   }
 
   private async findActiveUser(userId: number): Promise<MiniappUserRecord> {
@@ -167,14 +229,7 @@ export class MiniappService {
       where: {
         userId,
       },
-      select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        subTeam: true,
-        status: true,
-      },
+      select: miniappPlayerProfileSelect,
     })
   }
 
@@ -187,12 +242,7 @@ export class MiniappService {
         playerNumber,
       },
       select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        subTeam: true,
-        status: true,
+        ...miniappPlayerProfileSelect,
         userId: true,
       },
     })
@@ -200,7 +250,7 @@ export class MiniappService {
 
   private buildMeResponse(
     user: MiniappUserRecord,
-    binding: MiniappPlayerBinding | null,
+    player: MiniappPlayerBinding | null,
   ): MiniappMeResponse {
     return {
       user: {
@@ -210,24 +260,119 @@ export class MiniappService {
         avatarUrl: user.avatarUrl,
         phone: user.phone,
         status: user.status as 'active' | 'inactive',
-        isBound: Boolean(binding),
+        isBound: Boolean(player),
       },
-      binding: this.buildBindingSummary(binding),
+      player: this.buildPlayerSummary(player),
     }
   }
 
-  private buildBindingSummary(binding: MiniappPlayerBinding | null): MiniappBindingSummary | null {
-    if (!binding) {
+  private buildPlayerSummary(player: MiniappPlayerBinding | null): MiniappPlayerSummary | null {
+    if (!player) {
       return null
     }
 
     return {
-      playerId: binding.id,
-      playerNumber: binding.playerNumber,
-      nickname: binding.nickname,
-      avatarUrl: binding.avatarUrl,
-      subTeam: binding.subTeam,
-      status: binding.status,
+      playerId: player.id,
+      playerNumber: player.playerNumber,
+      nickname: player.nickname,
+      avatarUrl: player.avatarUrl,
+      realName: player.realName,
+      subTeam: player.subTeam,
+      jerseyName: player.jerseyName,
+      birthDate: player.birthDate?.toISOString() ?? null,
+      isAdmin: player.isAdmin,
+      position: player.position,
+      jerseySize: player.jerseySize,
+      status: player.status,
+      remark: player.remark,
+      createdAt: player.createdAt.toISOString(),
+      updatedAt: player.updatedAt.toISOString(),
     }
   }
+
+  private buildUpdatePlayerData(payload: MiniappProfileUpdatePayload) {
+    const data: {
+      avatarUrl?: string | null
+      birthDate?: Date | null
+      jerseyName?: string | null
+      jerseySize?: string | null
+      nickname?: string
+      position?: string | null
+      realName?: string | null
+      remark?: string | null
+      subTeam?: string | null
+    } = {}
+
+    if (payload.nickname !== undefined) {
+      data.nickname = normalizeRequiredText(payload.nickname, '昵称不能为空')
+    }
+
+    if (payload.avatarUrl !== undefined) {
+      data.avatarUrl = normalizeNullableText(payload.avatarUrl)
+    }
+
+    if (payload.realName !== undefined) {
+      data.realName = normalizeNullableText(payload.realName)
+    }
+
+    if (payload.subTeam !== undefined) {
+      data.subTeam = normalizeNullableText(payload.subTeam)
+    }
+
+    if (payload.jerseyName !== undefined) {
+      data.jerseyName = normalizeNullableText(payload.jerseyName)
+    }
+
+    if (payload.birthDate !== undefined) {
+      data.birthDate = normalizeNullableDate(payload.birthDate)
+    }
+
+    if (payload.position !== undefined) {
+      data.position = normalizeNullableText(payload.position)
+    }
+
+    if (payload.jerseySize !== undefined) {
+      data.jerseySize = normalizeNullableText(payload.jerseySize)
+    }
+
+    if (payload.remark !== undefined) {
+      data.remark = normalizeNullableText(payload.remark)
+    }
+
+    return data
+  }
+}
+
+function normalizeNullableText(value: string | null | undefined) {
+  if (value == null) {
+    return null
+  }
+
+  const normalized = value.trim()
+
+  return normalized ? normalized : null
+}
+
+function normalizeRequiredText(value: unknown, message: string) {
+  const normalized = normalizeNullableText(typeof value === 'string' ? value : null)
+
+  if (!normalized) {
+    throw new BadRequestException(message)
+  }
+
+  return normalized
+}
+
+function normalizeNullableDate(value: Date | string | null | undefined) {
+  if (value == null) {
+    return null
+  }
+
+  const date = value instanceof Date ? value : new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    throw new BadRequestException('出生日期格式不正确')
+  }
+
+  return date
 }
