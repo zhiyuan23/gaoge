@@ -20,6 +20,7 @@ const seasonYear = ref(2026)
 const seasonName = ref('春季赛')
 const standingsLoading = ref(false)
 const standingsError = ref('')
+const defaultStandingRoundCount = 10
 const assetSummary = ref({
   totalIncome: 0,
   totalExpense: 0,
@@ -67,8 +68,14 @@ const minSwipeDistance = 50
 
 const currentTeamData = computed(() => teamData[activeTeam.value])
 const isFootballTeam = computed(() => activeTeam.value === 'gaoge-fc')
+const activeTeamPrimaryColor = computed(() => teamColors[activeTeam.value].primary)
 const standingRounds = computed(() => standings.value.rounds ?? [])
 const standingTeams = computed(() => standings.value.teams ?? [])
+const defaultStandingTeams = [
+  { teamId: 1, teamCode: 'real', teamName: '皇家高歌', totalPoints: 0, roundPoints: [] },
+  { teamId: 2, teamCode: 'inter', teamName: '高歌国际', totalPoints: 0, roundPoints: [] },
+  { teamId: 3, teamCode: 'united', teamName: '高歌联', totalPoints: 0, roundPoints: [] },
+]
 const standingTeamDisplayOrder = {
   real: 0,
   inter: 1,
@@ -86,15 +93,27 @@ const orderedStandingTeams = computed(() =>
     return (leftTeam.teamId ?? 0) - (rightTeam.teamId ?? 0)
   }),
 )
+const displayedStandingTeams = computed(() =>
+  orderedStandingTeams.value.length ? orderedStandingTeams.value : defaultStandingTeams,
+)
 const standingTableRows = computed(() =>
-  standingRounds.value.map((round, roundIndex) => ({
-    id: round.id ?? `round-${roundIndex + 1}`,
-    label: round.label ?? `第${round.round ?? roundIndex + 1}轮`,
-    points: orderedStandingTeams.value.map((team) => team.roundPoints?.[roundIndex] ?? 0),
-  })),
+  Array.from(
+    { length: Math.max(defaultStandingRoundCount, standingRounds.value.length) },
+    (_, index) => {
+      const round = standingRounds.value[index]
+
+      return {
+        id: round?.id ?? `round-placeholder-${index + 1}`,
+        label: round?.label ?? `第${round?.round ?? index + 1}轮`,
+        points: displayedStandingTeams.value.map((team) =>
+          round ? (team.roundPoints?.[index] ?? 0) : null,
+        ),
+      }
+    },
+  ),
 )
 const maxStandingPoints = computed(() =>
-  Math.max(1, ...orderedStandingTeams.value.map((team) => team.totalPoints ?? 0)),
+  Math.max(1, ...displayedStandingTeams.value.map((team) => team.totalPoints ?? 0)),
 )
 const standingTeamAccents = {
   real: {
@@ -112,6 +131,46 @@ const standingTeamAccents = {
     glow: 'rgba(239, 68, 68, 0.18)',
     fill: '#ef4444',
   },
+}
+
+const hexToRgba = (hexColor, alpha) => {
+  const normalizedHex = hexColor.replace('#', '')
+  const safeHex =
+    normalizedHex.length === 3
+      ? normalizedHex
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : normalizedHex
+
+  const red = Number.parseInt(safeHex.slice(0, 2), 16)
+  const green = Number.parseInt(safeHex.slice(2, 4), 16)
+  const blue = Number.parseInt(safeHex.slice(4, 6), 16)
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+}
+
+const isActiveSeason = (season) => seasonName.value === season
+
+const selectSeason = (season) => {
+  if (seasonName.value === season) {
+    return
+  }
+
+  seasonName.value = season
+}
+
+const getSeasonTabStyle = (season) => {
+  if (!isActiveSeason(season)) {
+    return {}
+  }
+
+  return {
+    borderColor: hexToRgba(activeTeamPrimaryColor.value, 0.4),
+    background: `linear-gradient(180deg, ${hexToRgba(activeTeamPrimaryColor.value, 0.2)}, ${hexToRgba(activeTeamPrimaryColor.value, 0.1)})`,
+    boxShadow: `0 0 20px ${hexToRgba(activeTeamPrimaryColor.value, 0.16)}, inset 0 1px 0 rgba(255,255,255,0.08)`,
+    color: 'rgba(255,255,255,0.96)',
+  }
 }
 
 // const getStandingTeamTrophyCount = (team) =>
@@ -187,6 +246,14 @@ const loadStandings = async () => {
 
   standingsLoading.value = true
   standingsError.value = ''
+  standings.value = {
+    season: {
+      year: seasonYear.value,
+      season: seasonName.value,
+    },
+    rounds: [],
+    teams: [],
+  }
 
   try {
     const payload = await fetchFootballStandings({
@@ -451,52 +518,64 @@ watch(isFootballTeam, loadAssetSummary, {
             v-if="isFootballTeam"
             class="border-white/8 mb-6 rounded-3xl border bg-white/5 p-4 md:p-6"
           >
-            <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div>
+            <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div class="min-w-0 md:flex-1">
                 <h2 class="text-lg font-bold" :style="{ color: teamColors[activeTeam].primary }">
                   赛季积分榜
                 </h2>
                 <p class="mt-2 text-sm text-white/55">按赛季查看三支球队积分对比与每轮明细。</p>
               </div>
-              <div v-if="false" class="grid grid-cols-2 gap-3 md:w-auto">
-                <label
-                  class="flex flex-col gap-2 text-xs uppercase tracking-[0.14em] text-white/40"
+              <div
+                class="bg-[#0b0d12]/88 flex max-w-full flex-nowrap items-center gap-1.5 self-start rounded-[20px] border border-white/10 p-1 shadow-[0_18px_40px_rgba(0,0,0,0.24)] backdrop-blur-md md:ml-4"
+              >
+                <div
+                  class="season-year-select border-white/8 bg-white/6 relative shrink-0 overflow-hidden rounded-[14px] border"
                 >
-                  年份
                   <select
                     v-model.number="seasonYear"
-                    class="rounded-2xl border border-white/10 bg-[#11131a] px-4 py-3 text-sm tracking-normal text-white outline-none transition focus:border-white/25"
+                    data-testid="standings-season-year"
+                    class="season-year-select__input focus:border-white/18 focus:bg-white/8 appearance-none rounded-[14px] border border-transparent bg-transparent px-3 py-2.5 pr-8 text-[12px] font-semibold tracking-[0.03em] text-white outline-none transition sm:px-4 sm:py-3 sm:pr-10 sm:text-sm sm:tracking-[0.04em]"
                   >
                     <option v-for="year in seasonYears" :key="year" :value="year">
                       {{ year }}
                     </option>
                   </select>
-                </label>
-                <label
-                  class="flex flex-col gap-2 text-xs uppercase tracking-[0.14em] text-white/40"
-                >
-                  赛段
-                  <select
-                    v-model="seasonName"
-                    class="rounded-2xl border border-white/10 bg-[#11131a] px-4 py-3 text-sm tracking-normal text-white outline-none transition focus:border-white/25"
+                  <span
+                    class="text-white/38 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 sm:right-3"
                   >
-                    <option v-for="season in seasons" :key="season" :value="season">
-                      {{ season }}
-                    </option>
-                  </select>
-                </label>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </span>
+                </div>
+                <div
+                  class="bg-white/4 flex flex-nowrap items-center gap-0.5 rounded-[14px] p-0.5 sm:gap-1 sm:rounded-[16px] sm:p-1"
+                >
+                  <button
+                    v-for="season in seasons"
+                    :key="season"
+                    :data-season-name="season"
+                    type="button"
+                    class="season-tab hover:border-white/12 hover:bg-white/6 text-white/52 min-w-52px sm:min-w-68px sm:rounded-12px cursor-pointer whitespace-nowrap rounded-[10px] border border-transparent px-2 py-2 text-[11px] font-medium tracking-[0.02em] transition sm:px-3 sm:py-2.5 sm:text-xs sm:tracking-[0.04em]"
+                    :class="isActiveSeason(season) ? 'season-tab--active' : ''"
+                    :style="getSeasonTabStyle(season)"
+                    @click="selectSeason(season)"
+                  >
+                    {{ season }}
+                  </button>
+                </div>
               </div>
             </div>
 
             <div
-              v-if="standingsLoading"
-              class="border-white/8 rounded-2xl border bg-[#0f1117] px-4 py-10 text-center text-sm text-white/55"
-            >
-              积分榜加载中...
-            </div>
-
-            <div
-              v-else-if="standingsError"
+              v-if="standingsError"
               class="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-6"
             >
               <p class="text-sm text-red-100">积分加载失败：{{ standingsError }}</p>
@@ -508,21 +587,11 @@ watch(isFootballTeam, loadAssetSummary, {
               </button>
             </div>
 
-            <div
-              v-else-if="!standingRounds.length"
-              class="rounded-2xl border border-dashed border-white/10 bg-[#0f1117] px-4 py-10 text-center"
-            >
-              <p class="text-white/72 text-sm font-medium">暂无比赛数据</p>
-              <p class="text-white/42 mt-2 text-xs tracking-[0.08em]">
-                录入首轮比赛后，这里会展示 3 支球队的累计积分走势与总计。
-              </p>
-            </div>
-
             <div v-else class="space-y-5">
               <div>
                 <div class="grid grid-cols-3 gap-2 md:gap-3">
                   <article
-                    v-for="team in orderedStandingTeams"
+                    v-for="team in displayedStandingTeams"
                     :key="team.teamId"
                     class="overflow-hidden rounded-2xl border px-3 py-3 md:p-4"
                     :style="{
@@ -590,7 +659,7 @@ watch(isFootballTeam, loadAssetSummary, {
                       <tr>
                         <th class="px-4 py-3 font-medium">轮次</th>
                         <th
-                          v-for="team in orderedStandingTeams"
+                          v-for="team in displayedStandingTeams"
                           :key="team.teamId"
                           class="px-4 py-3 text-center font-medium"
                         >
@@ -621,7 +690,7 @@ watch(isFootballTeam, loadAssetSummary, {
                             <span class="relative">{{ point }}</span>
                           </span>
                           <span v-else>
-                            {{ point }}
+                            {{ point ?? '-' }}
                           </span>
                         </td>
                       </tr>
@@ -630,7 +699,7 @@ watch(isFootballTeam, loadAssetSummary, {
                       <tr>
                         <th class="px-4 py-4 font-semibold text-white">总积分</th>
                         <td
-                          v-for="team in orderedStandingTeams"
+                          v-for="team in displayedStandingTeams"
                           :key="`total-${team.teamId}`"
                           class="px-4 py-4 text-center font-semibold text-white"
                         >
@@ -738,6 +807,33 @@ watch(isFootballTeam, loadAssetSummary, {
 
 .team-hero-image {
   object-position: center var(--hero-image-offset);
+}
+
+.season-year-select::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgb(255, 255, 255, 4%);
+}
+
+.season-year-select__input {
+  min-width: 72px;
+}
+
+.season-year-select__input::-ms-expand {
+  display: none;
+}
+
+.season-tab--active {
+  font-weight: 600;
+}
+
+@media (width >= 640px) {
+  .season-year-select__input {
+    min-width: 88px;
+  }
 }
 
 @media (width <= 767px) {
