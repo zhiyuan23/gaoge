@@ -1,3 +1,6 @@
+import dayjs from 'dayjs'
+
+import type { MatchRound } from '@/api/basketball/match-round'
 import type { Team } from '@/api/basketball/team'
 
 import type { MatchRoundFormModel, MatchRoundResultFormItem, MatchRoundSearch } from './types'
@@ -30,6 +33,10 @@ export const MATCH_ROUND_ROUND_OPTIONS = Array.from({ length: 15 }, (_, index) =
   value: index + 1,
 }))
 
+export const MATCH_ROUND_VENUE_OPTIONS = [{ label: '腾辉体育中心', value: '腾辉体育中心' }] as const
+
+const DEFAULT_MATCH_ROUND_VENUE = MATCH_ROUND_VENUE_OPTIONS[0].value
+
 export function getPointsByRank(rank: 1 | 2 | 3 | null): 0 | 1 | 2 | null {
   if (rank === 1) {
     return 2
@@ -55,13 +62,26 @@ export function createMatchRoundResultItems(teams: Team[]): MatchRoundResultForm
   }))
 }
 
-export function createEmptyMatchRoundForm(teams: Team[] = []): MatchRoundFormModel {
+function getNextTuesdayAfter(matchDate: string | Date) {
+  const currentDate = dayjs(matchDate)
+  const daysToNextTuesday = (2 - currentDate.day() + 7) % 7 || 7
+  return currentDate.add(daysToNextTuesday, 'day').format('YYYY-MM-DD')
+}
+
+function getNextRoundValue(round: number) {
+  return Math.min(round + 1, MATCH_ROUND_ROUND_OPTIONS.length)
+}
+
+export function createEmptyMatchRoundForm(
+  teams: Team[] = [],
+  previousMatchRound?: Pick<MatchRound, 'year' | 'season' | 'round' | 'matchDate'> | null,
+): MatchRoundFormModel {
   return {
-    year: new Date().getFullYear(),
-    season: '',
-    round: 1,
-    matchDate: '',
-    venue: '',
+    year: previousMatchRound?.year ?? new Date().getFullYear(),
+    season: previousMatchRound?.season ?? '',
+    round: previousMatchRound ? getNextRoundValue(previousMatchRound.round) : 1,
+    matchDate: previousMatchRound ? getNextTuesdayAfter(previousMatchRound.matchDate) : '',
+    venue: DEFAULT_MATCH_ROUND_VENUE,
     remark: '',
     results: createMatchRoundResultItems(teams),
   }

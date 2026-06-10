@@ -24,6 +24,7 @@ const props = defineProps<{
   modelValue: boolean
   mode: 'create' | 'edit'
   matchRound?: MatchRound | null
+  previousMatchRound?: MatchRound | null
   teams: Team[]
   teamsValid: boolean
   teamsWarning: string
@@ -76,7 +77,7 @@ watch(
     formModel.value =
       props.mode === 'edit' && props.matchRound
         ? createMatchRoundFormFromRow(props.matchRound, props.teams)
-        : createEmptyMatchRoundForm(props.teams)
+        : createEmptyMatchRoundForm(props.teams, props.previousMatchRound)
 
     nextTick(() => {
       formRef.value?.clearValidate()

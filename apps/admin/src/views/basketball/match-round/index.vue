@@ -42,10 +42,12 @@ defineOptions({
 type MatchRoundSearchSeason = MatchRoundSearch['season']
 
 const submitLoading = ref(false)
+const createLoading = ref(false)
 const selectionDataList = ref<MatchRound[]>([])
 const teams = ref<Team[]>([])
 const teamsTotal = ref(0)
 const teamsLoading = ref(false)
+const previousMatchRound = ref<MatchRound | null>(null)
 
 const {
   search,
@@ -94,10 +96,26 @@ const teamsWarning = computed(() =>
     : `当前球队数量为 ${teamsTotal.value}，业务要求必须恰好有 3 支球队后才能维护比赛信息。`,
 )
 
-function handleAdd() {
+async function fetchPreviousMatchRound() {
+  const response = await matchRoundsApi.list({ page: 1, pageSize: 1 })
+  previousMatchRound.value = response.list[0] ?? null
+}
+
+async function handleAdd() {
   if (!teamsValid.value) {
     ElMessage.error(teamsWarning.value)
     return
+  }
+
+  createLoading.value = true
+  try {
+    previousMatchRound.value = null
+    await fetchPreviousMatchRound()
+  } catch {
+    ElMessage.error('获取上一场比赛信息失败，请稍后重试')
+    return
+  } finally {
+    createLoading.value = false
   }
 
   openCreate()
@@ -208,6 +226,7 @@ watch(tableData, () => {
             type="primary"
             plain
             :disabled="!teamsValid"
+            :loading="createLoading"
             @click="handleAdd"
           >
             新增比赛
@@ -263,6 +282,7 @@ watch(tableData, () => {
       v-model="dialogVisible"
       :mode="dialogMode"
       :match-round="currentMatchRound"
+      :previous-match-round="previousMatchRound"
       :teams="teams"
       :teams-valid="teamsValid"
       :teams-warning="teamsWarning"

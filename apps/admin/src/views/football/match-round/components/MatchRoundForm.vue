@@ -5,6 +5,7 @@ import {
   getPointsByRank,
   MATCH_ROUND_ROUND_OPTIONS,
   MATCH_ROUND_SEASON_OPTIONS,
+  MATCH_ROUND_VENUE_OPTIONS,
   MATCH_ROUND_YEAR_OPTIONS,
 } from '../model/defaults'
 import type { MatchRoundFormModel } from '../model/types'
@@ -109,7 +110,14 @@ defineExpose({
       </ElCol>
       <ElCol :span="12">
         <ElFormItem label="比赛场地">
-          <ElInput v-model="model.venue" placeholder="请输入比赛场地" />
+          <ElSelect v-model="model.venue" placeholder="请选择比赛场地" class="w-full">
+            <ElOption
+              v-for="option in MATCH_ROUND_VENUE_OPTIONS"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </ElSelect>
         </ElFormItem>
       </ElCol>
       <ElCol :span="24">
