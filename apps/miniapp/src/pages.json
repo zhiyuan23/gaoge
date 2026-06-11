@@ -18,9 +18,9 @@
       }
     },
     {
-      "path": "pages/message/index",
+      "path": "pages/message-board/index",
       "style": {
-        "navigationBarTitleText": "消息"
+        "navigationBarTitleText": "留言板"
       }
     },
     {
@@ -89,7 +89,7 @@
       },
       {
         "text": "留言板",
-        "pagePath": "pages/message/index",
+        "pagePath": "pages/message-board/index",
         "iconPath": "static/images/tabbar/message.png",
         "selectedIconPath": "static/images/tabbar/message-active.png"
       },

@@ -6,6 +6,7 @@ import { WechatModule } from './common/wechat/wechat.module'
 import { AuthModule } from './modules/auth/auth.module'
 import { BannerModule } from './modules/banner/banner.module'
 import { BasketballModule } from './modules/basketball/basketball.module'
+import { ContentModule } from './modules/content/content.module'
 import { FootballModule } from './modules/football/football.module'
 import { HealthModule } from './modules/health/health.module'
 import { MiniappModule } from './modules/miniapp/miniapp.module'
@@ -26,6 +27,7 @@ import { AppService } from './app.service'
     HealthModule,
     BasketballModule,
     FootballModule,
+    ContentModule,
     AuthModule,
     BannerModule,
     MiniappModule,

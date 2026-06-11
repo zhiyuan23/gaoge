@@ -5,6 +5,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import useSettingsStore from '@/store/settings'
 
 import Basketball from './modules/basketball'
+import Content from './modules/content'
 import BreadcrumbExample from './modules/example/breadcrumb'
 import ComponentExample from './modules/example/component'
 import ExternalLinkExample from './modules/example/external-link'
@@ -92,6 +93,13 @@ const asyncRoutes: Route.recordMainRaw[] = [
       icon: 'solar:cup-star-outline',
     },
     children: [Gaoge, Basketball],
+  },
+  {
+    meta: {
+      title: '内容',
+      icon: 'ri:article-line',
+    },
+    children: [Content],
   },
   {
     meta: {
