@@ -44,7 +44,13 @@ defineExpose({
 </script>
 
 <template>
-  <ElForm ref="formRef" :model="model" :rules="PLAYER_FORM_RULES" label-width="96px">
+  <ElForm
+    ref="formRef"
+    :model="model"
+    :rules="PLAYER_FORM_RULES"
+    label-width="96px"
+    class="gaoge-form"
+  >
     <ElRow :gutter="16">
       <ElCol :span="12">
         <ElFormItem label="OpenID" prop="openid">

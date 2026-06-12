@@ -6,7 +6,6 @@ import {
   MATCH_ROUND_ROUND_OPTIONS,
   MATCH_ROUND_SEASON_OPTIONS,
   MATCH_ROUND_VENUE_OPTIONS,
-  MATCH_ROUND_YEAR_OPTIONS,
 } from '../model/defaults'
 import type { MatchRoundFormModel } from '../model/types'
 import { MATCH_ROUND_FORM_RULES, MATCH_ROUND_RANK_OPTIONS } from '../schemas/form'
@@ -49,20 +48,14 @@ defineExpose({
 </script>
 
 <template>
-  <ElForm ref="formRef" :model="model" :rules="MATCH_ROUND_FORM_RULES" label-width="96px">
+  <ElForm
+    ref="formRef"
+    :model="model"
+    :rules="MATCH_ROUND_FORM_RULES"
+    label-width="96px"
+    class="gaoge-form"
+  >
     <ElRow :gutter="16">
-      <ElCol :span="12">
-        <ElFormItem label="年度" prop="year">
-          <ElSelect v-model="model.year" placeholder="请选择年度" class="w-full">
-            <ElOption
-              v-for="option in MATCH_ROUND_YEAR_OPTIONS"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-            />
-          </ElSelect>
-        </ElFormItem>
-      </ElCol>
       <ElCol :span="12">
         <ElFormItem label="赛季" prop="season">
           <ElSelect v-model="model.season" placeholder="请选择赛季" class="w-full">

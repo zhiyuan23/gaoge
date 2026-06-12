@@ -33,7 +33,13 @@ defineExpose({
 </script>
 
 <template>
-  <ElForm ref="formRef" :model="model" :rules="TEAM_FORM_RULES" label-width="96px">
+  <ElForm
+    ref="formRef"
+    :model="model"
+    :rules="TEAM_FORM_RULES"
+    label-width="96px"
+    class="gaoge-form"
+  >
     <ElRow :gutter="16">
       <ElCol v-if="typeof model.id === 'number'" :span="12">
         <ElFormItem label="球队ID">

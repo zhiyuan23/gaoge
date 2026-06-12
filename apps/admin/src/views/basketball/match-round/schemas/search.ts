@@ -1,19 +1,15 @@
-import type { SearchField } from '@/components/common/EsSearch/types'
+import type { SearchField, SearchOption } from '@/components/common/EsSearch/types'
 
-import {
-  MATCH_ROUND_ROUND_OPTIONS,
-  MATCH_ROUND_SEASON_OPTIONS,
-  MATCH_ROUND_YEAR_OPTIONS,
-} from '../model/defaults'
+import { MATCH_ROUND_ROUND_OPTIONS, MATCH_ROUND_SEASON_OPTIONS } from '../model/defaults'
 
-export function createMatchRoundSearchFields(): SearchField[] {
+export function createMatchRoundSearchFields(yearOptions: SearchOption[]): SearchField[] {
   return [
     {
       key: 'year',
       label: '年度',
       type: 'select',
       placeholder: '全部',
-      options: MATCH_ROUND_YEAR_OPTIONS,
+      options: yearOptions,
       props: {
         clearable: true,
       },

@@ -14,12 +14,12 @@ import type {
 import matchRoundsApi from '@/api/basketball/match-round'
 import type { Team } from '@/api/basketball/team'
 import teamsApi from '@/api/basketball/team'
-import type { SearchFormData } from '@/components/common/EsSearch/types'
+import type { SearchFormData, SearchOption } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
 import { useListPage } from '@/composables/useListPage'
 
 import MatchRoundFormDialog from './components/MatchRoundFormDialog.vue'
-import { MATCH_ROUND_DEFAULT_SEARCH } from './model/defaults'
+import { buildMatchRoundYearFilterOptions, MATCH_ROUND_DEFAULT_SEARCH } from './model/defaults'
 import { buildMatchRoundListParams } from './model/mapper'
 import type { MatchRoundSearch } from './model/types'
 import { createMatchRoundSearchFields } from './schemas/search'
@@ -41,6 +41,8 @@ defineOptions({
 
 type MatchRoundSearchSeason = MatchRoundSearch['season']
 
+const MATCH_ROUND_BOOTSTRAP_PAGE_SIZE = 1000
+
 const submitLoading = ref(false)
 const createLoading = ref(false)
 const selectionDataList = ref<MatchRound[]>([])
@@ -48,6 +50,7 @@ const teams = ref<Team[]>([])
 const teamsTotal = ref(0)
 const teamsLoading = ref(false)
 const previousMatchRound = ref<MatchRound | null>(null)
+const yearOptions = ref<SearchOption[]>([])
 
 const {
   search,
@@ -88,7 +91,7 @@ const {
   openEdit,
 } = useCrudDialog<MatchRound>()
 
-const searchFields = computed(() => createMatchRoundSearchFields())
+const searchFields = computed(() => createMatchRoundSearchFields(yearOptions.value))
 const teamsValid = computed(() => teamsTotal.value === 3)
 const teamsWarning = computed(() =>
   teamsTotal.value === 3
@@ -96,9 +99,47 @@ const teamsWarning = computed(() =>
     : `当前球队数量为 ${teamsTotal.value}，业务要求必须恰好有 3 支球队后才能维护比赛信息。`,
 )
 
-async function fetchPreviousMatchRound() {
-  const response = await matchRoundsApi.list({ page: 1, pageSize: 1 })
-  previousMatchRound.value = response.list[0] ?? null
+function syncSearchYearWithOptions() {
+  if (
+    search.value.year !== '' &&
+    !yearOptions.value.some((option) => option.value === search.value.year)
+  ) {
+    search.value.year = ''
+  }
+}
+
+function applyMatchRoundMeta(list: MatchRound[]) {
+  previousMatchRound.value = list[0] ?? null
+  yearOptions.value = buildMatchRoundYearFilterOptions(list.map((item) => item.year))
+  syncSearchYearWithOptions()
+}
+
+async function initializeMatchRoundPageData() {
+  loading.value = true
+  try {
+    const response = await matchRoundsApi.list({
+      page: 1,
+      pageSize: Math.max(pageSize.value, MATCH_ROUND_BOOTSTRAP_PAGE_SIZE),
+    })
+    applyMatchRoundMeta(response.list)
+    tableData.value = response.list.slice(0, pageSize.value)
+    total.value = response.total
+  } finally {
+    loading.value = false
+  }
+}
+
+async function refreshMatchRoundMeta() {
+  const response = await matchRoundsApi.list({
+    page: 1,
+    pageSize: MATCH_ROUND_BOOTSTRAP_PAGE_SIZE,
+  })
+  applyMatchRoundMeta(response.list)
+}
+
+async function refreshMatchRoundListData() {
+  await refreshMatchRoundMeta()
+  await fetchMatchRounds()
 }
 
 async function handleAdd() {
@@ -109,16 +150,10 @@ async function handleAdd() {
 
   createLoading.value = true
   try {
-    previousMatchRound.value = null
-    await fetchPreviousMatchRound()
-  } catch {
-    ElMessage.error('获取上一场比赛信息失败，请稍后重试')
-    return
+    openCreate()
   } finally {
     createLoading.value = false
   }
-
-  openCreate()
 }
 
 function handleEdit(row: MatchRound) {
@@ -165,7 +200,7 @@ async function handleDelete(row: MatchRound) {
     loading.value = true
     await matchRoundsApi.remove(row.id)
     ElMessage.success('已删除')
-    await fetchMatchRounds()
+    await refreshMatchRoundListData()
   } finally {
     loading.value = false
   }
@@ -185,14 +220,14 @@ async function handleSubmit(payload: MatchRoundPayload | UpdateMatchRoundPayload
     }
 
     dialogVisible.value = false
-    await fetchMatchRounds()
+    await refreshMatchRoundListData()
   } finally {
     submitLoading.value = false
   }
 }
 
 onMounted(async () => {
-  await Promise.all([fetchTeams(), fetchMatchRounds()])
+  await Promise.all([fetchTeams(), initializeMatchRoundPageData()])
 })
 
 watch(tableData, () => {

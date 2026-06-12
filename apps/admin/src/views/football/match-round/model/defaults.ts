@@ -6,12 +6,14 @@ import type { Team } from '@/api/football/team'
 import type { MatchRoundFormModel, MatchRoundResultFormItem, MatchRoundSearch } from './types'
 
 export const MATCH_ROUND_DEFAULT_SEARCH: MatchRoundSearch = {
-  year: '',
+  year: 2026,
   season: '',
   round: '',
   matchDate: '',
   venueKeyword: '',
 }
+
+export const MATCH_ROUND_FILTER_YEAR_OPTIONS = [{ label: '2026年', value: 2026 }]
 
 export const MATCH_ROUND_YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => {
   const year = new Date().getFullYear() - 5 + index
@@ -20,6 +22,15 @@ export const MATCH_ROUND_YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) =>
     value: year,
   }
 })
+
+export function buildMatchRoundYearFilterOptions(years: Array<number | null | undefined>) {
+  return [...new Set(years.filter((year): year is number => Number.isFinite(year)))]
+    .sort((left, right) => right - left)
+    .map((year) => ({
+      label: `${year}年`,
+      value: year,
+    }))
+}
 
 export const MATCH_ROUND_SEASON_OPTIONS = [
   { label: '春季赛', value: '春季赛' },

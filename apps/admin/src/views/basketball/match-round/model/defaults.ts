@@ -21,6 +21,15 @@ export const MATCH_ROUND_YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) =>
   }
 })
 
+export function buildMatchRoundYearFilterOptions(years: Array<number | null | undefined>) {
+  return [...new Set(years.filter((year): year is number => Number.isFinite(year)))]
+    .sort((left, right) => right - left)
+    .map((year) => ({
+      label: `${year}年`,
+      value: year,
+    }))
+}
+
 export const MATCH_ROUND_SEASON_OPTIONS = [
   { label: '春季赛', value: '春季赛' },
   { label: '夏季赛', value: '夏季赛' },

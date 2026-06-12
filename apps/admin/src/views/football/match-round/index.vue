@@ -97,9 +97,15 @@ const teamsWarning = computed(() =>
     : `当前球队数量为 ${teamsTotal.value}，业务要求必须恰好有 3 支球队后才能维护比赛信息。`,
 )
 
-async function fetchPreviousMatchRound() {
-  const response = await matchRoundsApi.list({ page: 1, pageSize: 1 })
-  previousMatchRound.value = response.list[0] ?? null
+function shouldSyncPreviousMatchRoundFromTable() {
+  return (
+    page.value === 1 &&
+    search.value.year === MATCH_ROUND_DEFAULT_SEARCH.year &&
+    search.value.season === MATCH_ROUND_DEFAULT_SEARCH.season &&
+    search.value.round === MATCH_ROUND_DEFAULT_SEARCH.round &&
+    search.value.matchDate === MATCH_ROUND_DEFAULT_SEARCH.matchDate &&
+    search.value.venueKeyword === MATCH_ROUND_DEFAULT_SEARCH.venueKeyword
+  )
 }
 
 async function handleAdd() {
@@ -110,16 +116,10 @@ async function handleAdd() {
 
   createLoading.value = true
   try {
-    previousMatchRound.value = null
-    await fetchPreviousMatchRound()
-  } catch {
-    ElMessage.error('获取上一场比赛信息失败，请稍后重试')
-    return
+    openCreate()
   } finally {
     createLoading.value = false
   }
-
-  openCreate()
 }
 
 function handleEdit(row: MatchRound) {
@@ -198,6 +198,10 @@ onMounted(async () => {
 
 watch(tableData, () => {
   selectionDataList.value = []
+
+  if (shouldSyncPreviousMatchRoundFromTable()) {
+    previousMatchRound.value = tableData.value[0] ?? null
+  }
 })
 </script>
 

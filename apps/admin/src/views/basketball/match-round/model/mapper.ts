@@ -53,6 +53,10 @@ function normalizeOptionalText(value: string) {
   return trimmed || null
 }
 
+function getYearFromMatchDate(matchDate: string) {
+  return dayjs(matchDate).year()
+}
+
 function buildResultsPayload(model: MatchRoundFormModel): MatchRoundPayload['results'] {
   return model.results.map((item) => ({
     teamId: item.teamId,
@@ -62,7 +66,7 @@ function buildResultsPayload(model: MatchRoundFormModel): MatchRoundPayload['res
 
 export function buildMatchRoundPayload(model: MatchRoundFormModel): MatchRoundPayload {
   return {
-    year: Number(model.year),
+    year: getYearFromMatchDate(model.matchDate),
     season: model.season as MatchRoundPayload['season'],
     round: Number(model.round),
     matchDate: model.matchDate,

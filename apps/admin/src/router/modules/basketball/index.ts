@@ -12,6 +12,7 @@ const routes: RouteRecordRaw = {
     title: '高歌篮球俱乐部',
     cacheable: true,
     icon: 'mdi:basketball',
+    menu: false,
   },
   children: [
     {

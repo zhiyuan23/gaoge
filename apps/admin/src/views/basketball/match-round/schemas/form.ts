@@ -27,7 +27,6 @@ function validateResults(
 }
 
 export const MATCH_ROUND_FORM_RULES: FormRules<MatchRoundFormModel> = {
-  year: [{ required: true, message: '请选择年度', trigger: 'change' }],
   season: [{ required: true, message: '请选择赛季', trigger: 'change' }],
   round: [{ required: true, message: '请选择场次', trigger: 'change' }],
   matchDate: [{ required: true, message: '请选择比赛日期', trigger: 'change' }],
