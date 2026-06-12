@@ -270,7 +270,7 @@ onUnmounted(() => {
         .tab {
           position: relative;
           display: inline-block;
-          width: 150px;
+          width: 140px;
           height: calc(var(--g-tabbar-height) - 10px);
           margin: 5px 0 5px 4px;
           overflow: hidden;

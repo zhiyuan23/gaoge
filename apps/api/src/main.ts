@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { HttpExceptionFilter } from './common/http/http-exception.filter'
 import { ResponseInterceptor } from './common/http/response.interceptor'
 import { resolveUploadRoot, uploadPublicPrefix } from './common/storage/upload-path'
+import { setupApiDocs } from './swagger/setup-api-docs'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
@@ -36,7 +37,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build()
   const document = SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api-docs', app, document)
+  setupApiDocs(app, document)
 
   app.useGlobalPipes(
     new ValidationPipe({
