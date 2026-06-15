@@ -4,6 +4,7 @@ const defaultUploadRoot = resolve(__dirname, '../../../uploads')
 
 export const uploadPublicPrefix = '/uploads'
 export const miniappAvatarPublicPrefix = `${uploadPublicPrefix}/miniapp-avatar`
+export const contentBannerPublicPrefix = `${uploadPublicPrefix}/content-banner`
 
 export function resolveUploadRoot(configuredRoot = process.env.API_UPLOAD_ROOT) {
   const normalizedRoot = configuredRoot?.trim()
@@ -17,4 +18,8 @@ export function resolveUploadRoot(configuredRoot = process.env.API_UPLOAD_ROOT) 
 
 export function resolveMiniappAvatarUploadDir(configuredRoot = process.env.API_UPLOAD_ROOT) {
   return join(resolveUploadRoot(configuredRoot), 'miniapp-avatar')
+}
+
+export function resolveContentBannerUploadDir(configuredRoot = process.env.API_UPLOAD_ROOT) {
+  return join(resolveUploadRoot(configuredRoot), 'content-banner')
 }

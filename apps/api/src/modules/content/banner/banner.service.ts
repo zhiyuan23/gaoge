@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import type { Prisma } from '@prisma/client'
 
+import type { BannerJumpType, BannerStatus } from '@gaoge/shared-types'
+
 import { PrismaService } from '@/common/prisma/prisma.service'
 
 import type { BannerListDto } from './dto/banner-list.dto'
@@ -8,6 +10,25 @@ import type { CreateBannerDto } from './dto/create-banner.dto'
 import type { UpdateBannerDto } from './dto/update-banner.dto'
 
 const bannerOrderBy: Prisma.BannerOrderByWithRelationInput[] = [{ sort: 'desc' }, { id: 'desc' }]
+
+type BannerJumpInput = {
+  jumpType?: BannerJumpType | null
+  jumpUrl?: string | null
+}
+
+type NormalizedBannerJump = {
+  jumpType: BannerJumpType
+  jumpUrl: string | null
+}
+
+type BannerState = {
+  title: string
+  imageUrl: string
+  jumpType: string
+  jumpUrl: string | null
+  sort: number
+  status: string
+}
 
 @Injectable()
 export class BannerService {
@@ -39,25 +60,21 @@ export class BannerService {
     return banner
   }
 
-  create(dto: CreateBannerDto) {
+  async create(dto: CreateBannerDto) {
+    const data = await buildBannerCreateData(dto)
+
     return this.prisma.banner.create({
-      data: {
-        title: normalizeRequiredText(dto.title, '轮播图标题不能为空'),
-        imageUrl: normalizeRequiredText(dto.imageUrl, '轮播图图片不能为空'),
-        jumpType: dto.jumpType ?? 'none',
-        jumpUrl: normalizeText(dto.jumpUrl) ?? null,
-        sort: dto.sort ?? 0,
-        status: dto.status ?? 'active',
-      },
+      data,
     })
   }
 
   async update(id: number, dto: UpdateBannerDto) {
-    await this.findOne(id)
+    const current = await this.findOne(id)
+    const data = await buildBannerUpdateData(current, dto)
 
     return this.prisma.banner.update({
       where: { id },
-      data: buildBannerUpdateData(dto),
+      data,
     })
   }
 
@@ -84,6 +101,41 @@ function normalizeRequiredText(value: unknown, errorMessage: string) {
   return normalized
 }
 
+export async function validateBannerJump(input: BannerJumpInput): Promise<NormalizedBannerJump> {
+  const jumpType = input.jumpType ?? 'none'
+  const jumpUrl = normalizeText(input.jumpUrl) ?? null
+
+  if (jumpType === 'none') {
+    return {
+      jumpType,
+      jumpUrl: null,
+    }
+  }
+
+  if (jumpType === 'webview') {
+    if (!jumpUrl) {
+      throw new BadRequestException('网页链接不能为空')
+    }
+    if (!/^https?:\/\//.test(jumpUrl)) {
+      throw new BadRequestException('网页链接必须以 http:// 或 https:// 开头')
+    }
+  }
+
+  if (jumpType === 'miniapp') {
+    if (!jumpUrl) {
+      throw new BadRequestException('小程序页面路径不能为空')
+    }
+    if (!jumpUrl.startsWith('/pages/')) {
+      throw new BadRequestException('小程序页面路径必须以 /pages/ 开头')
+    }
+  }
+
+  return {
+    jumpType,
+    jumpUrl,
+  }
+}
+
 function buildBannerWhere(params: BannerListDto) {
   const where: Prisma.BannerWhereInput = {}
   const keyword = normalizeText(params.keyword)
@@ -104,27 +156,55 @@ function buildBannerWhere(params: BannerListDto) {
   return where
 }
 
-function buildBannerUpdateData(dto: UpdateBannerDto) {
-  const data: Prisma.BannerUncheckedUpdateInput = {}
+async function buildBannerCreateData(
+  dto: CreateBannerDto,
+): Promise<Prisma.BannerUncheckedCreateInput> {
+  const jump = await validateBannerJump({
+    jumpType: dto.jumpType,
+    jumpUrl: dto.jumpUrl,
+  })
 
-  if (typeof dto.title === 'string') {
-    data.title = normalizeRequiredText(dto.title, '轮播图标题不能为空')
+  return {
+    title: normalizeRequiredText(dto.title, '轮播图标题不能为空'),
+    imageUrl: normalizeRequiredText(dto.imageUrl, '轮播图图片不能为空'),
+    jumpType: jump.jumpType,
+    jumpUrl: jump.jumpUrl,
+    sort: dto.sort ?? 0,
+    status: dto.status ?? 'active',
   }
-  if (typeof dto.imageUrl === 'string') {
-    data.imageUrl = normalizeRequiredText(dto.imageUrl, '轮播图图片不能为空')
-  }
-  if (dto.jumpType) {
-    data.jumpType = dto.jumpType
-  }
-  if (typeof dto.jumpUrl === 'string') {
-    data.jumpUrl = normalizeText(dto.jumpUrl) ?? null
-  }
-  if (typeof dto.sort === 'number') {
-    data.sort = dto.sort
-  }
-  if (dto.status) {
-    data.status = dto.status
+}
+
+async function buildBannerUpdateData(
+  current: BannerState,
+  dto: UpdateBannerDto,
+): Promise<Prisma.BannerUncheckedUpdateInput> {
+  const nextState: BannerState = {
+    title:
+      typeof dto.title === 'string'
+        ? normalizeRequiredText(dto.title, '轮播图标题不能为空')
+        : current.title,
+    imageUrl:
+      typeof dto.imageUrl === 'string'
+        ? normalizeRequiredText(dto.imageUrl, '轮播图图片不能为空')
+        : current.imageUrl,
+    jumpType: dto.jumpType ?? current.jumpType,
+    jumpUrl:
+      typeof dto.jumpUrl === 'string' ? (normalizeText(dto.jumpUrl) ?? null) : current.jumpUrl,
+    sort: typeof dto.sort === 'number' ? dto.sort : current.sort,
+    status: dto.status ?? current.status,
   }
 
-  return data
+  const jump = await validateBannerJump({
+    jumpType: nextState.jumpType as BannerJumpType,
+    jumpUrl: nextState.jumpUrl,
+  })
+
+  return {
+    title: nextState.title,
+    imageUrl: nextState.imageUrl,
+    jumpType: jump.jumpType,
+    jumpUrl: jump.jumpUrl,
+    sort: nextState.sort,
+    status: nextState.status as BannerStatus,
+  }
 }
