@@ -468,11 +468,12 @@ model BasketballMatchRoundResult {
 // ============================================
 model Banner {
   id       Int       @id @default(autoincrement())
-  title    String    // 标题
-  imageUrl String    // 图片地址
-  linkUrl  String?   // 跳转链接
-  sort     Int       @default(0) // 排序
-  status   String    @default("active") // active / inactive
+  title    String
+  imageUrl String
+  jumpType String    @default("none")
+  jumpUrl  String?
+  sort     Int       @default(0)
+  status   String    @default("active")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
