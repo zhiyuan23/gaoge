@@ -7,55 +7,50 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 
-import { JwtAuthGuard } from '../auth/jwt-auth.guard'
+import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
-import { CreateBannerDto, UpdateBannerDto } from './dto/create-banner.dto'
+import { BannerListDto } from './dto/banner-list.dto'
+import { CreateBannerDto } from './dto/create-banner.dto'
+import { UpdateBannerDto } from './dto/update-banner.dto'
 import { BannerService } from './banner.service'
 
-@Controller('banner')
+@Controller('content/banners')
 export class BannerController {
   constructor(private readonly bannerService: BannerService) {}
 
-  /**
-   * 获取轮播图列表 (公开)
-   */
   @Get()
-  findAll() {
-    return this.bannerService.findAll()
+  findPublished() {
+    return this.bannerService.findPublished()
   }
 
-  /**
-   * 获取单条
-   */
+  @Get('admin')
+  @UseGuards(JwtAuthGuard)
+  findAll(@Query() query: BannerListDto) {
+    return this.bannerService.findAll(query)
+  }
+
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.bannerService.findOne(id)
   }
 
-  /**
-   * 创建轮播图 (需登录)
-   */
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateBannerDto) {
     return this.bannerService.create(dto)
   }
 
-  /**
-   * 更新轮播图 (需登录)
-   */
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBannerDto) {
     return this.bannerService.update(id, dto)
   }
 
-  /**
-   * 删除轮播图 (需登录)
-   */
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(@Param('id', ParseIntPipe) id: number) {

@@ -4,7 +4,6 @@ import { ConfigModule } from '@nestjs/config'
 import { PrismaModule } from './common/prisma/prisma.module'
 import { WechatModule } from './common/wechat/wechat.module'
 import { AuthModule } from './modules/auth/auth.module'
-import { BannerModule } from './modules/banner/banner.module'
 import { BasketballModule } from './modules/basketball/basketball.module'
 import { ContentModule } from './modules/content/content.module'
 import { FootballModule } from './modules/football/football.module'
@@ -29,7 +28,6 @@ import { AppService } from './app.service'
     FootballModule,
     ContentModule,
     AuthModule,
-    BannerModule,
     MiniappModule,
     SystemModule,
   ],
