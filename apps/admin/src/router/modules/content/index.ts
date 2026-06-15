@@ -15,6 +15,15 @@ const routes: RouteRecordRaw = {
   },
   children: [
     {
+      path: 'banner',
+      name: 'contentBanner',
+      component: () => import('@/views/content/banner/index.vue'),
+      meta: {
+        title: 'Banner 管理',
+        auth: ['content.banner.view'],
+      },
+    },
+    {
       path: 'message-board-post',
       name: 'contentMessageBoardPost',
       component: () => import('@/views/content/message-board-post/index.vue'),
