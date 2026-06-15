@@ -39,7 +39,7 @@
 - 新增/编辑交互优先使用 `useCrudDialog + <Entity>Form.vue + <Entity>FormDialog.vue`
 - 查询项、表格列、表单 schema、类型与 mapper 优先拆到模块内独立文件
 - 权限常量优先集中放在 `auth.ts`，不要在 `index.vue` 或模板里散落硬编码权限字符串
-- 新模块优先对齐同类已有页面，例如 `football/player`、`football/team`、`football/asset-record`、`system/user`
+- 新模块优先对齐同类已有页面，例如 `sports/football/player`、`sports/football/team`、`sports/football/asset-record`、`system/user`
 
 如果只是补一个标准筛选项、列、表单字段或批量动作，优先在现有模块结构内增量修改，不把简单需求扩写成新的页面框架。
 
@@ -62,7 +62,7 @@
 标准 CRUD 模块优先采用既有结构：
 
 ```text
-views/<domain>/<module>/
+views/<aggregate>/<domain>/<module>/
   index.vue
   auth.ts
   components/
@@ -82,6 +82,7 @@ views/<domain>/<module>/
 
 默认要求：
 
+- 当页面要先归到聚合业务菜单下时，先落一层 `<aggregate>`，例如 `views/sports/football/player`、`views/sports/content/banner`
 - `index.vue` 必须保留为页面装配层，负责拼接列表请求、搜索状态、表格交互、弹窗开关和权限
 - `components/` 放表单体、表单弹窗和页面私有子组件，不把复杂表单直接堆回 `index.vue`
 - `schemas/` 放 `search.ts`、`table.ts`、`form.ts` 这类声明式配置

@@ -74,22 +74,16 @@ defineExpose({
 
       <ElCol :span="24">
         <ElFormItem label="Banner 图片" prop="imageUrl">
-          <div class="flex w-full flex-col gap-12">
+          <div class="flex w-full flex-col gap-4">
             <ImageUpload
               v-model="model.imageUrl"
               action="#"
               :http-request="uploadRequest"
               :width="240"
-              :height="120"
+              :height="160"
               @on-success="handleUploadSuccess"
             />
             <ElInput v-model="model.imageUrl" placeholder="可直接填写图片链接" />
-            <ElImage
-              v-if="model.imageUrl"
-              :src="model.imageUrl"
-              fit="cover"
-              class="h-120 w-240 rounded-8 border border-[var(--el-border-color-lighter)]"
-            />
           </div>
         </ElFormItem>
       </ElCol>

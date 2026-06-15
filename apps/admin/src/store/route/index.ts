@@ -11,7 +11,7 @@ import type { Route } from '#/global'
 
 const backendViewModules = {
   ...import.meta.glob('../../views/{index,login,reload,[...all]}.vue'),
-  ...import.meta.glob('../../views/gaoge/**/*.vue'),
+  ...import.meta.glob('../../views/sports/**/*.vue'),
 }
 
 const useRouteStore = defineStore(

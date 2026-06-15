@@ -5,9 +5,10 @@ function Layout() {
 }
 
 const routes: RouteRecordRaw = {
-  path: '/football',
+  path: '/sports/football',
   component: Layout,
-  name: 'football',
+  name: 'sportsFootball',
+  redirect: '/sports/football/player',
   meta: {
     title: '高歌FC',
     cacheable: true,
@@ -17,7 +18,7 @@ const routes: RouteRecordRaw = {
     {
       path: 'player',
       name: 'player',
-      component: () => import('@/views/football/player/index.vue'),
+      component: () => import('@/views/sports/football/player/index.vue'),
       meta: {
         title: '球员信息',
       },
@@ -25,7 +26,7 @@ const routes: RouteRecordRaw = {
     {
       path: 'team',
       name: 'team',
-      component: () => import('@/views/football/team/index.vue'),
+      component: () => import('@/views/sports/football/team/index.vue'),
       meta: {
         title: '球队信息',
       },
@@ -33,7 +34,7 @@ const routes: RouteRecordRaw = {
     {
       path: 'match-round',
       name: 'matchRound',
-      component: () => import('@/views/football/match-round/index.vue'),
+      component: () => import('@/views/sports/football/match-round/index.vue'),
       meta: {
         title: '比赛信息',
       },
@@ -41,7 +42,7 @@ const routes: RouteRecordRaw = {
     {
       path: 'asset-record',
       name: 'assetRecord',
-      component: () => import('@/views/football/asset-record/index.vue'),
+      component: () => import('@/views/sports/football/asset-record/index.vue'),
       meta: {
         title: '资产信息',
         auth: ['football.assetRecord.view'],

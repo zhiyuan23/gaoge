@@ -21,7 +21,7 @@ AI 在处理 `apps/admin/src/views/*` 下的页面需求时，应先判断是否
 页面优先采用如下结构：
 
 ```text
-views/<domain>/<module>/
+views/<aggregate>/<domain>/<module>/
   index.vue
   components/
   schemas/
@@ -33,6 +33,7 @@ views/<domain>/<module>/
 
 规则：
 
+- 当某组页面需要先挂到业务聚合层时，先落一层 `<aggregate>`，例如 `views/sports/football/player`、`views/sports/content/banner`
 - `schemas/*` 放声明式配置
 - `model/*` 放页面内部类型和 mapper
 - `services/*` 放本页面局部服务辅助，例如远程 options

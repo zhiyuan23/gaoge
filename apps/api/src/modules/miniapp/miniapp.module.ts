@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common'
 
-import { MessageBoardPostModule } from '@/modules/content/message-board-post/message-board-post.module'
+import { MessageBoardPostModule } from '@/modules/sports/content/message-board-post/message-board-post.module'
 
 import { MiniappController } from './miniapp.controller'
 import { MiniappService } from './miniapp.service'

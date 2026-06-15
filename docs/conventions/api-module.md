@@ -11,7 +11,7 @@
 标准业务模块优先采用如下结构：
 
 ```text
-src/modules/<domain>/<resource>/
+src/modules/<aggregate>/<domain>/<resource>/
   <resource>.module.ts
   <resource>.controller.ts
   <resource>.service.ts
@@ -24,6 +24,7 @@ src/modules/<domain>/<resource>/
 
 规则：
 
+- 当某组资源需要先挂在业务聚合层下时，先落一层 `<aggregate>`，例如 `src/modules/sports/football/player`、`src/modules/sports/content/banner`
 - 一个资源一个模块，不把多个无关资源硬塞进同一个 service
 - `controller` 负责路由、参数接收、守卫和权限装配
 - `service` 负责业务逻辑、查询拼装和 Prisma 调用
@@ -31,7 +32,7 @@ src/modules/<domain>/<resource>/
 
 ## 路由与命名
 
-- 按 `领域/资源` 组织模块目录，例如 `football/player`
+- 按 `聚合/领域/资源` 组织模块目录；没有聚合层时可直接退化为 `领域/资源`，例如 `sports/football/player`
 - HTTP 路由保持资源集合语义，优先使用复数，例如 `/football/players`
 - 控制器、服务、模块类名优先使用单数资源名，例如 `PlayerController`、`PlayerService`
 - 列表查询 DTO 优先使用 `<Resource>ListDto`

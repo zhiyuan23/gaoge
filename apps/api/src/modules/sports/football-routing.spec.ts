@@ -1,8 +1,8 @@
 import { PATH_METADATA } from '@nestjs/common/constants'
 
 import { ROLES_KEY } from '@/common/auth/roles.decorator'
+import { AuthController } from '@/modules/auth/auth.controller'
 
-import { AuthController } from './auth/auth.controller'
 import { FundController } from './football/fund/fund.controller'
 import { MatchRoundController } from './football/match-round/match-round.controller'
 import { PlayerController } from './football/player/player.controller'

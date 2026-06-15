@@ -4,8 +4,6 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import useSettingsStore from '@/store/settings'
 
-import Basketball from './modules/basketball'
-import Content from './modules/content'
 import BreadcrumbExample from './modules/example/breadcrumb'
 import ComponentExample from './modules/example/component'
 import ExternalLinkExample from './modules/example/external-link'
@@ -18,8 +16,8 @@ import MultilevelMenuExample from './modules/example/multilevel-menu'
 import PermissionExample from './modules/example/permission'
 import PluginExample from './modules/example/plugin'
 import TabExample from './modules/example/tab'
-import Gaoge from './modules/football'
 import Playground from './modules/playground'
+import Sports from './modules/sports'
 import System from './modules/system'
 import Wechat from './modules/wechat'
 
@@ -87,20 +85,7 @@ const systemRoutes: RouteRecordRaw[] = [
 
 // 动态路由（异步路由、导航栏路由）
 const asyncRoutes: Route.recordMainRaw[] = [
-  {
-    meta: {
-      title: '高歌体育',
-      icon: 'solar:cup-star-outline',
-    },
-    children: [Gaoge, Basketball],
-  },
-  {
-    meta: {
-      title: '内容',
-      icon: 'ri:article-line',
-    },
-    children: [Content],
-  },
+  Sports,
   {
     meta: {
       title: '演示',

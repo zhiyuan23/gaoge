@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { UploadProps } from 'element-plus'
+import type { ImageProps, UploadProps } from 'element-plus'
 import { ElMessage } from 'element-plus'
 
 defineOptions({
@@ -14,6 +14,7 @@ const {
   size = 2,
   width = 150,
   height = 150,
+  fit = 'cover',
   placeholder = '',
   notip = false,
   ext = ['jpg', 'png', 'gif', 'bmp'],
@@ -26,6 +27,7 @@ const {
   size?: number
   width?: number
   height?: number
+  fit?: ImageProps['fit']
   placeholder?: string
   notip?: boolean
   ext?: string[]
@@ -105,7 +107,7 @@ const onSuccess: UploadProps['onSuccess'] = (res) => {
         v-if="url === ''"
         :src="url === '' ? placeholder : url"
         :style="`width:${width}px;height:${height}px;`"
-        fit="fill"
+        :fit="fit"
       >
         <template #error>
           <div class="image-slot" :style="`width:${width}px;height:${height}px;`">
@@ -114,7 +116,7 @@ const onSuccess: UploadProps['onSuccess'] = (res) => {
         </template>
       </ElImage>
       <div v-else class="image">
-        <ElImage :src="url" :style="`width:${width}px;height:${height}px;`" fit="fill" />
+        <ElImage :src="url" :style="`width:${width}px;height:${height}px;`" :fit="fit" />
         <div class="mask">
           <div class="actions">
             <span @click.stop="preview">
@@ -134,7 +136,7 @@ const onSuccess: UploadProps['onSuccess'] = (res) => {
         <ElImage
           :src="uploadData.progress.preview"
           :style="`width:${width}px;height:${height}px;`"
-          fit="fill"
+          :fit="fit"
         />
         <ElProgress
           type="circle"

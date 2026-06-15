@@ -5,9 +5,10 @@ function Layout() {
 }
 
 const routes: RouteRecordRaw = {
-  path: '/content',
+  path: '/sports/content',
   component: Layout,
-  name: 'content',
+  name: 'sportsContent',
+  redirect: '/sports/content/banner',
   meta: {
     title: '内容管理',
     cacheable: true,
@@ -17,7 +18,7 @@ const routes: RouteRecordRaw = {
     {
       path: 'banner',
       name: 'contentBanner',
-      component: () => import('@/views/content/banner/index.vue'),
+      component: () => import('@/views/sports/content/banner/index.vue'),
       meta: {
         title: 'Banner 管理',
         auth: ['content.banner.view'],
@@ -26,7 +27,7 @@ const routes: RouteRecordRaw = {
     {
       path: 'message-board-post',
       name: 'contentMessageBoardPost',
-      component: () => import('@/views/content/message-board-post/index.vue'),
+      component: () => import('@/views/sports/content/message-board-post/index.vue'),
       meta: {
         title: '留言板',
         auth: ['content.messageBoardPost.view'],

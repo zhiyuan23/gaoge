@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common'
 
-import { MessageBoardPostListDto } from '@/modules/content/message-board-post/dto/message-board-post-list.dto'
-import { MessageBoardPostService } from '@/modules/content/message-board-post/message-board-post.service'
+import { MessageBoardPostListDto } from '@/modules/sports/content/message-board-post/dto/message-board-post-list.dto'
+import { MessageBoardPostService } from '@/modules/sports/content/message-board-post/message-board-post.service'
 
 @Controller('miniapp')
 export class MiniappPublicController {
