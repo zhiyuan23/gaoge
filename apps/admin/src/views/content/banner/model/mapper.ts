@@ -1,7 +1,7 @@
-import type { Banner , BannerListParams } from '@/api/content/banner'
+import type { Banner, BannerListParams, BannerPayload } from '@/api/content/banner'
 import type { ListPageRequestResult } from '@/composables/useListPage'
 
-import type { BannerSearch } from './types'
+import type { BannerFormModel, BannerSearch } from './types'
 
 export function buildBannerListParams(
   search: BannerSearch,
@@ -26,5 +26,29 @@ export function normalizeBannerListResponse(banners: Banner[]): ListPageRequestR
   return {
     list: banners,
     total: banners.length,
+  }
+}
+
+export function createBannerFormFromRow(row: Banner): BannerFormModel {
+  return {
+    title: row.title,
+    imageUrl: row.imageUrl,
+    jumpType: row.jumpType,
+    jumpUrl: row.jumpUrl ?? '',
+    sort: row.sort,
+    status: row.status,
+  }
+}
+
+export function buildBannerPayload(model: BannerFormModel): BannerPayload {
+  const jumpUrl = model.jumpType === 'none' ? undefined : model.jumpUrl.trim()
+
+  return {
+    title: model.title.trim(),
+    imageUrl: model.imageUrl.trim(),
+    jumpType: model.jumpType,
+    jumpUrl,
+    sort: model.sort,
+    status: model.status,
   }
 }

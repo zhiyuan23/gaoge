@@ -16,4 +16,14 @@ export default {
   update: (id: number, data: UpdateBannerPayload) =>
     api.patch<Banner>(`/content/banners/${id}`, data),
   remove: (id: number) => api.delete<Banner>(`/content/banners/${id}`),
+  uploadImage: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return api.post<{ imageUrl: string }>('/content/banners/upload-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
 }
