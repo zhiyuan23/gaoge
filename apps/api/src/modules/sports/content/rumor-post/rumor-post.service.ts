@@ -2,20 +2,20 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import type { Prisma } from '@prisma/client'
 
 import type {
-  MessageBoardPost,
-  MessageBoardPostListParams,
-  MessageBoardPostListResponse,
-  MessageBoardPostPayload,
-  MessageBoardTagOption,
-  MiniappMessageBoardListParams,
-  MiniappMessageBoardListResponse,
-  MiniappMessageBoardPostItem,
+  MiniappRumorPostItem,
+  MiniappRumorPostListParams,
+  MiniappRumorPostListResponse,
+  RumorPost,
+  RumorPostListParams,
+  RumorPostListResponse,
+  RumorPostPayload,
+  RumorTagOption,
 } from '@gaoge/shared-types'
 
 import { PrismaService } from '@/common/prisma/prisma.service'
 
-import type { CreateMessageBoardPostDto } from './dto/create-message-board-post.dto'
-import type { UpdateMessageBoardPostDto } from './dto/update-message-board-post.dto'
+import type { CreateRumorPostDto } from './dto/create-rumor-post.dto'
+import type { UpdateRumorPostDto } from './dto/update-rumor-post.dto'
 
 const publishedFeedOrderBy: Prisma.MessageBoardPostOrderByWithRelationInput[] = [
   { isPinned: 'desc' },
@@ -24,13 +24,13 @@ const publishedFeedOrderBy: Prisma.MessageBoardPostOrderByWithRelationInput[] = 
 ]
 
 @Injectable()
-export class MessageBoardPostService {
+export class RumorPostService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateMessageBoardPostDto) {
+  create(dto: CreateRumorPostDto) {
     const status = normalizeStatus(dto.status)
     const data: Prisma.MessageBoardPostCreateInput = {
-      ...buildMessageBoardPostData(dto),
+      ...buildRumorPostData(dto),
       status,
       publishedAt: status === 'published' ? new Date() : null,
     }
@@ -38,7 +38,7 @@ export class MessageBoardPostService {
     return this.prisma.messageBoardPost.create({ data })
   }
 
-  async findAll(params: MessageBoardPostListParams = {}): Promise<MessageBoardPostListResponse> {
+  async findAll(params: RumorPostListParams = {}): Promise<RumorPostListResponse> {
     const page = normalizePositiveInteger(params.page, 1)
     const pageSize = normalizePositiveInteger(params.pageSize, 15)
     const where = buildAdminWhere(params)
@@ -63,7 +63,7 @@ export class MessageBoardPostService {
     ])
 
     return {
-      list: list.map(serializeMessageBoardPost),
+      list: list.map(serializeRumorPost),
       total,
       tagOptions: buildTagOptions(tagRows),
     }
@@ -73,7 +73,7 @@ export class MessageBoardPostService {
     return this.findExisting(id)
   }
 
-  async update(id: number, dto: UpdateMessageBoardPostDto) {
+  async update(id: number, dto: UpdateRumorPostDto) {
     const existing = await this.findExisting(id)
     const data = buildUpdateData(dto, existing)
 
@@ -104,8 +104,8 @@ export class MessageBoardPostService {
   }
 
   async findPublishedForMiniapp(
-    params: MiniappMessageBoardListParams = {},
-  ): Promise<MiniappMessageBoardListResponse> {
+    params: MiniappRumorPostListParams = {},
+  ): Promise<MiniappRumorPostListResponse> {
     const page = normalizePositiveInteger(params.page, 1)
     const pageSize = normalizePositiveInteger(params.pageSize, 10)
     const where = buildPublishedWhere(params)
@@ -131,13 +131,13 @@ export class MessageBoardPostService {
     const tagOptions = await this.listPublishedTagOptions()
 
     return {
-      list: list.map(serializeMiniappMessageBoardPostItem),
+      list: list.map(serializeMiniappRumorPostItem),
       total,
       tagOptions,
     }
   }
 
-  async listPublishedTagOptions(): Promise<MessageBoardTagOption[]> {
+  async listPublishedTagOptions(): Promise<RumorTagOption[]> {
     const rows = await this.prisma.messageBoardPost.findMany({
       where: {
         status: 'published',
@@ -157,7 +157,7 @@ export class MessageBoardPostService {
     })
 
     if (!post) {
-      throw new NotFoundException('留言板消息不存在')
+      throw new NotFoundException('流言板动态不存在')
     }
 
     return post
@@ -174,7 +174,7 @@ function normalizeText(value: unknown) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
 
-function normalizeTags(tags: MessageBoardPostPayload['tags']) {
+function normalizeTags(tags: RumorPostPayload['tags']) {
   if (!Array.isArray(tags)) {
     return []
   }
@@ -186,9 +186,9 @@ function normalizeStatus(value: unknown): 'draft' | 'published' {
   return value === 'published' ? 'published' : 'draft'
 }
 
-function buildMessageBoardPostData(
+function buildRumorPostData(
   payload: Pick<
-    MessageBoardPostPayload,
+    RumorPostPayload,
     'title' | 'content' | 'tags' | 'sourceName' | 'sourceUrl' | 'isPinned'
   >,
 ): Prisma.MessageBoardPostUncheckedCreateInput {
@@ -203,7 +203,7 @@ function buildMessageBoardPostData(
 }
 
 function buildUpdateData(
-  payload: UpdateMessageBoardPostDto,
+  payload: UpdateRumorPostDto,
   existing: {
     status: string
     publishedAt: Date | null
@@ -245,7 +245,7 @@ function buildUpdateData(
   return data
 }
 
-function buildAdminWhere(params: MessageBoardPostListParams) {
+function buildAdminWhere(params: RumorPostListParams) {
   const keyword = normalizeText(params.keyword)
   const status = normalizeText(params.status)
   const tag = normalizeText(params.tag)
@@ -271,7 +271,7 @@ function buildAdminWhere(params: MessageBoardPostListParams) {
   return where
 }
 
-function buildPublishedWhere(params: MiniappMessageBoardListParams) {
+function buildPublishedWhere(params: MiniappRumorPostListParams) {
   const tag = normalizeText(params.tag)
   const where: Prisma.MessageBoardPostWhereInput = {
     status: 'published',
@@ -286,9 +286,9 @@ function buildPublishedWhere(params: MiniappMessageBoardListParams) {
   return where
 }
 
-function buildTagOptions(rows: Array<{ tags: string[] }>): MessageBoardTagOption[] {
+function buildTagOptions(rows: Array<{ tags: string[] }>): RumorTagOption[] {
   const seen = new Set<string>()
-  const list: MessageBoardTagOption[] = []
+  const list: RumorTagOption[] = []
 
   for (const row of rows) {
     for (const rawTag of row.tags) {
@@ -309,7 +309,7 @@ function buildTagOptions(rows: Array<{ tags: string[] }>): MessageBoardTagOption
   return list
 }
 
-function serializeMessageBoardPost(post: {
+function serializeRumorPost(post: {
   id: number
   title: string
   content: string
@@ -321,7 +321,7 @@ function serializeMessageBoardPost(post: {
   publishedAt: Date | null
   createdAt: Date
   updatedAt: Date
-}): MessageBoardPost {
+}): RumorPost {
   return {
     id: post.id,
     title: post.title,
@@ -337,7 +337,7 @@ function serializeMessageBoardPost(post: {
   }
 }
 
-function serializeMiniappMessageBoardPostItem(post: {
+function serializeMiniappRumorPostItem(post: {
   id: number
   title: string
   content: string
@@ -346,7 +346,7 @@ function serializeMiniappMessageBoardPostItem(post: {
   sourceUrl: string | null
   isPinned: boolean
   publishedAt: Date | null
-}): MiniappMessageBoardPostItem {
+}): MiniappRumorPostItem {
   return {
     id: post.id,
     title: post.title,

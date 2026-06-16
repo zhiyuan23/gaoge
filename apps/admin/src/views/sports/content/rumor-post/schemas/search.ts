@@ -1,14 +1,12 @@
 import type { SearchField, SearchOption } from '@/components/common/EsSearch/types'
 
-import { MESSAGE_BOARD_POST_STATUS_OPTIONS } from '../model/defaults'
+import { RUMOR_POST_STATUS_OPTIONS } from '../model/defaults'
 
-export interface MessageBoardPostSearchFieldContext {
+export interface RumorPostSearchFieldContext {
   tagOptions: () => SearchOption[]
 }
 
-export function createMessageBoardPostSearchFields(
-  ctx: MessageBoardPostSearchFieldContext,
-): SearchField[] {
+export function createRumorPostSearchFields(ctx: RumorPostSearchFieldContext): SearchField[] {
   return [
     {
       key: 'keyword',
@@ -21,7 +19,7 @@ export function createMessageBoardPostSearchFields(
       label: '状态',
       type: 'select',
       placeholder: '全部',
-      options: MESSAGE_BOARD_POST_STATUS_OPTIONS,
+      options: RUMOR_POST_STATUS_OPTIONS,
       props: {
         clearable: true,
       },

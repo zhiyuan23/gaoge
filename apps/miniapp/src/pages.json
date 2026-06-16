@@ -20,7 +20,7 @@
     {
       "path": "pages/message-board/index",
       "style": {
-        "navigationBarTitleText": "留言板"
+        "navigationBarTitleText": "流言板"
       }
     },
     {
@@ -88,7 +88,7 @@
         "selectedIconPath": "static/images/tabbar/discover-active.png"
       },
       {
-        "text": "留言板",
+        "text": "流言板",
         "pagePath": "pages/message-board/index",
         "iconPath": "static/images/tabbar/message.png",
         "selectedIconPath": "static/images/tabbar/message-active.png"

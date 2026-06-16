@@ -1,14 +1,8 @@
-import type {
-  MessageBoardPost,
-  MessageBoardPostListParams,
-  MessageBoardPostPayload,
-} from '@/api/content/message-board-post'
+import type { RumorPost, RumorPostListParams, RumorPostPayload } from '@/api/content/rumor-post'
 
-import type { MessageBoardPostFormModel, MessageBoardPostSearch } from './types'
+import type { RumorPostFormModel, RumorPostSearch } from './types'
 
-export function createMessageBoardPostFormFromRow(
-  row: MessageBoardPost,
-): MessageBoardPostFormModel {
+export function createRumorPostFormFromRow(row: RumorPost): RumorPostFormModel {
   return {
     id: row.id,
     title: row.title,
@@ -21,9 +15,7 @@ export function createMessageBoardPostFormFromRow(
   }
 }
 
-export function buildMessageBoardPostPayload(
-  model: MessageBoardPostFormModel,
-): MessageBoardPostPayload {
+export function buildRumorPostPayload(model: RumorPostFormModel): RumorPostPayload {
   return {
     title: model.title.trim(),
     content: model.content.trim(),
@@ -35,11 +27,11 @@ export function buildMessageBoardPostPayload(
   }
 }
 
-export function buildMessageBoardPostListParams(
-  search: MessageBoardPostSearch,
+export function buildRumorPostListParams(
+  search: RumorPostSearch,
   page: number,
   pageSize: number,
-): MessageBoardPostListParams {
+): RumorPostListParams {
   const status =
     search.status === 'draft' || search.status === 'published' ? search.status : undefined
 

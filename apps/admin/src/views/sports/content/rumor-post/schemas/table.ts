@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 
 import type { TableColumn } from '@/components/common/EsTable/types'
 
-import { MESSAGE_BOARD_POST_PERMISSIONS } from '../auth'
+import { RUMOR_POST_PERMISSIONS } from '../auth'
 
 export function formatDateTime(value: string | null) {
   if (!value) {
@@ -12,7 +12,7 @@ export function formatDateTime(value: string | null) {
   return dayjs(value).format('YYYY-MM-DD HH:mm')
 }
 
-export const MESSAGE_BOARD_POST_TABLE_COLUMNS: TableColumn[] = [
+export const RUMOR_POST_TABLE_COLUMNS: TableColumn[] = [
   { label: '标题', prop: 'title', minWidth: 180 },
   { label: '标签', prop: 'tags', width: 180, slot: 'tags' },
   { label: '来源', prop: 'sourceName', minWidth: 160, slot: 'sourceName' },
@@ -29,20 +29,20 @@ export const MESSAGE_BOARD_POST_TABLE_COLUMNS: TableColumn[] = [
       {
         key: 'publish',
         label: '发布',
-        auth: MESSAGE_BOARD_POST_PERMISSIONS.publish,
+        auth: RUMOR_POST_PERMISSIONS.publish,
         type: 'success',
         visible: (row: { status: string }) => row.status === 'draft',
       },
       {
         key: 'edit',
         label: '编辑',
-        auth: MESSAGE_BOARD_POST_PERMISSIONS.update,
+        auth: RUMOR_POST_PERMISSIONS.update,
         type: 'primary',
       },
       {
         key: 'delete',
         label: '删除',
-        auth: MESSAGE_BOARD_POST_PERMISSIONS.delete,
+        auth: RUMOR_POST_PERMISSIONS.delete,
         type: 'danger',
       },
     ],

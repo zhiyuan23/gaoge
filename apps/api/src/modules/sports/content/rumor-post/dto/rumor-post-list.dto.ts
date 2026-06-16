@@ -1,11 +1,11 @@
 import { Type } from 'class-transformer'
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator'
 
-import type { MessageBoardPostStatus } from '@gaoge/shared-types'
+import type { RumorPostStatus } from '@gaoge/shared-types'
 
-const messageBoardPostStatusValues = ['draft', 'published'] as const
+const rumorPostStatusValues = ['draft', 'published'] as const
 
-export class MessageBoardPostListDto {
+export class RumorPostListDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -23,8 +23,8 @@ export class MessageBoardPostListDto {
   keyword?: string
 
   @IsOptional()
-  @IsIn(messageBoardPostStatusValues)
-  status?: MessageBoardPostStatus
+  @IsIn(rumorPostStatusValues)
+  status?: RumorPostStatus
 
   @IsOptional()
   @IsString()

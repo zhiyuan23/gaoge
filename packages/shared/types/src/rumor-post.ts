@@ -1,51 +1,51 @@
 import type { DateTimeString } from './common.js'
 
-export type MessageBoardPostStatus = 'draft' | 'published'
+export type RumorPostStatus = 'draft' | 'published'
 
-export interface MessageBoardTagOption {
+export interface RumorTagOption {
   label: string
   value: string
 }
 
-export interface MessageBoardPost {
+export interface RumorPost {
   id: number
   title: string
   content: string
   tags: string[]
   sourceName: string
   sourceUrl: string | null
-  status: MessageBoardPostStatus
+  status: RumorPostStatus
   isPinned: boolean
   publishedAt: DateTimeString | null
   createdAt: DateTimeString
   updatedAt: DateTimeString
 }
 
-export interface MessageBoardPostPayload {
+export interface RumorPostPayload {
   title: string
   content: string
   tags?: string[]
   sourceName: string
   sourceUrl?: string
-  status?: MessageBoardPostStatus
+  status?: RumorPostStatus
   isPinned?: boolean
 }
 
-export interface MessageBoardPostListParams {
+export interface RumorPostListParams {
   page?: number
   pageSize?: number
   keyword?: string
-  status?: MessageBoardPostStatus | ''
+  status?: RumorPostStatus | ''
   tag?: string
 }
 
-export interface MessageBoardPostListResponse {
-  list: MessageBoardPost[]
+export interface RumorPostListResponse {
+  list: RumorPost[]
   total: number
-  tagOptions: MessageBoardTagOption[]
+  tagOptions: RumorTagOption[]
 }
 
-export interface MiniappMessageBoardPostItem {
+export interface MiniappRumorPostItem {
   id: number
   title: string
   content: string
@@ -56,14 +56,14 @@ export interface MiniappMessageBoardPostItem {
   publishedAt: DateTimeString | null
 }
 
-export interface MiniappMessageBoardListParams {
+export interface MiniappRumorPostListParams {
   page?: number
   pageSize?: number
   tag?: string
 }
 
-export interface MiniappMessageBoardListResponse {
-  list: MiniappMessageBoardPostItem[]
+export interface MiniappRumorPostListResponse {
+  list: MiniappRumorPostItem[]
   total: number
-  tagOptions: MessageBoardTagOption[]
+  tagOptions: RumorTagOption[]
 }

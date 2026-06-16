@@ -72,11 +72,11 @@ export const systemPermissions = [
 
 /** 内容管理 — 管理员权限 */
 export const contentAdminPermissions = [
-  'content.messageBoardPost.view',
-  'content.messageBoardPost.create',
-  'content.messageBoardPost.update',
-  'content.messageBoardPost.delete',
-  'content.messageBoardPost.publish',
+  'content.rumorPost.view',
+  'content.rumorPost.create',
+  'content.rumorPost.update',
+  'content.rumorPost.delete',
+  'content.rumorPost.publish',
   'content.banner.view',
   'content.banner.create',
   'content.banner.update',
@@ -84,7 +84,4 @@ export const contentAdminPermissions = [
 ] as const
 
 /** 内容管理 — 浏览者（只读）权限 */
-export const contentViewerPermissions = [
-  'content.messageBoardPost.view',
-  'content.banner.view',
-] as const
+export const contentViewerPermissions = ['content.rumorPost.view', 'content.banner.view'] as const

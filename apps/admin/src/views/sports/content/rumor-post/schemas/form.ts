@@ -1,11 +1,11 @@
 import type { FormRules } from 'element-plus'
 
-import { MESSAGE_BOARD_POST_STATUS_OPTIONS } from '../model/defaults'
-import type { MessageBoardPostFormModel } from '../model/types'
+import { RUMOR_POST_STATUS_OPTIONS } from '../model/defaults'
+import type { RumorPostFormModel } from '../model/types'
 
-export { MESSAGE_BOARD_POST_STATUS_OPTIONS }
+export { RUMOR_POST_STATUS_OPTIONS }
 
-export function getMessageBoardPostStatusLabel(status: string) {
+export function getRumorPostStatusLabel(status: string) {
   if (status === 'draft') {
     return '草稿'
   }
@@ -16,7 +16,7 @@ export function getMessageBoardPostStatusLabel(status: string) {
   return status || '-'
 }
 
-export function getMessageBoardPostStatusTagType(status: string) {
+export function getRumorPostStatusTagType(status: string) {
   if (status === 'published') {
     return 'success'
   }
@@ -45,7 +45,7 @@ function validateOptionalUrl(_rule: unknown, value: string, callback: (error?: E
   }
 }
 
-export const MESSAGE_BOARD_POST_FORM_RULES: FormRules<MessageBoardPostFormModel> = {
+export const RUMOR_POST_FORM_RULES: FormRules<RumorPostFormModel> = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   content: [{ required: true, message: '请输入正文', trigger: 'blur' }],
   sourceName: [{ required: true, message: '请输入来源名称', trigger: 'blur' }],

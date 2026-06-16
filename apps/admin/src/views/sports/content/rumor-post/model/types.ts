@@ -1,12 +1,12 @@
 import type { SearchFormData } from '@/components/common/EsSearch/types'
 
-export interface MessageBoardPostSearch extends SearchFormData {
+export interface RumorPostSearch extends SearchFormData {
   keyword: string
   status: string
   tag: string
 }
 
-export interface MessageBoardPostFormModel {
+export interface RumorPostFormModel {
   id?: number
   title: string
   content: string

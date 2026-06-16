@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common'
 
-import { MessageBoardPostModule } from '@/modules/sports/content/message-board-post/message-board-post.module'
+import { RumorPostModule } from '@/modules/sports/content/rumor-post/rumor-post.module'
 
 import { MiniappController } from './miniapp.controller'
 import { MiniappService } from './miniapp.service'
 import { MiniappPublicController } from './miniapp-public.controller'
 
 @Module({
-  imports: [MessageBoardPostModule],
+  imports: [RumorPostModule],
   controllers: [MiniappController, MiniappPublicController],
   providers: [MiniappService],
 })

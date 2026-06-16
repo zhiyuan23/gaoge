@@ -11,11 +11,11 @@ import {
   ValidateIf,
 } from 'class-validator'
 
-import type { MessageBoardPostStatus } from '@gaoge/shared-types'
+import type { RumorPostStatus } from '@gaoge/shared-types'
 
-const messageBoardPostStatusValues = ['draft', 'published'] as const
+const rumorPostStatusValues = ['draft', 'published'] as const
 
-export class CreateMessageBoardPostDto {
+export class CreateRumorPostDto {
   @IsString()
   @IsNotEmpty()
   title: string
@@ -43,8 +43,8 @@ export class CreateMessageBoardPostDto {
   sourceUrl?: string
 
   @IsOptional()
-  @IsIn(messageBoardPostStatusValues)
-  status?: MessageBoardPostStatus
+  @IsIn(rumorPostStatusValues)
+  status?: RumorPostStatus
 
   @IsOptional()
   @IsBoolean()

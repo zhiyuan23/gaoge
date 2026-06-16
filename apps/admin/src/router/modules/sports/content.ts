@@ -25,12 +25,12 @@ const routes: RouteRecordRaw = {
       },
     },
     {
-      path: 'message-board-post',
-      name: 'contentMessageBoardPost',
-      component: () => import('@/views/sports/content/message-board-post/index.vue'),
+      path: 'rumor-post',
+      name: 'contentRumorPost',
+      component: () => import('@/views/sports/content/rumor-post/index.vue'),
       meta: {
-        title: '留言板',
-        auth: ['content.messageBoardPost.view'],
+        title: '流言板',
+        auth: ['content.rumorPost.view'],
       },
     },
   ],

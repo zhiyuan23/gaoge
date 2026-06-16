@@ -3,11 +3,11 @@ import type { FormInstance } from 'element-plus'
 
 import type { SearchOption } from '@/components/common/EsSearch/types'
 
-import type { MessageBoardPostFormModel } from '../model/types'
-import { MESSAGE_BOARD_POST_FORM_RULES, MESSAGE_BOARD_POST_STATUS_OPTIONS } from '../schemas/form'
+import type { RumorPostFormModel } from '../model/types'
+import { RUMOR_POST_FORM_RULES, RUMOR_POST_STATUS_OPTIONS } from '../schemas/form'
 
 defineOptions({
-  name: 'MessageBoardPostForm',
+  name: 'RumorPostForm',
 })
 
 const props = defineProps<{
@@ -15,7 +15,7 @@ const props = defineProps<{
   tagOptions: SearchOption[]
 }>()
 
-const model = defineModel<MessageBoardPostFormModel>('model', { required: true })
+const model = defineModel<RumorPostFormModel>('model', { required: true })
 const formRef = ref<FormInstance>()
 
 const mergedTagOptions = computed(() => {
@@ -46,7 +46,7 @@ defineExpose({
 </script>
 
 <template>
-  <ElForm ref="formRef" :model="model" :rules="MESSAGE_BOARD_POST_FORM_RULES" label-width="96px">
+  <ElForm ref="formRef" :model="model" :rules="RUMOR_POST_FORM_RULES" label-width="96px">
     <ElRow :gutter="16">
       <ElCol :span="12">
         <ElFormItem label="标题" prop="title">
@@ -85,7 +85,7 @@ defineExpose({
         <ElFormItem label="状态">
           <ElSelect v-model="model.status" class="w-full" :disabled="statusLocked">
             <ElOption
-              v-for="item in MESSAGE_BOARD_POST_STATUS_OPTIONS"
+              v-for="item in RUMOR_POST_STATUS_OPTIONS"
               :key="String(item.value)"
               :label="item.label"
               :value="item.value"
@@ -104,7 +104,7 @@ defineExpose({
             v-model="model.content"
             type="textarea"
             :rows="6"
-            placeholder="请输入留言板正文"
+            placeholder="请输入流言板正文"
           />
         </ElFormItem>
       </ElCol>

@@ -1,28 +1,28 @@
 <route lang="yaml">
 meta:
-  title: 留言板
+  title: 流言板
 </route>
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import type { MessageBoardPost, MessageBoardPostPayload } from '@/api/content/message-board-post'
-import messageBoardPostApi from '@/api/content/message-board-post'
+import type { RumorPost, RumorPostPayload } from '@/api/content/rumor-post'
+import rumorPostApi from '@/api/content/rumor-post'
 import type { SearchFormData, SearchOption } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
 import { useListPage } from '@/composables/useListPage'
 
-import MessageBoardPostFormDialog from './components/MessageBoardPostFormDialog.vue'
-import { MESSAGE_BOARD_POST_DEFAULT_SEARCH } from './model/defaults'
-import { buildMessageBoardPostListParams } from './model/mapper'
-import type { MessageBoardPostSearch } from './model/types'
-import { getMessageBoardPostStatusLabel, getMessageBoardPostStatusTagType } from './schemas/form'
-import { createMessageBoardPostSearchFields } from './schemas/search'
-import { formatDateTime, MESSAGE_BOARD_POST_TABLE_COLUMNS } from './schemas/table'
-import { MESSAGE_BOARD_POST_PERMISSIONS } from './auth'
+import RumorPostFormDialog from './components/RumorPostFormDialog.vue'
+import { RUMOR_POST_DEFAULT_SEARCH } from './model/defaults'
+import { buildRumorPostListParams } from './model/mapper'
+import type { RumorPostSearch } from './model/types'
+import { getRumorPostStatusLabel, getRumorPostStatusTagType } from './schemas/form'
+import { createRumorPostSearchFields } from './schemas/search'
+import { formatDateTime, RUMOR_POST_TABLE_COLUMNS } from './schemas/table'
+import { RUMOR_POST_PERMISSIONS } from './auth'
 
 defineOptions({
-  name: 'ContentMessageBoardPost',
+  name: 'ContentRumorPost',
 })
 
 const submitLoading = ref(false)
@@ -35,18 +35,14 @@ const {
   loading,
   page,
   pageSize,
-  fetchList: fetchPosts,
+  fetchList: fetchRumorPosts,
   handleSearch,
   handlePaginationChange,
-} = useListPage<
-  MessageBoardPostSearch,
-  MessageBoardPost,
-  ReturnType<typeof buildMessageBoardPostListParams>
->({
-  defaultSearch: MESSAGE_BOARD_POST_DEFAULT_SEARCH,
-  buildParams: buildMessageBoardPostListParams,
+} = useListPage<RumorPostSearch, RumorPost, ReturnType<typeof buildRumorPostListParams>>({
+  defaultSearch: RUMOR_POST_DEFAULT_SEARCH,
+  buildParams: buildRumorPostListParams,
   request: async (params) => {
-    const response = await messageBoardPostApi.list(params)
+    const response = await rumorPostApi.list(params)
     tagOptions.value = response.tagOptions
     return response
   },
@@ -65,10 +61,10 @@ const {
   currentRow: currentPost,
   openCreate,
   openEdit,
-} = useCrudDialog<MessageBoardPost>()
+} = useCrudDialog<RumorPost>()
 
 const searchFields = computed(() =>
-  createMessageBoardPostSearchFields({
+  createRumorPostSearchFields({
     tagOptions: () => tagOptions.value,
   }),
 )
@@ -77,11 +73,11 @@ function handleAdd() {
   openCreate()
 }
 
-function handleEdit(row: MessageBoardPost) {
+function handleEdit(row: RumorPost) {
   openEdit(row)
 }
 
-function handleTableAction(payload: { row: MessageBoardPost; action: { key: string } }) {
+function handleTableAction(payload: { row: RumorPost; action: { key: string } }) {
   if (payload.action.key === 'edit') {
     handleEdit(payload.row)
     return
@@ -97,40 +93,40 @@ function handleTableAction(payload: { row: MessageBoardPost; action: { key: stri
   }
 }
 
-async function handleDelete(row: MessageBoardPost) {
+async function handleDelete(row: RumorPost) {
   try {
-    await ElMessageBox.confirm(`确定删除留言板消息《${row.title}》吗？`, '删除确认', {
+    await ElMessageBox.confirm(`确定删除流言动态《${row.title}》吗？`, '删除确认', {
       type: 'warning',
       confirmButtonText: '删除',
       cancelButtonText: '取消',
     })
     loading.value = true
-    await messageBoardPostApi.remove(row.id)
+    await rumorPostApi.remove(row.id)
     ElMessage.success('已删除')
-    await fetchPosts()
+    await fetchRumorPosts()
   } finally {
     loading.value = false
   }
 }
 
-async function handlePublish(row: MessageBoardPost) {
+async function handlePublish(row: RumorPost) {
   try {
-    await ElMessageBox.confirm(`确定发布留言板消息《${row.title}》吗？`, '发布确认', {
+    await ElMessageBox.confirm(`确定发布流言动态《${row.title}》吗？`, '发布确认', {
       type: 'info',
       confirmButtonText: '发布',
       cancelButtonText: '取消',
     })
     loading.value = true
-    await messageBoardPostApi.publish(row.id)
+    await rumorPostApi.publish(row.id)
     ElMessage.success('发布成功')
-    await fetchPosts()
+    await fetchRumorPosts()
   } finally {
     loading.value = false
   }
 }
 
 async function handleSubmit(payload: {
-  data: MessageBoardPostPayload
+  data: RumorPostPayload
   action: 'draft' | 'publish' | 'save'
 }) {
   const isCreate = dialogMode.value === 'create'
@@ -138,21 +134,21 @@ async function handleSubmit(payload: {
   submitLoading.value = true
   try {
     if (isCreate) {
-      await messageBoardPostApi.create({
+      await rumorPostApi.create({
         ...payload.data,
         status: payload.action === 'publish' ? 'published' : 'draft',
       })
       ElMessage.success(payload.action === 'publish' ? '发布成功' : '草稿已保存')
     } else if (currentPost.value) {
       if (currentPost.value.status === 'draft' && payload.action === 'publish') {
-        await messageBoardPostApi.update(currentPost.value.id, {
+        await rumorPostApi.update(currentPost.value.id, {
           ...payload.data,
           status: 'draft',
         })
-        await messageBoardPostApi.publish(currentPost.value.id)
+        await rumorPostApi.publish(currentPost.value.id)
         ElMessage.success('发布成功')
       } else {
-        await messageBoardPostApi.update(currentPost.value.id, {
+        await rumorPostApi.update(currentPost.value.id, {
           ...payload.data,
           status: currentPost.value.status === 'published' ? 'published' : 'draft',
         })
@@ -161,14 +157,14 @@ async function handleSubmit(payload: {
     }
 
     dialogVisible.value = false
-    await fetchPosts()
+    await fetchRumorPosts()
   } finally {
     submitLoading.value = false
   }
 }
 
 onMounted(() => {
-  fetchPosts()
+  fetchRumorPosts()
 })
 </script>
 
@@ -179,13 +175,8 @@ onMounted(() => {
 
       <EsListToolbar>
         <template #actions>
-          <ElButton
-            v-auth="MESSAGE_BOARD_POST_PERMISSIONS.create"
-            type="primary"
-            plain
-            @click="handleAdd"
-          >
-            新增留言
+          <ElButton v-auth="RUMOR_POST_PERMISSIONS.create" type="primary" plain @click="handleAdd">
+            新增动态
           </ElButton>
         </template>
       </EsListToolbar>
@@ -194,7 +185,7 @@ onMounted(() => {
         <EsTable
           v-model:page="page"
           v-model:page-size="pageSize"
-          :columns="MESSAGE_BOARD_POST_TABLE_COLUMNS"
+          :columns="RUMOR_POST_TABLE_COLUMNS"
           :data="tableData"
           :total="total"
           :loading="loading"
@@ -223,8 +214,8 @@ onMounted(() => {
             <span v-else>{{ row.sourceName }}</span>
           </template>
           <template #status="{ row }">
-            <ElTag :type="getMessageBoardPostStatusTagType(row.status)" size="small">
-              {{ getMessageBoardPostStatusLabel(row.status) }}
+            <ElTag :type="getRumorPostStatusTagType(row.status)" size="small">
+              {{ getRumorPostStatusLabel(row.status) }}
             </ElTag>
           </template>
           <template #isPinned="{ row }">
@@ -241,7 +232,7 @@ onMounted(() => {
       </div>
     </FaPageMain>
 
-    <MessageBoardPostFormDialog
+    <RumorPostFormDialog
       v-model="dialogVisible"
       :mode="dialogMode"
       :post="currentPost"

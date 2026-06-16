@@ -1,14 +1,14 @@
 import { Controller, Get, Query } from '@nestjs/common'
 
-import { MessageBoardPostListDto } from '@/modules/sports/content/message-board-post/dto/message-board-post-list.dto'
-import { MessageBoardPostService } from '@/modules/sports/content/message-board-post/message-board-post.service'
+import { RumorPostListDto } from '@/modules/sports/content/rumor-post/dto/rumor-post-list.dto'
+import { RumorPostService } from '@/modules/sports/content/rumor-post/rumor-post.service'
 
 @Controller('miniapp')
 export class MiniappPublicController {
-  constructor(private readonly messageBoardPostService: MessageBoardPostService) {}
+  constructor(private readonly rumorPostService: RumorPostService) {}
 
-  @Get('message-board-posts')
-  listMessageBoardPosts(@Query() query: MessageBoardPostListDto) {
-    return this.messageBoardPostService.findPublishedForMiniapp(query)
+  @Get('rumor-posts')
+  listRumorPosts(@Query() query: RumorPostListDto) {
+    return this.rumorPostService.findPublishedForMiniapp(query)
   }
 }

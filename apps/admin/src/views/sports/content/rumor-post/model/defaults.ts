@@ -1,19 +1,19 @@
 import type { SearchOption } from '@/components/common/EsSearch/types'
 
-import type { MessageBoardPostFormModel, MessageBoardPostSearch } from './types'
+import type { RumorPostFormModel, RumorPostSearch } from './types'
 
-export const MESSAGE_BOARD_POST_DEFAULT_SEARCH: MessageBoardPostSearch = {
+export const RUMOR_POST_DEFAULT_SEARCH: RumorPostSearch = {
   keyword: '',
   status: '',
   tag: '',
 }
 
-export const MESSAGE_BOARD_POST_STATUS_OPTIONS: SearchOption[] = [
+export const RUMOR_POST_STATUS_OPTIONS: SearchOption[] = [
   { label: '草稿', value: 'draft' },
   { label: '已发布', value: 'published' },
 ]
 
-export function createEmptyMessageBoardPostForm(): MessageBoardPostFormModel {
+export function createEmptyRumorPostForm(): RumorPostFormModel {
   return {
     title: '',
     content: '',

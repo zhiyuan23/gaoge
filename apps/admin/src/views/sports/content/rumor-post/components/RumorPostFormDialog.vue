@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import type { MessageBoardPost } from '@/api/content/message-board-post'
+import type { RumorPost } from '@/api/content/rumor-post'
 import type { SearchOption } from '@/components/common/EsSearch/types'
 
-import { createEmptyMessageBoardPostForm } from '../model/defaults'
-import { buildMessageBoardPostPayload, createMessageBoardPostFormFromRow } from '../model/mapper'
-import type { MessageBoardPostFormModel } from '../model/types'
+import { createEmptyRumorPostForm } from '../model/defaults'
+import { buildRumorPostPayload, createRumorPostFormFromRow } from '../model/mapper'
+import type { RumorPostFormModel } from '../model/types'
 
-import MessageBoardPostForm from './MessageBoardPostForm.vue'
+import RumorPostForm from './RumorPostForm.vue'
 
 defineOptions({
-  name: 'MessageBoardPostFormDialog',
+  name: 'RumorPostFormDialog',
 })
 
 const props = defineProps<{
   modelValue: boolean
   mode: 'create' | 'edit'
-  post?: MessageBoardPost | null
+  post?: RumorPost | null
   tagOptions: SearchOption[]
   loading?: boolean
 }>()
@@ -25,19 +25,19 @@ const emit = defineEmits<{
   (
     e: 'submit',
     payload: {
-      data: ReturnType<typeof buildMessageBoardPostPayload>
+      data: ReturnType<typeof buildRumorPostPayload>
       action: 'draft' | 'publish' | 'save'
     },
   ): void
 }>()
 
-type MessageBoardPostFormExpose = {
+type RumorPostFormExpose = {
   validate: () => Promise<boolean>
   clearValidate: () => void
 }
 
-const formRef = ref<MessageBoardPostFormExpose>()
-const formModel = ref<MessageBoardPostFormModel>(createEmptyMessageBoardPostForm())
+const formRef = ref<RumorPostFormExpose>()
+const formModel = ref<RumorPostFormModel>(createEmptyRumorPostForm())
 
 const visible = computed({
   get: () => props.modelValue,
@@ -55,7 +55,7 @@ async function handleSubmit(action: 'draft' | 'publish' | 'save') {
   }
 
   emit('submit', {
-    data: buildMessageBoardPostPayload(formModel.value),
+    data: buildRumorPostPayload(formModel.value),
     action,
   })
 }
@@ -69,8 +69,8 @@ watch(
 
     formModel.value =
       props.mode === 'edit' && props.post
-        ? createMessageBoardPostFormFromRow(props.post)
-        : createEmptyMessageBoardPostForm()
+        ? createRumorPostFormFromRow(props.post)
+        : createEmptyRumorPostForm()
 
     nextTick(() => {
       formRef.value?.clearValidate()
@@ -83,16 +83,11 @@ watch(
 <template>
   <ElDialog
     v-model="visible"
-    :title="mode === 'create' ? '新增留言板消息' : '编辑留言板消息'"
+    :title="mode === 'create' ? '新增流言动态' : '编辑流言动态'"
     width="720px"
     destroy-on-close
   >
-    <MessageBoardPostForm
-      ref="formRef"
-      v-model:model="formModel"
-      :mode="mode"
-      :tag-options="tagOptions"
-    />
+    <RumorPostForm ref="formRef" v-model:model="formModel" :mode="mode" :tag-options="tagOptions" />
     <template #footer>
       <ElButton @click="visible = false">取消</ElButton>
       <ElButton v-if="!isPublishedEditing" :loading="loading" @click="handleSubmit('draft')">

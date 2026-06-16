@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { MessageBoardTagOption, MiniappMessageBoardPostItem } from '@gaoge/shared-types'
+import type { MiniappRumorPostItem, RumorTagOption } from '@gaoge/shared-types'
 
-import { requestMessageBoardPosts } from '@/api/message-board-post'
+import { requestRumorPosts } from '@/api/rumor-post'
 import { formatTime, navigateTo, Toast } from '@/utils'
 
 defineOptions({
-  name: 'MessageBoardPage',
+  name: 'RumorBoardPage',
 })
 
 const pageSize = 10
@@ -17,8 +17,8 @@ const loadFailed = ref(false)
 const finished = ref(false)
 const page = ref(1)
 const activeTag = ref('')
-const items = ref<MiniappMessageBoardPostItem[]>([])
-const tagOptions = ref<MessageBoardTagOption[]>([])
+const items = ref<MiniappRumorPostItem[]>([])
+const tagOptions = ref<RumorTagOption[]>([])
 
 const displayTagOptions = computed(() => [{ label: '全部', value: '' }, ...tagOptions.value])
 
@@ -41,7 +41,7 @@ async function loadPosts(options: { refresh?: boolean } = {}) {
 
   try {
     loadFailed.value = false
-    const response = await requestMessageBoardPosts({
+    const response = await requestRumorPosts({
       page: page.value,
       pageSize,
       ...(activeTag.value ? { tag: activeTag.value } : {}),
@@ -61,7 +61,7 @@ async function loadPosts(options: { refresh?: boolean } = {}) {
     console.error(error)
     loadFailed.value = true
     initialized.value = true
-    Toast('加载留言板失败，请重试')
+    Toast('加载流言板失败，请重试')
   } finally {
     if (refresh) {
       loading.value = false
@@ -81,7 +81,7 @@ function handleTagChange(value: string) {
   void loadPosts({ refresh: true })
 }
 
-function handleOpenSource(item: MiniappMessageBoardPostItem) {
+function handleOpenSource(item: MiniappRumorPostItem) {
   if (!item.sourceUrl) {
     return
   }
@@ -122,7 +122,7 @@ onReachBottom(() => {
   <view class="message-board-page bg-#F3F6FB min-h-screen">
     <view class="px-28 pb-36 pt-28">
       <view class="hero-card rounded-32 px-28 py-28">
-        <text class="text-40 font-700 leading-56 color-#0F172A block">留言板</text>
+        <text class="text-40 font-700 leading-56 color-#0F172A block">流言板</text>
         <text class="text-24 leading-38 color-#5B6B86 mt-12 block">
           最新转会、伤病、签约和比赛日更新，按标签快速筛选。
         </text>
@@ -147,7 +147,7 @@ onReachBottom(() => {
         class="state-card rounded-28 mt-24 px-28 py-40 text-center"
       >
         <text class="text-28 font-600 color-#0F172A block">加载中</text>
-        <text class="text-24 color-#6B7280 mt-10 block">正在刷新最新留言板动态</text>
+        <text class="text-24 color-#6B7280 mt-10 block">正在刷新最新流言板动态</text>
       </view>
 
       <view
@@ -162,8 +162,8 @@ onReachBottom(() => {
         v-else-if="initialized && !items.length"
         class="state-card rounded-28 mt-24 px-28 py-40 text-center"
       >
-        <text class="text-28 font-600 color-#0F172A block">暂无消息</text>
-        <text class="text-24 color-#6B7280 mt-10 block">当前筛选下还没有可展示的留言</text>
+        <text class="text-28 font-600 color-#0F172A block">暂无动态</text>
+        <text class="text-24 color-#6B7280 mt-10 block">当前筛选下还没有可展示的流言动态</text>
       </view>
 
       <view v-else class="gap-18 mt-24 flex flex-col">

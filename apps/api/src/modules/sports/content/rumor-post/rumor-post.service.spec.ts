@@ -1,6 +1,6 @@
-import { MessageBoardPostService } from './message-board-post.service'
+import { RumorPostService } from './rumor-post.service'
 
-describe('MessageBoardPostService', () => {
+describe('RumorPostService', () => {
   const createService = () => {
     const prisma = {
       messageBoardPost: {
@@ -14,7 +14,7 @@ describe('MessageBoardPostService', () => {
       $transaction: jest.fn((actions: Promise<unknown>[]) => Promise.all(actions)),
     }
 
-    const service = new MessageBoardPostService(prisma as any)
+    const service = new RumorPostService(prisma as any)
 
     return {
       prisma,
