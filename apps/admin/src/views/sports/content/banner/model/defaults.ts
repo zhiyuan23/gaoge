@@ -9,6 +9,7 @@ export const BANNER_DEFAULT_SEARCH: BannerSearch = {
 export function createEmptyBannerForm(): BannerFormModel {
   return {
     title: '',
+    subtitle: '',
     imageUrl: '',
     jumpType: 'none',
     jumpUrl: '',

@@ -10,6 +10,7 @@ export interface BannerSearch extends SearchFormData {
 
 export interface BannerFormModel {
   title: string
+  subtitle: string
   imageUrl: string
   jumpType: BannerJumpType
   jumpUrl: string

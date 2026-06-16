@@ -20,10 +20,10 @@
     "clean": "rm -rf dist dist-*"
   },
   "dependencies": {
-    "@gaoge/shared-types": "workspace:*",
     "@antv/g2plot": "^2.4.35",
     "@bytemd/plugin-gfm": "^1.22.0",
     "@bytemd/vue-next": "^1.22.0",
+    "@gaoge/shared-types": "workspace:*",
     "@tinymce/tinymce-vue": "^6.3.0",
     "@vee-validate/zod": "^4.15.1",
     "@visactor/vchart": "^2.0.22",
@@ -57,6 +57,7 @@
     "qs": "^6.15.1",
     "radix-vue": "^1.9.17",
     "scule": "^1.3.0",
+    "sortablejs": "^1.15.7",
     "splitpanes": "^4.0.4",
     "swiper": "^12.1.3",
     "tailwind-merge": "^3.5.0",
@@ -87,6 +88,7 @@
     "@types/path-browserify": "^1.0.3",
     "@types/qrcode": "^1.5.6",
     "@types/qs": "^6.15.0",
+    "@types/sortablejs": "^1.15.9",
     "@types/splitpanes": "^2.2.6",
     "@types/three": "^0.184.0",
     "@unocss/eslint-plugin": "^66.6.8",

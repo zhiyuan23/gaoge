@@ -10,6 +10,7 @@ export type BannerJumpType = 'none' | 'webview' | 'miniapp'
 export interface Banner {
   id: number
   title: string
+  subtitle: string | null
   imageUrl: string
   jumpType: BannerJumpType
   jumpUrl: string | null
@@ -22,6 +23,7 @@ export interface Banner {
 /** 创建或更新轮播图时的提交参数。 */
 export interface BannerPayload {
   title: string
+  subtitle?: string
   imageUrl: string
   jumpType: BannerJumpType
   jumpUrl?: string
@@ -30,3 +32,12 @@ export interface BannerPayload {
 }
 
 export type UpdateBannerPayload = Partial<BannerPayload>
+
+export interface ReorderBannerItemPayload {
+  id: number
+  sort: number
+}
+
+export interface ReorderBannerPayload {
+  items: ReorderBannerItemPayload[]
+}

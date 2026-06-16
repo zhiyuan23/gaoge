@@ -5,8 +5,9 @@ meta:
 
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
+import Sortable from 'sortablejs'
 
-import type { Banner, BannerPayload } from '@/api/content/banner'
+import type { Banner, BannerPayload, ReorderBannerPayload } from '@/api/content/banner'
 import bannerApi from '@/api/content/banner'
 import type { SearchFormData } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
@@ -30,6 +31,9 @@ defineOptions({
 })
 
 const submitLoading = ref(false)
+const reorderLoading = ref(false)
+const tableWrapperRef = ref<HTMLElement>()
+let sortableInstance: Sortable | null = null
 
 const searchFields = computed(() => createBannerSearchFields())
 
@@ -38,7 +42,7 @@ const {
   tableData,
   loading,
   fetchList: fetchBanners,
-  handleSearch,
+  handleSearch: applySearch,
 } = useListPage<BannerSearch, Banner, ReturnType<typeof buildBannerListParams>>({
   defaultSearch: BANNER_DEFAULT_SEARCH,
   buildParams: buildBannerListParams,
@@ -52,6 +56,17 @@ const {
   },
 })
 
+const tableLoading = computed(() => loading.value || reorderLoading.value)
+const isDefaultSearchCondition = computed(
+  () =>
+    search.value.keyword === BANNER_DEFAULT_SEARCH.keyword &&
+    search.value.status === BANNER_DEFAULT_SEARCH.status &&
+    search.value.jumpType === BANNER_DEFAULT_SEARCH.jumpType,
+)
+const canDragSort = computed(
+  () => isDefaultSearchCondition.value && !tableLoading.value && tableData.value.length > 1,
+)
+
 const {
   dialogVisible,
   dialogMode,
@@ -62,6 +77,86 @@ const {
 
 function handleAdd() {
   openCreate()
+}
+
+function destroySortable() {
+  sortableInstance?.destroy()
+  sortableInstance = null
+}
+
+async function syncSortable() {
+  destroySortable()
+
+  if (!canDragSort.value) {
+    return
+  }
+
+  await nextTick()
+
+  const tableBody = tableWrapperRef.value?.querySelector<HTMLTableSectionElement>(
+    '.el-table__body-wrapper tbody',
+  )
+
+  if (!tableBody) {
+    return
+  }
+
+  sortableInstance = Sortable.create(tableBody, {
+    animation: 180,
+    handle: '.banner-drag-handle',
+    ghostClass: 'banner-sort-ghost',
+    chosenClass: 'banner-sort-chosen',
+    async onEnd(event: Sortable.SortableEvent) {
+      const { oldIndex, newIndex } = event
+
+      if (
+        oldIndex == null ||
+        newIndex == null ||
+        oldIndex === newIndex ||
+        !isDefaultSearchCondition.value
+      ) {
+        return
+      }
+
+      const nextRows = [...tableData.value]
+      const [movedRow] = nextRows.splice(oldIndex, 1)
+
+      if (!movedRow) {
+        return
+      }
+
+      nextRows.splice(newIndex, 0, movedRow)
+      await submitReorder(nextRows)
+    },
+  })
+}
+
+async function submitReorder(rows: Banner[]) {
+  const payload: ReorderBannerPayload = {
+    items: rows.map((row, index) => ({
+      id: row.id,
+      sort: (rows.length - index) * 100,
+    })),
+  }
+
+  reorderLoading.value = true
+  destroySortable()
+  tableData.value = [...rows]
+
+  try {
+    await bannerApi.reorder(payload)
+    ElMessage.success('排序已更新')
+    await fetchBanners()
+  } catch {
+    await fetchBanners()
+  } finally {
+    reorderLoading.value = false
+  }
+}
+
+function handleSearch(formData: SearchFormData) {
+  destroySortable()
+  applySearch(formData)
 }
 
 function handleTableAction(payload: { row: Banner; action: { key: string } }) {
@@ -114,6 +209,20 @@ async function handleSubmit(payload: BannerPayload) {
 onMounted(() => {
   fetchBanners()
 })
+
+watch(
+  [() => tableData.value, canDragSort],
+  () => {
+    syncSortable()
+  },
+  {
+    flush: 'post',
+  },
+)
+
+onBeforeUnmount(() => {
+  destroySortable()
+})
 </script>
 
 <template>
@@ -129,20 +238,45 @@ onMounted(() => {
         </template>
       </EsListToolbar>
 
-      <div class="table-wrapper">
+      <ElAlert
+        v-if="!isDefaultSearchCondition"
+        title="当前列表已筛选，请清空筛选条件后再拖拽排序。"
+        type="info"
+        :closable="false"
+        class="mb-4"
+      />
+
+      <div ref="tableWrapperRef" class="table-wrapper">
         <EsTable
           :columns="BANNER_TABLE_COLUMNS"
           :data="tableData"
-          :loading="loading"
+          :loading="tableLoading"
           :show-pagination="false"
+          row-key="id"
           table-height="100%"
           @action-click="handleTableAction"
         >
+          <template #dragSort>
+            <div
+              class="banner-drag-handle inline-flex items-center gap-1"
+              :class="
+                canDragSort ? 'cursor-move text-stone-500' : 'cursor-not-allowed text-stone-300'
+              "
+            >
+              <FaIcon name="i-ep:rank" class="size-4" />
+              <span class="text-xs">拖拽</span>
+            </div>
+          </template>
           <template #imageUrl="{ row }">
-            <ImagePreview :src="row.imageUrl" :width="96" :height="54" />
+            <div class="my-6px flex items-center">
+              <ImagePreview :src="row.imageUrl" :width="104" :height="54" />
+            </div>
           </template>
           <template #jumpType="{ row }">
             {{ getBannerJumpTypeLabel(row.jumpType) }}
+          </template>
+          <template #subtitle="{ row }">
+            {{ row.subtitle || '-' }}
           </template>
           <template #jumpUrl="{ row }">
             <ElLink
@@ -177,3 +311,13 @@ onMounted(() => {
     />
   </div>
 </template>
+
+<style scoped>
+.table-wrapper :deep(.banner-sort-ghost > td) {
+  background: rgb(245 245 244);
+}
+
+.table-wrapper :deep(.banner-sort-chosen > td) {
+  background: rgb(250 250 249);
+}
+</style>

@@ -73,6 +73,17 @@ defineExpose({
       </ElCol>
 
       <ElCol :span="24">
+        <ElFormItem label="副标题">
+          <ElInput
+            v-model="model.subtitle"
+            type="textarea"
+            :rows="2"
+            placeholder="请输入副标题，可不填"
+          />
+        </ElFormItem>
+      </ElCol>
+
+      <ElCol :span="24">
         <ElFormItem label="Banner 图片" prop="imageUrl">
           <div class="flex w-full flex-col gap-4">
             <ImageUpload

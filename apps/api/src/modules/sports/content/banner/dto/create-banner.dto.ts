@@ -10,6 +10,10 @@ export class CreateBannerDto {
   @IsNotEmpty()
   title: string
 
+  @IsOptional()
+  @IsString()
+  subtitle?: string
+
   @IsString()
   @IsNotEmpty()
   imageUrl: string

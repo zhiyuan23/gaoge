@@ -30,6 +30,7 @@ import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { BannerListDto } from './dto/banner-list.dto'
 import { CreateBannerDto } from './dto/create-banner.dto'
+import { ReorderBannerDto } from './dto/reorder-banner.dto'
 import { UpdateBannerDto } from './dto/update-banner.dto'
 import { BannerService } from './banner.service'
 
@@ -48,11 +49,18 @@ export class BannerController {
     return this.bannerService.findPublished()
   }
 
-  @Get('admin')
+  @Get('list')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermissions('content.banner.view')
   findAll(@Query() query: BannerListDto) {
     return this.bannerService.findAll(query)
+  }
+
+  @Patch('reorder')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('content.banner.update')
+  reorder(@Body() dto: ReorderBannerDto) {
+    return this.bannerService.reorder(dto)
   }
 
   @Get(':id')

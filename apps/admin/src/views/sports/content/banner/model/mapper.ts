@@ -32,6 +32,7 @@ export function normalizeBannerListResponse(banners: Banner[]): ListPageRequestR
 export function createBannerFormFromRow(row: Banner): BannerFormModel {
   return {
     title: row.title,
+    subtitle: row.subtitle ?? '',
     imageUrl: row.imageUrl,
     jumpType: row.jumpType,
     jumpUrl: row.jumpUrl ?? '',
@@ -45,6 +46,7 @@ export function buildBannerPayload(model: BannerFormModel): BannerPayload {
 
   return {
     title: model.title.trim(),
+    subtitle: model.subtitle.trim() || undefined,
     imageUrl: model.imageUrl.trim(),
     jumpType: model.jumpType,
     jumpUrl,

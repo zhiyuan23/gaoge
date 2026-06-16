@@ -7,6 +7,7 @@ import { PrismaService } from '@/common/prisma/prisma.service'
 
 import type { BannerListDto } from './dto/banner-list.dto'
 import type { CreateBannerDto } from './dto/create-banner.dto'
+import type { ReorderBannerDto } from './dto/reorder-banner.dto'
 import type { UpdateBannerDto } from './dto/update-banner.dto'
 
 const bannerOrderBy: Prisma.BannerOrderByWithRelationInput[] = [{ sort: 'desc' }, { id: 'desc' }]
@@ -23,6 +24,7 @@ type NormalizedBannerJump = {
 
 type BannerState = {
   title: string
+  subtitle: string | null
   imageUrl: string
   jumpType: string
   jumpUrl: string | null
@@ -75,6 +77,38 @@ export class BannerService {
     return this.prisma.banner.update({
       where: { id },
       data,
+    })
+  }
+
+  async reorder(dto: ReorderBannerDto) {
+    const ids = dto.items.map((item) => item.id)
+
+    await this.prisma.$transaction(async (tx) => {
+      const banners = await tx.banner.findMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+        select: {
+          id: true,
+        },
+      })
+
+      if (banners.length !== ids.length) {
+        throw new BadRequestException('部分 Banner 不存在，无法排序')
+      }
+
+      for (const item of dto.items) {
+        await tx.banner.update({
+          where: { id: item.id },
+          data: { sort: item.sort },
+        })
+      }
+    })
+
+    return this.prisma.banner.findMany({
+      orderBy: bannerOrderBy,
     })
   }
 
@@ -166,6 +200,7 @@ async function buildBannerCreateData(
 
   return {
     title: normalizeRequiredText(dto.title, '轮播图标题不能为空'),
+    subtitle: normalizeText(dto.subtitle) ?? null,
     imageUrl: normalizeRequiredText(dto.imageUrl, '轮播图图片不能为空'),
     jumpType: jump.jumpType,
     jumpUrl: jump.jumpUrl,
@@ -183,6 +218,8 @@ async function buildBannerUpdateData(
       typeof dto.title === 'string'
         ? normalizeRequiredText(dto.title, '轮播图标题不能为空')
         : current.title,
+    subtitle:
+      typeof dto.subtitle === 'string' ? (normalizeText(dto.subtitle) ?? null) : current.subtitle,
     imageUrl:
       typeof dto.imageUrl === 'string'
         ? normalizeRequiredText(dto.imageUrl, '轮播图图片不能为空')
@@ -201,6 +238,7 @@ async function buildBannerUpdateData(
 
   return {
     title: nextState.title,
+    subtitle: nextState.subtitle,
     imageUrl: nextState.imageUrl,
     jumpType: jump.jumpType,
     jumpUrl: jump.jumpUrl,

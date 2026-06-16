@@ -78,7 +78,7 @@
 banner 归入 `content` 域，使用复数路由：
 
 - `GET /content/banners`
-- `GET /content/banners/admin`
+- `GET /content/banners/list`
 - `POST /content/banners`
 - `PATCH /content/banners/:id`
 - `DELETE /content/banners/:id`
@@ -189,7 +189,7 @@ banner 区职责仅为：
 
 ### 6.3 管理列表接口
 
-`GET /content/banners/admin` 用于后台管理页读取。
+`GET /content/banners/list` 用于后台管理页读取。
 
 本次支持基础查询条件：
 
