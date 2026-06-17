@@ -5,7 +5,7 @@ import { requestRumorPosts } from '@/api/rumor-post'
 import { formatTime, navigateTo, Toast } from '@/utils'
 
 defineOptions({
-  name: 'RumorBoardPage',
+  name: 'RumorPostPage',
 })
 
 const pageSize = 10
@@ -19,8 +19,6 @@ const page = ref(1)
 const activeTag = ref('')
 const items = ref<MiniappRumorPostItem[]>([])
 const tagOptions = ref<RumorTagOption[]>([])
-
-const displayTagOptions = computed(() => [{ label: '全部', value: '' }, ...tagOptions.value])
 
 async function loadPosts(options: { refresh?: boolean } = {}) {
   const { refresh = false } = options
@@ -72,15 +70,6 @@ async function loadPosts(options: { refresh?: boolean } = {}) {
   }
 }
 
-function handleTagChange(value: string) {
-  if (activeTag.value === value) {
-    return
-  }
-
-  activeTag.value = value
-  void loadPosts({ refresh: true })
-}
-
 function handleOpenSource(item: MiniappRumorPostItem) {
   if (!item.sourceUrl) {
     return
@@ -119,54 +108,9 @@ onReachBottom(() => {
 </script>
 
 <template>
-  <view class="message-board-page bg-#F3F6FB min-h-screen">
-    <view class="px-28 pb-36 pt-28">
-      <view class="hero-card rounded-32 px-28 py-28">
-        <text class="text-40 font-700 leading-56 color-#0F172A block">流言板</text>
-        <text class="text-24 leading-38 color-#5B6B86 mt-12 block">
-          最新转会、伤病、签约和比赛日更新，按标签快速筛选。
-        </text>
-      </view>
-
-      <scroll-view scroll-x class="mt-20 w-full whitespace-nowrap">
-        <view class="inline-flex gap-12 pr-28">
-          <view
-            v-for="item in displayTagOptions"
-            :key="item.value"
-            class="chip text-22 font-600 inline-flex items-center rounded-full px-24 py-12 transition-all"
-            :class="activeTag === item.value ? 'chip-active' : 'chip-idle'"
-            @tap="handleTagChange(String(item.value))"
-          >
-            {{ item.label }}
-          </view>
-        </view>
-      </scroll-view>
-
-      <view
-        v-if="loading && !initialized"
-        class="state-card rounded-28 mt-24 px-28 py-40 text-center"
-      >
-        <text class="text-28 font-600 color-#0F172A block">加载中</text>
-        <text class="text-24 color-#6B7280 mt-10 block">正在刷新最新流言板动态</text>
-      </view>
-
-      <view
-        v-else-if="loadFailed && !items.length"
-        class="state-card rounded-28 mt-24 px-28 py-40 text-center"
-      >
-        <text class="text-28 font-600 color-#0F172A block">加载失败</text>
-        <text class="text-24 color-#6B7280 mt-10 block">下拉刷新后重试</text>
-      </view>
-
-      <view
-        v-else-if="initialized && !items.length"
-        class="state-card rounded-28 mt-24 px-28 py-40 text-center"
-      >
-        <text class="text-28 font-600 color-#0F172A block">暂无动态</text>
-        <text class="text-24 color-#6B7280 mt-10 block">当前筛选下还没有可展示的流言动态</text>
-      </view>
-
-      <view v-else class="gap-18 mt-24 flex flex-col">
+  <view class="rumor-post-page bg-#F3F6FB min-h-screen">
+    <view class="px-28 pb-36 pt-24">
+      <view class="gap-18 flex flex-col">
         <view
           v-for="item in items"
           :key="item.id"
@@ -213,23 +157,13 @@ onReachBottom(() => {
             {{ item.content }}
           </text>
         </view>
-
-        <view v-if="loadingMore" class="text-22 color-#64748B pb-16 pt-4 text-center"
-          >正在加载更多</view
-        >
-        <view
-          v-else-if="finished && items.length"
-          class="text-22 color-#94A3B8 pb-16 pt-4 text-center"
-        >
-          已经到底了
-        </view>
       </view>
     </view>
   </view>
 </template>
 
 <style scoped lang="scss">
-.message-board-page {
+.rumor-post-page {
   min-height: 100vh;
 }
 

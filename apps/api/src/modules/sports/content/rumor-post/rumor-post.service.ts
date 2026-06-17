@@ -17,7 +17,7 @@ import { PrismaService } from '@/common/prisma/prisma.service'
 import type { CreateRumorPostDto } from './dto/create-rumor-post.dto'
 import type { UpdateRumorPostDto } from './dto/update-rumor-post.dto'
 
-const publishedFeedOrderBy: Prisma.MessageBoardPostOrderByWithRelationInput[] = [
+const publishedFeedOrderBy: Prisma.RumorPostOrderByWithRelationInput[] = [
   { isPinned: 'desc' },
   { publishedAt: 'desc' },
   { id: 'desc' },
@@ -29,13 +29,13 @@ export class RumorPostService {
 
   create(dto: CreateRumorPostDto) {
     const status = normalizeStatus(dto.status)
-    const data: Prisma.MessageBoardPostCreateInput = {
+    const data: Prisma.RumorPostCreateInput = {
       ...buildRumorPostData(dto),
       status,
       publishedAt: status === 'published' ? new Date() : null,
     }
 
-    return this.prisma.messageBoardPost.create({ data })
+    return this.prisma.rumorPost.create({ data })
   }
 
   async findAll(params: RumorPostListParams = {}): Promise<RumorPostListResponse> {
@@ -43,7 +43,7 @@ export class RumorPostService {
     const pageSize = normalizePositiveInteger(params.pageSize, 15)
     const where = buildAdminWhere(params)
     const [list, total, tagRows] = await this.prisma.$transaction([
-      this.prisma.messageBoardPost.findMany({
+      this.prisma.rumorPost.findMany({
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -51,8 +51,8 @@ export class RumorPostService {
           updatedAt: 'desc',
         },
       }),
-      this.prisma.messageBoardPost.count({ where }),
-      this.prisma.messageBoardPost.findMany({
+      this.prisma.rumorPost.count({ where }),
+      this.prisma.rumorPost.findMany({
         select: {
           tags: true,
         },
@@ -77,7 +77,7 @@ export class RumorPostService {
     const existing = await this.findExisting(id)
     const data = buildUpdateData(dto, existing)
 
-    return this.prisma.messageBoardPost.update({
+    return this.prisma.rumorPost.update({
       where: { id },
       data,
     })
@@ -86,7 +86,7 @@ export class RumorPostService {
   async remove(id: number) {
     await this.findExisting(id)
 
-    return this.prisma.messageBoardPost.delete({
+    return this.prisma.rumorPost.delete({
       where: { id },
     })
   }
@@ -94,7 +94,7 @@ export class RumorPostService {
   async publish(id: number) {
     const existing = await this.findExisting(id)
 
-    return this.prisma.messageBoardPost.update({
+    return this.prisma.rumorPost.update({
       where: { id },
       data: {
         status: 'published',
@@ -110,7 +110,7 @@ export class RumorPostService {
     const pageSize = normalizePositiveInteger(params.pageSize, 10)
     const where = buildPublishedWhere(params)
     const [list, total] = await this.prisma.$transaction([
-      this.prisma.messageBoardPost.findMany({
+      this.prisma.rumorPost.findMany({
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -126,7 +126,7 @@ export class RumorPostService {
           publishedAt: true,
         },
       }),
-      this.prisma.messageBoardPost.count({ where }),
+      this.prisma.rumorPost.count({ where }),
     ])
     const tagOptions = await this.listPublishedTagOptions()
 
@@ -138,7 +138,7 @@ export class RumorPostService {
   }
 
   async listPublishedTagOptions(): Promise<RumorTagOption[]> {
-    const rows = await this.prisma.messageBoardPost.findMany({
+    const rows = await this.prisma.rumorPost.findMany({
       where: {
         status: 'published',
       },
@@ -152,7 +152,7 @@ export class RumorPostService {
   }
 
   private async findExisting(id: number) {
-    const post = await this.prisma.messageBoardPost.findUnique({
+    const post = await this.prisma.rumorPost.findUnique({
       where: { id },
     })
 
@@ -191,7 +191,7 @@ function buildRumorPostData(
     RumorPostPayload,
     'title' | 'content' | 'tags' | 'sourceName' | 'sourceUrl' | 'isPinned'
   >,
-): Prisma.MessageBoardPostUncheckedCreateInput {
+): Prisma.RumorPostUncheckedCreateInput {
   return {
     title: payload.title.trim(),
     content: payload.content.trim(),
@@ -208,8 +208,8 @@ function buildUpdateData(
     status: string
     publishedAt: Date | null
   },
-): Prisma.MessageBoardPostUncheckedUpdateInput {
-  const data: Prisma.MessageBoardPostUncheckedUpdateInput = {}
+): Prisma.RumorPostUncheckedUpdateInput {
+  const data: Prisma.RumorPostUncheckedUpdateInput = {}
 
   if (typeof payload.title === 'string') {
     data.title = payload.title.trim()
@@ -249,7 +249,7 @@ function buildAdminWhere(params: RumorPostListParams) {
   const keyword = normalizeText(params.keyword)
   const status = normalizeText(params.status)
   const tag = normalizeText(params.tag)
-  const where: Prisma.MessageBoardPostWhereInput = {}
+  const where: Prisma.RumorPostWhereInput = {}
 
   if (status) {
     where.status = status
@@ -273,7 +273,7 @@ function buildAdminWhere(params: RumorPostListParams) {
 
 function buildPublishedWhere(params: MiniappRumorPostListParams) {
   const tag = normalizeText(params.tag)
-  const where: Prisma.MessageBoardPostWhereInput = {
+  const where: Prisma.RumorPostWhereInput = {
     status: 'published',
   }
 

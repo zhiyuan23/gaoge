@@ -226,7 +226,7 @@ model WechatShareConfig {
   updatedAt       DateTime @updatedAt
 }
 
-model MessageBoardPost {
+model RumorPost {
   id          Int      @id @default(autoincrement())
   title       String
   content     String
@@ -242,6 +242,7 @@ model MessageBoardPost {
   @@index([status])
   @@index([isPinned])
   @@index([publishedAt])
+  @@map("MessageBoardPost")
 }
 
 // ============================================

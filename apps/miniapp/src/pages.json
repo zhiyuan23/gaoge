@@ -8,7 +8,7 @@
     {
       "path": "pages/home/index",
       "style": {
-        "navigationBarTitleText": "首页"
+        "navigationBarTitleText": "高歌"
       }
     },
     {
@@ -18,9 +18,15 @@
       }
     },
     {
-      "path": "pages/message-board/index",
+      "path": "pages/rumor-post/index",
       "style": {
         "navigationBarTitleText": "流言板"
+      }
+    },
+    {
+      "path": "pages/team/index",
+      "style": {
+        "navigationBarTitleText": "球队"
       }
     },
     {
@@ -33,6 +39,12 @@
       "path": "pages/football/player/index",
       "style": {
         "navigationBarTitleText": "球员列表"
+      }
+    },
+    {
+      "path": "pages/football/asset/index",
+      "style": {
+        "navigationBarTitleText": "球队资产明细"
       }
     }
   ],
@@ -76,22 +88,22 @@
     "backgroundColor": "#F5F7FB",
     "list": [
       {
-        "text": "首页",
+        "text": "高歌",
         "pagePath": "pages/home/index",
         "iconPath": "static/images/tabbar/home.png",
         "selectedIconPath": "static/images/tabbar/home-active.png"
       },
       {
-        "text": "发现",
-        "pagePath": "pages/discover/index",
-        "iconPath": "static/images/tabbar/discover.png",
-        "selectedIconPath": "static/images/tabbar/discover-active.png"
-      },
-      {
         "text": "流言板",
-        "pagePath": "pages/message-board/index",
+        "pagePath": "pages/rumor-post/index",
         "iconPath": "static/images/tabbar/message.png",
         "selectedIconPath": "static/images/tabbar/message-active.png"
+      },
+      {
+        "text": "球队",
+        "pagePath": "pages/team/index",
+        "iconPath": "static/images/tabbar/profile.png",
+        "selectedIconPath": "static/images/tabbar/profile-active.png"
       },
       {
         "text": "我的",

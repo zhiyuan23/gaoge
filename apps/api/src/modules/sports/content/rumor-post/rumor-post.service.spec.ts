@@ -3,7 +3,7 @@ import { RumorPostService } from './rumor-post.service'
 describe('RumorPostService', () => {
   const createService = () => {
     const prisma = {
-      messageBoardPost: {
+      rumorPost: {
         create: jest.fn(),
         findMany: jest.fn().mockResolvedValue([]),
         findUnique: jest.fn(),
@@ -38,8 +38,8 @@ describe('RumorPostService', () => {
       updatedAt: new Date('2026-06-10T10:00:00.000Z'),
     }
 
-    prisma.messageBoardPost.findUnique.mockResolvedValue(draft)
-    prisma.messageBoardPost.update.mockResolvedValue({
+    prisma.rumorPost.findUnique.mockResolvedValue(draft)
+    prisma.rumorPost.update.mockResolvedValue({
       ...draft,
       status: 'published',
       publishedAt: new Date('2026-06-10T11:00:00.000Z'),
@@ -47,7 +47,7 @@ describe('RumorPostService', () => {
 
     await service.publish(12)
 
-    expect(prisma.messageBoardPost.update).toHaveBeenCalledWith(
+    expect(prisma.rumorPost.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 12 },
         data: expect.objectContaining({
@@ -69,7 +69,7 @@ describe('RumorPostService', () => {
       pageSize: 5,
     })
 
-    expect(prisma.messageBoardPost.findMany).toHaveBeenCalledWith(
+    expect(prisma.rumorPost.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           status: 'published',
@@ -115,7 +115,7 @@ describe('RumorPostService', () => {
       tag: '比赛日',
     })
 
-    expect(prisma.messageBoardPost.findMany).toHaveBeenCalledWith(
+    expect(prisma.rumorPost.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           status: 'published',
@@ -132,7 +132,7 @@ describe('RumorPostService', () => {
 
     await service.findPublishedForMiniapp()
 
-    expect(prisma.messageBoardPost.findMany).toHaveBeenCalledWith(
+    expect(prisma.rumorPost.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: [{ isPinned: 'desc' }, { publishedAt: 'desc' }, { id: 'desc' }],
       }),
@@ -142,7 +142,7 @@ describe('RumorPostService', () => {
   it('builds deduplicated tag options from published records', async () => {
     const { prisma, service } = createService()
 
-    prisma.messageBoardPost.findMany.mockResolvedValueOnce([
+    prisma.rumorPost.findMany.mockResolvedValueOnce([
       { tags: ['转会', '签约'] },
       { tags: ['比赛日', '转会'] },
       { tags: [''] },
