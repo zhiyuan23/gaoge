@@ -112,9 +112,6 @@ const standingTableRows = computed(() =>
     },
   ),
 )
-const maxStandingPoints = computed(() =>
-  Math.max(1, ...displayedStandingTeams.value.map((team) => team.totalPoints ?? 0)),
-)
 const standingTeamAccents = {
   real: {
     border: 'rgba(245, 158, 11, 0.32)',
@@ -132,6 +129,51 @@ const standingTeamAccents = {
     fill: '#ef4444',
   },
 }
+const standingTeamLogos = {
+  real: {
+    icon: 'game-icons:lion',
+    label: '狮子',
+    color: '#f59e0b',
+  },
+  inter: {
+    icon: 'game-icons:eagle-emblem',
+    label: '展翅的雄鹰',
+    color: '#3b82f6',
+  },
+  united: {
+    icon: 'game-icons:wolf-head',
+    label: '仰天长啸的狼',
+    color: '#ef4444',
+    iconClass: 'scale-x-[-1]',
+  },
+}
+const standingPointIcons = {
+  2: {
+    icon: 'mdi:white-balance-sunny',
+    label: '冠军太阳',
+    color: 'text-amber-200',
+    background: 'bg-amber-400/10',
+    border: 'border-amber-300/20',
+  },
+  1: {
+    icon: 'mdi:moon-waning-crescent',
+    label: '亚军月亮',
+    color: 'text-sky-200',
+    background: 'bg-sky-400/10',
+    border: 'border-sky-300/20',
+  },
+  0: {
+    icon: 'mdi:star-four-points-outline',
+    label: '季军星星',
+    color: 'text-rose-200',
+    background: 'bg-rose-400/10',
+    border: 'border-rose-300/20',
+  },
+}
+
+const getStandingTeamLogo = (teamCode) => standingTeamLogos[teamCode] ?? standingTeamLogos.real
+
+const getStandingPointIcon = (point) => standingPointIcons[point] ?? null
 
 const hexToRgba = (hexColor, alpha) => {
   const normalizedHex = hexColor.replace('#', '')
@@ -172,37 +214,6 @@ const getSeasonTabStyle = (season) => {
     color: 'rgba(255,255,255,0.96)',
   }
 }
-
-// const getStandingTeamTrophyCount = (team) =>
-//   team.roundPoints?.filter((point) => point === 2).length ?? 0
-// const leadingStandingTeamCode = computed(() => {
-//   const [leader, runnerUp] = [...orderedStandingTeams.value].sort((leftTeam, rightTeam) => {
-//     if ((rightTeam.totalPoints ?? 0) !== (leftTeam.totalPoints ?? 0)) {
-//       return (rightTeam.totalPoints ?? 0) - (leftTeam.totalPoints ?? 0)
-//     }
-
-//     return getStandingTeamTrophyCount(rightTeam) - getStandingTeamTrophyCount(leftTeam)
-//   })
-
-//   if (!leader) {
-//     return ''
-//   }
-
-//   if (!runnerUp) {
-//     return leader.teamCode
-//   }
-
-//   const leaderPoints = leader.totalPoints ?? 0
-//   const runnerUpPoints = runnerUp.totalPoints ?? 0
-//   const leaderTrophies = getStandingTeamTrophyCount(leader)
-//   const runnerUpTrophies = getStandingTeamTrophyCount(runnerUp)
-
-//   if (leaderPoints === runnerUpPoints && leaderTrophies === runnerUpTrophies) {
-//     return ''
-//   }
-
-//   return leader.teamCode
-// })
 
 const nextSlide = () => {
   const total = currentTeamData.value.gallery.length
@@ -556,7 +567,7 @@ watch(isFootballTeam, loadAssetSummary, {
                   </span>
                 </div>
                 <div
-                  class="bg-white/4 flex flex-nowrap items-center gap-0.5 rounded-[14px] p-0.5 sm:gap-1 sm:rounded-[16px] sm:p-1"
+                  class="bg-white/4 sm:rounded-16px flex flex-nowrap items-center gap-0.5 rounded-[14px] p-0.5 sm:gap-1 sm:p-1"
                 >
                   <button
                     v-for="season in seasons"
@@ -602,7 +613,10 @@ watch(isFootballTeam, loadAssetSummary, {
                       }, rgba(255,255,255,0.03))`,
                     }"
                   >
-                    <div class="flex items-start justify-between gap-3">
+                    <div
+                      data-test="standing-team-card-main"
+                      class="flex flex-col items-center gap-2 text-center md:flex-row md:items-start md:justify-between md:gap-3 md:text-left"
+                    >
                       <div class="min-w-0">
                         <p class="text-[10px] uppercase tracking-[0.12em] text-white/45 md:text-xs">
                           {{ team.teamCode }}
@@ -615,38 +629,53 @@ watch(isFootballTeam, loadAssetSummary, {
                       </div>
                       <div class="text-right">
                         <div
-                          class="relative items-end justify-end gap-1 px-1 text-2xl font-black leading-none text-white md:text-3xl"
+                          data-test="standing-team-logo"
+                          class="md:h-13 md:w-13 relative flex h-11 w-11 items-center justify-center rounded-2xl border"
+                          :aria-label="`${team.teamName}：${getStandingTeamLogo(team.teamCode).label}`"
+                          :style="{
+                            borderColor:
+                              standingTeamAccents[team.teamCode]?.border || 'rgba(255,255,255,0.1)',
+                            background: `radial-gradient(circle at 50% 28%, ${
+                              standingTeamAccents[team.teamCode]?.glow || 'rgba(255,255,255,0.08)'
+                            }, rgba(255,255,255,0.04) 68%)`,
+                            color: getStandingTeamLogo(team.teamCode).color,
+                          }"
                         >
-                          <!-- <Icon
-                            v-if="team.teamCode === leadingStandingTeamCode"
+                          <Icon
+                            data-test="standing-team-crown-icon"
                             icon="mdi:crown"
-                            class="text-amber-200/12 absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2"
-                          /> -->
-                          <span class="relative">{{ team.totalPoints }}</span>
+                            class="absolute -top-2 h-4 w-4 rotate-[-8deg] text-amber-200 drop-shadow-[0_4px_8px_rgba(245,158,11,0.28)] md:h-5 md:w-5"
+                          />
+                          <Icon
+                            data-test="standing-team-logo-icon"
+                            :icon="getStandingTeamLogo(team.teamCode).icon"
+                            class="h-7 w-7 md:h-8 md:w-8"
+                            :class="getStandingTeamLogo(team.teamCode).iconClass"
+                          />
                         </div>
                       </div>
                     </div>
-                    <!-- <div
-                      v-if="getStandingTeamTrophyCount(team)"
-                      class="mt-3 flex justify-end gap-1.5 text-amber-300"
+                    <div
+                      data-test="standing-card-decoration"
+                      class="mt-3 flex h-2 gap-1.5 overflow-hidden rounded-full"
+                      aria-hidden="true"
                     >
-                      <Icon
-                        v-for="trophyIndex in getStandingTeamTrophyCount(team)"
-                        :key="`${team.teamId}-trophy-${trophyIndex}`"
-                        icon="mdi:trophy"
-                        class="h-4 w-4"
-                      />
-                    </div> -->
-                    <div class="bg-white/8 mt-2.5 h-2 overflow-hidden rounded-full">
-                      <div
-                        class="h-full rounded-full transition-all duration-500"
+                      <span
+                        class="h-full flex-[1.8] rounded-full opacity-90"
                         :style="{
-                          width: `${(team.totalPoints / maxStandingPoints) * 100}%`,
                           backgroundColor:
                             standingTeamAccents[team.teamCode]?.fill ||
                             teamColors[activeTeam].primary,
                         }"
-                      ></div>
+                      ></span>
+                      <span
+                        class="h-full flex-1 rounded-full"
+                        :style="{
+                          backgroundColor:
+                            standingTeamAccents[team.teamCode]?.glow || 'rgba(255,255,255,0.14)',
+                        }"
+                      ></span>
+                      <span class="bg-white/12 h-full w-3 rounded-full"></span>
                     </div>
                   </article>
                 </div>
@@ -654,14 +683,22 @@ watch(isFootballTeam, loadAssetSummary, {
 
               <div class="border-white/8 overflow-hidden rounded-2xl border bg-[#0f1117]">
                 <div class="overflow-x-auto">
-                  <table class="min-w-full text-left text-sm text-white/80">
+                  <table
+                    data-test="standing-round-table"
+                    class="w-full table-fixed text-left text-xs text-white/80 md:text-sm"
+                  >
                     <thead class="bg-white/3 text-xs uppercase tracking-[0.14em] text-white/40">
                       <tr>
-                        <th class="px-4 py-3 font-medium">轮次</th>
+                        <th
+                          data-test="standing-round-heading"
+                          class="w-12 whitespace-nowrap px-2 py-3 font-medium md:w-auto md:px-4"
+                        >
+                          轮次
+                        </th>
                         <th
                           v-for="team in displayedStandingTeams"
                           :key="team.teamId"
-                          class="px-4 py-3 text-center font-medium"
+                          class="px-1 py-3 text-center font-medium md:px-4"
                         >
                           {{ team.teamName }}
                         </th>
@@ -673,21 +710,29 @@ watch(isFootballTeam, loadAssetSummary, {
                         :key="row.id"
                         class="border-white/6 border-t"
                       >
-                        <th class="px-4 py-4 font-semibold text-white">{{ row.label }}</th>
+                        <th class="whitespace-nowrap px-2 py-4 font-semibold text-white md:px-4">
+                          {{ row.label }}
+                        </th>
                         <td
                           v-for="(point, pointIndex) in row.points"
                           :key="`${row.id}-${pointIndex}`"
-                          class="text-white/72 px-4 py-4 text-center"
+                          class="text-white/72 px-1 py-4 text-center md:px-4"
                         >
                           <span
-                            v-if="point === 2"
-                            class="relative inline-flex h-8 w-8 items-center justify-center text-[11px] font-semibold text-amber-50"
+                            v-if="getStandingPointIcon(point)"
+                            data-test="standing-point-icon"
+                            class="inline-flex h-7 w-7 items-center justify-center rounded-full border md:h-8 md:w-8"
+                            :class="[
+                              getStandingPointIcon(point).background,
+                              getStandingPointIcon(point).border,
+                            ]"
+                            :aria-label="getStandingPointIcon(point).label"
                           >
                             <Icon
-                              icon="mdi:trophy"
-                              class="text-amber-200/12 absolute inset-0 h-full w-full translate-y-0.5"
+                              :icon="getStandingPointIcon(point).icon"
+                              class="md:h-4.5 md:w-4.5 h-4 w-4"
+                              :class="getStandingPointIcon(point).color"
                             />
-                            <span class="relative">{{ point }}</span>
                           </span>
                           <span v-else>
                             {{ point ?? '-' }}
@@ -697,13 +742,28 @@ watch(isFootballTeam, loadAssetSummary, {
                     </tbody>
                     <tfoot class="border-white/8 bg-white/2 border-t">
                       <tr>
-                        <th class="px-4 py-4 font-semibold text-white">总积分</th>
+                        <th class="px-2 py-4 font-semibold text-white md:px-4">徽记</th>
                         <td
                           v-for="team in displayedStandingTeams"
                           :key="`total-${team.teamId}`"
-                          class="px-4 py-4 text-center font-semibold text-white"
+                          class="px-1 py-4 text-center font-semibold text-white md:px-4"
                         >
-                          {{ team.totalPoints }}
+                          <span
+                            data-test="standing-total-decoration"
+                            class="mx-auto flex h-6 w-12 items-center justify-center gap-1 rounded-full border border-white/10 bg-white/5 md:h-7 md:w-16"
+                            aria-hidden="true"
+                          >
+                            <span
+                              class="h-1.5 w-5 rounded-full md:w-7"
+                              :style="{
+                                backgroundColor:
+                                  standingTeamAccents[team.teamCode]?.fill ||
+                                  teamColors[activeTeam].primary,
+                              }"
+                            ></span>
+                            <span class="bg-white/28 h-1.5 w-1.5 rounded-full"></span>
+                            <span class="bg-white/16 h-1.5 w-1.5 rounded-full"></span>
+                          </span>
                         </td>
                       </tr>
                     </tfoot>

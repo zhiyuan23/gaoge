@@ -274,6 +274,95 @@ describe('TeamsPage', () => {
     expect(tableRows[9]?.text()).toContain('第10轮')
     expect(firstRoundCells).toHaveLength(3)
     expect(firstRoundCells.every((cell) => cell.text().trim() === '-')).toBe(true)
-    expect(wrapper.text()).toContain('总积分000')
+    expect(wrapper.text()).not.toContain('总积分')
+    const teamLogos = wrapper.findAll('[data-test="standing-team-logo"]')
+    expect(teamLogos).toHaveLength(3)
+    expect(teamLogos.map((logo) => logo.attributes('aria-label'))).toEqual([
+      '皇家高歌：狮子',
+      '高歌国际：展翅的雄鹰',
+      '高歌联：仰天长啸的狼',
+    ])
+    const cardMainRows = wrapper.findAll('[data-test="standing-team-card-main"]')
+    expect(cardMainRows).toHaveLength(3)
+    expect(cardMainRows.every((row) => row.classes().includes('flex-col'))).toBe(true)
+    expect(cardMainRows.every((row) => row.classes().includes('md:flex-row'))).toBe(true)
+    const teamLogoIcons = wrapper.findAll('[data-test="standing-team-logo-icon"]')
+    expect(teamLogoIcons).toHaveLength(3)
+    expect(teamLogoIcons[2].classes()).toContain('scale-x-[-1]')
+    expect(wrapper.findAll('[data-test="standing-team-crown-icon"]')).toHaveLength(3)
+    expect(wrapper.findAll('[data-test="standing-card-decoration"]')).toHaveLength(3)
+    expect(wrapper.findAll('[data-test="standing-total-decoration"]')).toHaveLength(3)
+    const standingRoundTableClasses = wrapper.get('[data-test="standing-round-table"]').classes()
+    expect(standingRoundTableClasses).toContain('w-full')
+    expect(standingRoundTableClasses).toContain('table-fixed')
+    expect(standingRoundTableClasses).not.toContain('min-w-[520px]')
+    const standingRoundHeadingClasses = wrapper
+      .get('[data-test="standing-round-heading"]')
+      .classes()
+    expect(standingRoundHeadingClasses).toContain('w-12')
+    expect(standingRoundHeadingClasses).not.toContain('min-w-18')
+    expect(wrapper.text()).not.toContain('000')
+  })
+
+  it('replaces visible standing points with symbolic icons', async () => {
+    footballApi.fetchFootballStandings.mockResolvedValue({
+      season: { year: 2026, season: '春季赛' },
+      rounds: [{ id: 1, round: 1, label: '第1轮' }],
+      teams: [
+        {
+          teamId: 1,
+          teamCode: 'real',
+          teamName: '皇家高歌',
+          totalPoints: 2,
+          roundPoints: [2],
+        },
+        {
+          teamId: 2,
+          teamCode: 'inter',
+          teamName: '高歌国际',
+          totalPoints: 1,
+          roundPoints: [1],
+        },
+        {
+          teamId: 3,
+          teamCode: 'united',
+          teamName: '高歌联',
+          totalPoints: 0,
+          roundPoints: [0],
+        },
+      ],
+    })
+    footballApi.fetchFootballAssetSummary.mockResolvedValue({
+      totalIncome: 0,
+      totalExpense: 0,
+      balance: 0,
+      waivedMatchCount: 0,
+    })
+
+    const router = createTestRouter('/teams/football')
+    await router.push('/teams/football')
+    await router.isReady()
+
+    const wrapper = mount(TeamsPage, {
+      global: {
+        plugins: [router],
+        stubs: {
+          Icon: { template: '<span />' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const pointIcons = wrapper.findAll('[data-test="standing-point-icon"]')
+
+    expect(pointIcons).toHaveLength(3)
+    expect(pointIcons.map((icon) => icon.attributes('aria-label'))).toEqual([
+      '冠军太阳',
+      '亚军月亮',
+      '季军星星',
+    ])
+    expect(wrapper.text()).not.toContain('总积分')
+    expect(wrapper.text()).not.toContain('210')
   })
 })
