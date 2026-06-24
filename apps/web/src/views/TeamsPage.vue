@@ -1,6 +1,6 @@
 <script setup>
 import { Icon } from '@iconify/vue'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import DetailButton from '@/components/DetailButton.vue'
@@ -356,13 +356,38 @@ const onTouchEnd = () => {
   }
 }
 
-watch([isFootballTeam, seasonYear, seasonName], loadStandings, {
-  immediate: true,
-})
+watch([isFootballTeam, seasonYear, seasonName], loadStandings)
 
 watch(isFootballTeam, loadAssetSummary, {
   immediate: true,
 })
+
+// 初始化赛季积分榜：从最新赛季开始查找有数据的赛季
+const initializeStandings = async () => {
+  if (!isFootballTeam.value) return
+
+  for (const season of [...seasons].reverse()) {
+    const requestSeq = ++standingsRequestSequence
+
+    try {
+      const payload = await fetchFootballStandings({
+        year: seasonYear.value,
+        season,
+      })
+
+      if (requestSeq !== standingsRequestSequence) return
+
+      if (payload.rounds && payload.rounds.length > 0) {
+        seasonName.value = season
+        return
+      }
+    } catch {
+      if (requestSeq !== standingsRequestSequence) return
+    }
+  }
+}
+
+onMounted(initializeStandings)
 </script>
 
 <template>
@@ -710,13 +735,13 @@ watch(isFootballTeam, loadAssetSummary, {
                         :key="row.id"
                         class="border-white/6 border-t"
                       >
-                        <th class="whitespace-nowrap px-2 py-4 font-semibold text-white md:px-4">
+                        <th class="whitespace-nowrap px-2 py-3 font-semibold text-white md:px-4">
                           {{ row.label }}
                         </th>
                         <td
                           v-for="(point, pointIndex) in row.points"
                           :key="`${row.id}-${pointIndex}`"
-                          class="text-white/72 px-1 py-4 text-center md:px-4"
+                          class="text-white/72 px-1 py-3 text-center md:px-4"
                         >
                           <span
                             v-if="getStandingPointIcon(point)"
@@ -734,7 +759,10 @@ watch(isFootballTeam, loadAssetSummary, {
                               :class="getStandingPointIcon(point).color"
                             />
                           </span>
-                          <span v-else>
+                          <span
+                            v-else
+                            class="inline-flex h-7 w-7 items-center justify-center md:h-8 md:w-8"
+                          >
                             {{ point ?? '-' }}
                           </span>
                         </td>
@@ -742,11 +770,11 @@ watch(isFootballTeam, loadAssetSummary, {
                     </tbody>
                     <tfoot class="border-white/8 bg-white/2 border-t">
                       <tr>
-                        <th class="px-2 py-4 font-semibold text-white md:px-4">徽记</th>
+                        <th class="px-2 py-3 font-semibold text-white md:px-4">徽记</th>
                         <td
                           v-for="team in displayedStandingTeams"
                           :key="`total-${team.teamId}`"
-                          class="px-1 py-4 text-center font-semibold text-white md:px-4"
+                          class="px-1 py-3 text-center font-semibold text-white md:px-4"
                         >
                           <span
                             data-test="standing-total-decoration"

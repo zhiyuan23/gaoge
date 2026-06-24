@@ -20,7 +20,8 @@
       "Bash(npx vite:*)",
       "Bash(npx nest:*)",
       "Bash(npx jest:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(xxd)"
     ]
   }
 }
