@@ -20,6 +20,7 @@ import { useListPage } from '@/composables/useListPage'
 
 import MatchRoundFormDialog from './components/MatchRoundFormDialog.vue'
 import { MATCH_ROUND_DEFAULT_SEARCH } from './model/defaults'
+import { getLatestMatchRoundMetadata, isMatchRoundDefaultSearch } from './model/latest'
 import { buildMatchRoundListParams } from './model/mapper'
 import type { MatchRoundSearch } from './model/types'
 import { createMatchRoundSearchFields } from './schemas/search'
@@ -89,7 +90,10 @@ const {
   openEdit,
 } = useCrudDialog<MatchRound>()
 
-const searchFields = computed(() => createMatchRoundSearchFields())
+const defaultMatchRoundSearch = computed(
+  () => getLatestMatchRoundMetadata(previousMatchRound.value).defaultSearch,
+)
+const searchFields = computed(() => createMatchRoundSearchFields(defaultMatchRoundSearch.value))
 const teamsValid = computed(() => teamsTotal.value === 3)
 const teamsWarning = computed(() =>
   teamsTotal.value === 3
@@ -97,15 +101,25 @@ const teamsWarning = computed(() =>
     : `当前球队数量为 ${teamsTotal.value}，业务要求必须恰好有 3 支球队后才能维护比赛信息。`,
 )
 
-function shouldSyncPreviousMatchRoundFromTable() {
-  return (
-    page.value === 1 &&
-    search.value.year === MATCH_ROUND_DEFAULT_SEARCH.year &&
-    search.value.season === MATCH_ROUND_DEFAULT_SEARCH.season &&
-    search.value.round === MATCH_ROUND_DEFAULT_SEARCH.round &&
-    search.value.matchDate === MATCH_ROUND_DEFAULT_SEARCH.matchDate &&
-    search.value.venueKeyword === MATCH_ROUND_DEFAULT_SEARCH.venueKeyword
-  )
+function isDefaultSearch() {
+  return page.value === 1 && isMatchRoundDefaultSearch(search.value, defaultMatchRoundSearch.value)
+}
+
+// 最新比赛独立于当前赛季筛选和分页，用于默认赛季及新增比赛预填。
+async function refreshLatestMatchRound() {
+  const response = await matchRoundsApi.list({
+    page: 1,
+    pageSize: 1,
+  })
+  const metadata = getLatestMatchRoundMetadata(response.list[0] ?? null)
+
+  previousMatchRound.value = metadata.previousMatchRound
+}
+
+async function initializeMatchRoundPageData() {
+  await refreshLatestMatchRound()
+  search.value = { ...defaultMatchRoundSearch.value }
+  await fetchMatchRounds()
 }
 
 async function handleAdd() {
@@ -152,6 +166,19 @@ async function fetchTeams() {
   }
 }
 
+// 仅在用户未修改默认筛选时，随最新比赛同步赛季；否则保留用户筛选。
+async function refreshMatchRoundListData() {
+  const shouldSyncDefaultSeason = isDefaultSearch()
+  await refreshLatestMatchRound()
+
+  if (shouldSyncDefaultSeason) {
+    search.value = { ...defaultMatchRoundSearch.value }
+    page.value = 1
+  }
+
+  await fetchMatchRounds()
+}
+
 async function handleDelete(row: MatchRound) {
   try {
     await ElMessageBox.confirm(
@@ -166,7 +193,7 @@ async function handleDelete(row: MatchRound) {
     loading.value = true
     await matchRoundsApi.remove(row.id)
     ElMessage.success('已删除')
-    await fetchMatchRounds()
+    await refreshMatchRoundListData()
   } finally {
     loading.value = false
   }
@@ -186,22 +213,18 @@ async function handleSubmit(payload: MatchRoundPayload | UpdateMatchRoundPayload
     }
 
     dialogVisible.value = false
-    await fetchMatchRounds()
+    await refreshMatchRoundListData()
   } finally {
     submitLoading.value = false
   }
 }
 
 onMounted(async () => {
-  await Promise.all([fetchTeams(), fetchMatchRounds()])
+  await Promise.all([fetchTeams(), initializeMatchRoundPageData()])
 })
 
 watch(tableData, () => {
   selectionDataList.value = []
-
-  if (shouldSyncPreviousMatchRoundFromTable()) {
-    previousMatchRound.value = tableData.value[0] ?? null
-  }
 })
 </script>
 

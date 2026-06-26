@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import FaLabel from '@/ui/components/FaLabel/index.vue'
-
 import type { EsSearchEmits, EsSearchProps, SearchField, SearchOption } from './types'
 
 defineOptions({
@@ -140,7 +138,7 @@ watch(
     <FaSearchBar :show-toggle="false">
       <template #default>
         <div class="es-search__grid" :style="gridStyle">
-          <FaLabel
+          <div
             v-for="field in visibleFields"
             :key="field.key"
             :label="field.label"
@@ -230,7 +228,7 @@ watch(
               v-model="form[field.key]"
               v-bind="field.props"
             />
-          </FaLabel>
+          </div>
 
           <div class="flex flex-wrap items-center justify-end gap-2 md:-col-end-1">
             <FaButton v-if="showReset" variant="outline" @click="handleReset">

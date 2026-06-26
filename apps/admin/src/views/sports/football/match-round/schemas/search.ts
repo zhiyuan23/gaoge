@@ -5,17 +5,30 @@ import {
   MATCH_ROUND_ROUND_OPTIONS,
   MATCH_ROUND_SEASON_OPTIONS,
 } from '../model/defaults'
+import type { MatchRoundSearch } from '../model/types'
 
-export function createMatchRoundSearchFields(): SearchField[] {
+export function createMatchRoundSearchFields(defaultSearch: MatchRoundSearch): SearchField[] {
+  const yearOptions =
+    defaultSearch.year === ''
+      ? MATCH_ROUND_FILTER_YEAR_OPTIONS
+      : [
+          { label: `${defaultSearch.year}年`, value: defaultSearch.year },
+          ...MATCH_ROUND_FILTER_YEAR_OPTIONS.filter(
+            (option) => option.value !== defaultSearch.year,
+          ),
+        ]
+
   return [
     {
       key: 'year',
       label: '年度',
       type: 'select',
       placeholder: '全部',
-      options: MATCH_ROUND_FILTER_YEAR_OPTIONS,
+      defaultValue: defaultSearch.year,
+      options: yearOptions,
       props: {
         clearable: true,
+        valueOnClear: '',
       },
     },
     {
@@ -23,9 +36,11 @@ export function createMatchRoundSearchFields(): SearchField[] {
       label: '赛季',
       type: 'select',
       placeholder: '全部',
+      defaultValue: defaultSearch.season,
       options: [...MATCH_ROUND_SEASON_OPTIONS],
       props: {
         clearable: true,
+        valueOnClear: '',
       },
     },
     {

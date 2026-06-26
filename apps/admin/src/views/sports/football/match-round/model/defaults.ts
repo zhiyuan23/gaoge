@@ -39,7 +39,7 @@ export const MATCH_ROUND_SEASON_OPTIONS = [
   { label: '冬季赛', value: '冬季赛' },
 ] as const
 
-export const MATCH_ROUND_ROUND_OPTIONS = Array.from({ length: 15 }, (_, index) => ({
+export const MATCH_ROUND_ROUND_OPTIONS = Array.from({ length: 10 }, (_, index) => ({
   label: `第${index + 1}轮`,
   value: index + 1,
 }))
