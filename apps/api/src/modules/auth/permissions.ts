@@ -27,35 +27,6 @@ export const footballViewerPermissions = [
   'football.fund.view',
 ] as const
 
-/** 篮球业务 — 管理员权限 */
-export const basketballAdminPermissions = [
-  'basketball.assetRecord.view',
-  'basketball.assetRecord.create',
-  'basketball.assetRecord.update',
-  'basketball.assetRecord.delete',
-  'basketball.player.create',
-  'basketball.player.update',
-  'basketball.player.delete',
-  'basketball.team.create',
-  'basketball.team.update',
-  'basketball.team.delete',
-  'basketball.matchRound.create',
-  'basketball.matchRound.update',
-  'basketball.matchRound.delete',
-  'basketball.fund.create',
-  'basketball.fund.update',
-  'basketball.fund.delete',
-] as const
-
-/** 篮球业务 — 浏览者（只读）权限 */
-export const basketballViewerPermissions = [
-  'basketball.assetRecord.view',
-  'basketball.player.view',
-  'basketball.team.view',
-  'basketball.matchRound.view',
-  'basketball.fund.view',
-] as const
-
 /** 系统管理权限 */
 export const systemPermissions = [
   'system.user.view',

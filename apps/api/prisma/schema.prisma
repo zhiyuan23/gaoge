@@ -14,21 +14,21 @@ datasource db {
 // 用户表
 // ============================================
 model User {
-  id           Int        @id @default(autoincrement())
-  openid       String?    @unique // 微信 openid
-  unionid      String?    @unique // 微信 unionid
-  account      String?    @unique // 后台登录账号
-  passwordHash String?    // 后台密码哈希
-  nickname     String?    // 昵称
-  avatarUrl    String?    // 头像
-  phone        String?    @unique // 手机号
-  role         String     @default("user") // 兼容字段：user / admin / viewer
-  status       String     @default("active") // active / inactive
-  deletedAt    DateTime?  // 软删除
-  lastLoginAt DateTime? // 最后登录时间
+  id           Int       @id @default(autoincrement())
+  openid       String?   @unique // 微信 openid
+  unionid      String?   @unique // 微信 unionid
+  account      String?   @unique // 后台登录账号
+  passwordHash String? // 后台密码哈希
+  nickname     String? // 昵称
+  avatarUrl    String? // 头像
+  phone        String?   @unique // 手机号
+  role         String    @default("user") // 兼容字段：user / admin / viewer
+  status       String    @default("active") // active / inactive
+  deletedAt    DateTime? // 软删除
+  lastLoginAt  DateTime? // 最后登录时间
 
   // Token 关联
-  refreshTokens RefreshToken[]
+  refreshTokens  RefreshToken[]
   footballPlayer Player?
   userRoles      UserRole[]
 
@@ -43,54 +43,25 @@ model User {
 // 球员表（足球队员）
 // ============================================
 model Player {
-  id           Int        @id @default(autoincrement())
-  openid       String?    @unique // 微信openid，非必填唯一
-  playerNumber Int?       @unique // 球员号码，业务上新增/编辑必填，范围 0~100
-  nickname     String     @unique // 昵称，必填唯一
-  realName     String?    // 真实姓名，非必填
-  avatarUrl    String?    // 头像，非必填
-  subTeam      String?    // 当前分队字段仍保留为文本，后续再迁移为关联模型
-  jerseyName   String?    // 球衣名称，非必填
-  birthDate    DateTime?  // 出生年月日，非必填
-  isAdmin      Boolean    @default(false) // 是否管理员
-  position     String?    // 足球位置，非必填
-  jerseySize   String?    // 球衣尺码，非必填
-  status       String     @default("active") // active / inactive
-  remark       String?    // 备注
-  userId       Int?       @unique // 绑定的用户ID
-  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  id           Int       @id @default(autoincrement())
+  openid       String?   @unique // 微信openid，非必填唯一
+  playerNumber Int?      @unique // 球员号码，业务上新增/编辑必填，范围 0~100
+  nickname     String    @unique // 昵称，必填唯一
+  realName     String? // 真实姓名，非必填
+  avatarUrl    String? // 头像，非必填
+  subTeam      String? // 当前分队字段仍保留为文本，后续再迁移为关联模型
+  jerseyName   String? // 球衣名称，非必填
+  birthDate    DateTime? // 出生年月日，非必填
+  isAdmin      Boolean   @default(false) // 是否管理员
+  position     String? // 足球位置，非必填
+  jerseySize   String? // 球衣尺码，非必填
+  status       String    @default("active") // active / inactive
+  remark       String? // 备注
+  userId       Int?      @unique // 绑定的用户ID
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@index([playerNumber])
-  @@index([openid])
-  @@index([nickname])
-  @@index([subTeam])
-}
-
-// ============================================
-// 篮球队员表
-// ============================================
-model BasketballPlayer {
-  id           Int        @id @default(autoincrement())
-  openid       String?    @unique // 微信openid，非必填唯一
-  playerNumber Int?       @unique // 球员号码，业务上新增/编辑必填，范围 0~100
-  nickname     String     @unique // 昵称，必填唯一
-  realName     String?    // 真实姓名，非必填
-  avatarUrl    String?    // 头像，非必填
-  subTeam      String?    // 当前分队字段仍保留为文本，后续再迁移为关联模型
-  jerseyName   String?    // 球衣名称，非必填
-  birthDate    DateTime?  // 出生年月日，非必填
-  isAdmin      Boolean    @default(false) // 是否管理员
-  position     String?    // 篮球位置，非必填
-  jerseySize   String?    // 球衣尺码，非必填
-  status       String     @default("active") // active / inactive
-  remark       String?    // 备注
-  userId       Int?       @unique // 绑定的用户ID
-
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([playerNumber])
   @@index([openid])
@@ -102,12 +73,12 @@ model BasketballPlayer {
 // Token 表
 // ============================================
 model RefreshToken {
-  id        Int       @id @default(autoincrement())
-  token     String    @unique
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
   userId    Int
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([token])
   @@index([userId])
@@ -198,11 +169,11 @@ model RolePermission {
 }
 
 model MenuPermission {
-  menuId        Int
-  permissionId  Int
-  createdAt     DateTime   @default(now())
-  menu          Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  permission    Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  menuId       Int
+  permissionId Int
+  createdAt    DateTime   @default(now())
+  menu         Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([menuId, permissionId])
   @@index([permissionId])
@@ -227,17 +198,17 @@ model WechatShareConfig {
 }
 
 model RumorPost {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   content     String
   tags        String[]
   sourceName  String
   sourceUrl   String?
-  status      String   @default("draft")
-  isPinned    Boolean  @default(false)
+  status      String    @default("draft")
+  isPinned    Boolean   @default(false)
   publishedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([status])
   @@index([isPinned])
@@ -249,40 +220,18 @@ model RumorPost {
 // 球队资金明细表
 // ============================================
 model TeamFund {
-  id          Int       @id @default(autoincrement())
-  type        String    // income (收入) / expense (支出)
-  amount      Int       // 金额 (分，存储整数)
-  title       String    // 标题
-  description String?   // 详细说明
-  category    String    // 类别：game_fee(比赛费) / equipment(装备) / venue(场地) / activity(活动) / sponsor(赞助) / other(其他)
-  status      String    @default("pending") // pending / confirmed / cancelled
-  recordDate  DateTime  // 记录日期
-  creatorId   Int?      // 创建者ID (管理员)
+  id          Int      @id @default(autoincrement())
+  type        String // income (收入) / expense (支出)
+  amount      Int // 金额 (分，存储整数)
+  title       String // 标题
+  description String? // 详细说明
+  category    String // 类别：game_fee(比赛费) / equipment(装备) / venue(场地) / activity(活动) / sponsor(赞助) / other(其他)
+  status      String   @default("pending") // pending / confirmed / cancelled
+  recordDate  DateTime // 记录日期
+  creatorId   Int? // 创建者ID (管理员)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([type])
-  @@index([recordDate])
-  @@index([status])
-}
-
-// ============================================
-// 篮球队资金明细表
-// ============================================
-model BasketballTeamFund {
-  id          Int       @id @default(autoincrement())
-  type        String    // income (收入) / expense (支出)
-  amount      Int       // 金额 (分，存储整数)
-  title       String    // 标题
-  description String?   // 详细说明
-  category    String    // 类别：game_fee(比赛费) / equipment(装备) / venue(场地) / activity(活动) / sponsor(赞助) / other(其他)
-  status      String    @default("pending") // pending / confirmed / cancelled
-  recordDate  DateTime  // 记录日期
-  creatorId   Int?      // 创建者ID (管理员)
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([type])
   @@index([recordDate])
@@ -293,49 +242,21 @@ model BasketballTeamFund {
 // 球队资产收支流水表
 // ============================================
 model FootballAssetRecord {
-  id          Int       @id @default(autoincrement())
-  direction   String    // income / expense
-  recordType  String    // match_fee / extra_income / equipment / activity / other_expense
-  amount      Int       // 金额（分）
-  seasonLabel String?   // 赛季文本标签
-  matchLabel  String?   // 场次文本标签
-  isWaived    Boolean   @default(false) // 是否免收，仅比赛收费收入使用
-  title       String    // 标题
-  description String?   // 备注
-  recordDate  DateTime  // 业务发生日期
-  status      String    @default("confirmed") // confirmed / cancelled
-  creatorId   Int?      // 创建人 ID
+  id          Int      @id @default(autoincrement())
+  direction   String // income / expense
+  recordType  String // match_fee / extra_income / equipment / activity / other_expense
+  amount      Int // 金额（分）
+  seasonLabel String? // 赛季文本标签
+  matchLabel  String? // 场次文本标签
+  isWaived    Boolean  @default(false) // 是否免收，仅比赛收费收入使用
+  title       String // 标题
+  description String? // 备注
+  recordDate  DateTime // 业务发生日期
+  status      String   @default("confirmed") // confirmed / cancelled
+  creatorId   Int? // 创建人 ID
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  @@index([direction])
-  @@index([recordType])
-  @@index([recordDate])
-  @@index([status])
-  @@index([seasonLabel])
-  @@index([matchLabel])
-}
-
-// ============================================
-// 篮球队资产收支流水表
-// ============================================
-model BasketballAssetRecord {
-  id          Int       @id @default(autoincrement())
-  direction   String    // income / expense
-  recordType  String    // match_fee / extra_income / equipment / activity / other_expense
-  amount      Int       // 金额（分）
-  seasonLabel String?   // 赛季文本标签
-  matchLabel  String?   // 场次文本标签
-  isWaived    Boolean   @default(false) // 是否免收，仅比赛收费收入使用
-  title       String    // 标题
-  description String?   // 备注
-  recordDate  DateTime  // 业务发生日期
-  status      String    @default("confirmed") // confirmed / cancelled
-  creatorId   Int?      // 创建人 ID
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([direction])
   @@index([recordType])
@@ -349,38 +270,18 @@ model BasketballAssetRecord {
 // 球队信息表
 // ============================================
 model Team {
-  id           Int                @id @default(autoincrement())
-  code         String             @unique // 由后端生成的只读编码，后台不展示不编辑
-  name         String             @unique
-  avatarUrl    String?
-  slogan       String?
-  sponsorName  String?
-  sort         Int                @default(0)
+  id          Int     @id @default(autoincrement())
+  code        String  @unique // 由后端生成的只读编码，后台不展示不编辑
+  name        String  @unique
+  avatarUrl   String?
+  slogan      String?
+  sponsorName String?
+  sort        Int     @default(0)
 
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   matchResults MatchRoundResult[]
-
-  @@index([sort])
-}
-
-// ============================================
-// 篮球队信息表
-// ============================================
-model BasketballTeam {
-  id           Int                          @id @default(autoincrement())
-  code         String                       @unique // 由后端生成的只读编码，后台不展示不编辑
-  name         String                       @unique
-  avatarUrl    String?
-  slogan       String?
-  sponsorName  String?
-  sort         Int                          @default(0)
-
-  createdAt    DateTime                     @default(now())
-  updatedAt    DateTime                     @updatedAt
-
-  matchResults BasketballMatchRoundResult[]
 
   @@index([sort])
 }
@@ -389,39 +290,19 @@ model BasketballTeam {
 // 比赛轮次表
 // ============================================
 model MatchRound {
-  year      Int
-  season    String
-  round     Int
-  id        Int                @id @default(autoincrement())
-  collectTeamFee Boolean       @default(true)
-  matchDate DateTime
-  venue     String?
-  remark    String?
+  year           Int
+  season         String
+  round          Int
+  id             Int      @id @default(autoincrement())
+  collectTeamFee Boolean  @default(true)
+  matchDate      DateTime
+  venue          String?
+  remark         String?
 
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  results   MatchRoundResult[]
-
-  @@index([matchDate])
-}
-
-// ============================================
-// 篮球比赛轮次表
-// ============================================
-model BasketballMatchRound {
-  year      Int
-  season    String
-  round     Int
-  id        Int                          @id @default(autoincrement())
-  matchDate DateTime
-  venue     String?
-  remark    String?
-
-  createdAt DateTime                     @default(now())
-  updatedAt DateTime                     @updatedAt
-
-  results   BasketballMatchRoundResult[]
+  results MatchRoundResult[]
 
   @@index([matchDate])
 }
@@ -430,34 +311,15 @@ model BasketballMatchRound {
 // 比赛轮次结果表
 // ============================================
 model MatchRoundResult {
-  id           Int        @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   matchRoundId Int
   teamId       Int
-  rank         Int        // 业务约束仅允许 1 / 2 / 3，数据库级 CHECK 见迁移
-  points       Int        // 按名次换算后的积分快照：1=>2, 2=>1, 3=>0
-  createdAt    DateTime   @default(now())
+  rank         Int // 业务约束仅允许 1 / 2 / 3，数据库级 CHECK 见迁移
+  points       Int // 按名次换算后的积分快照：1=>2, 2=>1, 3=>0
+  createdAt    DateTime @default(now())
 
-  matchRound   MatchRound @relation(fields: [matchRoundId], references: [id], onDelete: Cascade)
-  team         Team       @relation(fields: [teamId], references: [id], onDelete: Restrict)
-
-  @@unique([matchRoundId, teamId])
-  @@unique([matchRoundId, rank])
-  @@index([teamId])
-}
-
-// ============================================
-// 篮球比赛轮次结果表
-// ============================================
-model BasketballMatchRoundResult {
-  id           Int                  @id @default(autoincrement())
-  matchRoundId Int
-  teamId       Int
-  rank         Int                  // 业务约束仅允许 1 / 2 / 3，数据库级 CHECK 见迁移
-  points       Int                  // 按名次换算后的积分快照：1=>2, 2=>1, 3=>0
-  createdAt    DateTime             @default(now())
-
-  matchRound   BasketballMatchRound @relation(fields: [matchRoundId], references: [id], onDelete: Cascade)
-  team         BasketballTeam       @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  matchRound MatchRound @relation(fields: [matchRoundId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Restrict)
 
   @@unique([matchRoundId, teamId])
   @@unique([matchRoundId, rank])
@@ -468,14 +330,14 @@ model BasketballMatchRoundResult {
 // 轮播图表
 // ============================================
 model Banner {
-  id       Int       @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   title    String
   subtitle String?
   imageUrl String
-  jumpType String    @default("none")
+  jumpType String  @default("none")
   jumpUrl  String?
-  sort     Int       @default(0)
-  status   String    @default("active")
+  sort     Int     @default(0)
+  status   String  @default("active")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

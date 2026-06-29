@@ -124,7 +124,7 @@ describe('WechatShareService', () => {
       imgUrl: 'https://cdn.gaoge.cc/default.png',
     })
 
-    await expect(service.getPublicConfig('/teams/basketball')).resolves.toEqual({
+    await expect(service.getPublicConfig('/teams/football')).resolves.toEqual({
       title: '球队标题',
       desc: '球队简介',
       imgUrl: 'https://cdn.gaoge.cc/teams.png',
