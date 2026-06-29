@@ -16,7 +16,7 @@ const props = defineProps<{
   modelValue: boolean
   mode: 'create' | 'edit'
   player?: Player | null
-  subTeamOptions: SearchOption[]
+  teamOptions: SearchOption[]
   positionOptions: SearchOption[]
   statusOptions: SearchOption[]
   loading?: boolean
@@ -76,7 +76,7 @@ watch(
     <PlayerForm
       ref="formRef"
       v-model:model="formModel"
-      :sub-team-options="subTeamOptions"
+      :team-options="teamOptions"
       :position-options="positionOptions"
       :status-options="statusOptions"
     />

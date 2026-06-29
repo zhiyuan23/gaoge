@@ -13,12 +13,17 @@ export function createPlayerFormFromRow(row: Player): PlayerFormModel {
     realName: row.realName ?? '',
     avatarUrl: row.avatarUrl ?? '',
     subTeam: row.subTeam ?? '',
+    teamIds: row.teamIds ?? [],
+    primaryTeamId: row.primaryTeamId ?? '',
     jerseyName: row.jerseyName ?? '',
     birthDate: row.birthDate ? row.birthDate.slice(0, 10) : '',
     isAdmin: row.isAdmin,
     position: row.position ?? '',
+    positions: row.positions ?? [],
+    primaryPosition: row.primaryPosition ?? '',
     jerseySize: row.jerseySize ?? '',
     status: row.status ?? 'active',
+    signature: row.signature ?? '',
     remark: row.remark ?? '',
   }
 }
@@ -35,13 +40,16 @@ export function buildPlayerPayload(model: PlayerFormModel): PlayerPayload {
     nickname: model.nickname.trim(),
     realName: normalizeText(model.realName),
     avatarUrl: normalizeText(model.avatarUrl),
-    subTeam: normalizeText(model.subTeam),
+    teamIds: model.teamIds,
+    primaryTeamId: model.primaryTeamId === '' ? null : model.primaryTeamId,
     jerseyName: normalizeText(model.jerseyName),
     birthDate: model.birthDate ? dayjs(model.birthDate).startOf('day').toISOString() : undefined,
     isAdmin: model.isAdmin,
-    position: normalizeText(model.position),
+    positions: model.positions,
+    primaryPosition: model.primaryPosition === '' ? null : model.primaryPosition,
     jerseySize: normalizeText(model.jerseySize),
     status: normalizeText(model.status) ?? 'active',
+    signature: normalizeText(model.signature),
     remark: normalizeText(model.remark),
   }
 }
@@ -55,6 +63,7 @@ export function buildPlayerListParams(
     page,
     pageSize,
     keyword: search.keyword || undefined,
-    subTeam: search.subTeam || undefined,
+    teamId: search.teamId || undefined,
+    position: search.position || undefined,
   }
 }

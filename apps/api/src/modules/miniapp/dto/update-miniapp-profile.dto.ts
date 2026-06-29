@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer'
-import { IsDate, IsOptional, IsString } from 'class-validator'
+import { IsDate, IsOptional, IsString, MaxLength } from 'class-validator'
 
 export class UpdateMiniappProfileDto {
   @IsOptional()
@@ -30,6 +30,11 @@ export class UpdateMiniappProfileDto {
   @IsOptional()
   @IsString()
   jerseySize?: string | null
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(15)
+  signature?: string | null
 
   @IsOptional()
   @IsString()

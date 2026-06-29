@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { FormInstance } from 'element-plus'
 
+import type { FootballPosition } from '@gaoge/shared-types'
+
 import type { SearchOption } from '@/components/common/EsSearch/types'
 
 import type { PlayerFormModel } from '../model/types'
@@ -11,7 +13,7 @@ defineOptions({
 })
 
 const props = defineProps<{
-  subTeamOptions: SearchOption[]
+  teamOptions: SearchOption[]
   positionOptions: SearchOption[]
   statusOptions: SearchOption[]
 }>()
@@ -21,6 +23,32 @@ const formRef = ref<FormInstance>()
 
 const customStatusOptions = computed(() =>
   props.statusOptions.filter((item) => !['active', 'inactive'].includes(String(item.value))),
+)
+const primaryTeamOptions = computed(() =>
+  props.teamOptions.filter((item) => model.value.teamIds.includes(Number(item.value))),
+)
+const primaryPositionOptions = computed(() =>
+  props.positionOptions.filter((item) =>
+    model.value.positions.includes(String(item.value) as FootballPosition),
+  ),
+)
+
+watch(
+  () => model.value.teamIds.slice(),
+  (teamIds) => {
+    if (model.value.primaryTeamId !== '' && !teamIds.includes(model.value.primaryTeamId)) {
+      model.value.primaryTeamId = ''
+    }
+  },
+)
+
+watch(
+  () => model.value.positions.slice(),
+  (positions) => {
+    if (model.value.primaryPosition && !positions.includes(model.value.primaryPosition)) {
+      model.value.primaryPosition = ''
+    }
+  },
 )
 
 async function validate() {
@@ -78,10 +106,30 @@ defineExpose({
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem label="分队">
-          <ElSelect v-model="model.subTeam" placeholder="请选择分队" clearable filterable>
+        <ElFormItem label="代表球队" prop="teamIds">
+          <ElSelect
+            v-model="model.teamIds"
+            placeholder="请选择代表球队"
+            multiple
+            collapse-tags
+            collapse-tags-tooltip
+            filterable
+          >
             <ElOption
-              v-for="item in subTeamOptions"
+              v-for="item in teamOptions"
+              :key="String(item.value)"
+              :label="item.label"
+              :value="item.value"
+            />
+          </ElSelect>
+        </ElFormItem>
+      </ElCol>
+      <ElCol :span="12">
+        <ElFormItem label="主队">
+          <ElSelect v-model="model.primaryTeamId" placeholder="请选择主队" filterable>
+            <ElOption label="无主队" value="" />
+            <ElOption
+              v-for="item in primaryTeamOptions"
               :key="String(item.value)"
               :label="item.label"
               :value="item.value"
@@ -95,14 +143,14 @@ defineExpose({
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem label="位置">
+        <ElFormItem label="可踢位置" prop="positions">
           <ElSelect
-            v-model="model.position"
-            placeholder="请输入或选择位置"
-            clearable
+            v-model="model.positions"
+            placeholder="请选择可踢位置"
+            multiple
+            collapse-tags
+            collapse-tags-tooltip
             filterable
-            allow-create
-            default-first-option
           >
             <ElOption
               v-for="item in positionOptions"
@@ -114,8 +162,16 @@ defineExpose({
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
-        <ElFormItem label="球衣尺码">
-          <ElInput v-model="model.jerseySize" placeholder="例如 L / XL" />
+        <ElFormItem label="主位置">
+          <ElSelect v-model="model.primaryPosition" placeholder="请选择主位置" filterable>
+            <ElOption label="无主位置" value="" />
+            <ElOption
+              v-for="item in primaryPositionOptions"
+              :key="String(item.value)"
+              :label="item.label"
+              :value="item.value"
+            />
+          </ElSelect>
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
@@ -143,6 +199,11 @@ defineExpose({
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
+        <ElFormItem label="球衣尺码">
+          <ElInput v-model="model.jerseySize" placeholder="例如 L / XL" />
+        </ElFormItem>
+      </ElCol>
+      <ElCol :span="12">
         <ElFormItem label="出生日期">
           <ElDatePicker
             v-model="model.birthDate"
@@ -156,6 +217,16 @@ defineExpose({
       <ElCol :span="12">
         <ElFormItem label="管理员">
           <ElSwitch v-model="model.isAdmin" />
+        </ElFormItem>
+      </ElCol>
+      <ElCol :span="12">
+        <ElFormItem label="签名/简介" prop="signature">
+          <ElInput
+            v-model="model.signature"
+            placeholder="请输入 15 字以内签名"
+            maxlength="15"
+            show-word-limit
+          />
         </ElFormItem>
       </ElCol>
       <ElCol :span="24">

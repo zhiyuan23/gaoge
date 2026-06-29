@@ -5,10 +5,12 @@ import type {
   AuthLoginResponse,
   AuthRoleSummary,
   AuthUser,
+  FootballPosition,
   MiniappAuthUser,
   MiniappLoginResponse,
   MiniappPlayerSummary,
   PermissionResponse,
+  Team,
   UserRole,
 } from '@gaoge/shared-types'
 
@@ -121,10 +123,20 @@ export class AuthService {
           avatarUrl: true,
           realName: true,
           subTeam: true,
+          primaryTeamId: true,
+          primaryTeam: true,
+          playerTeams: {
+            include: {
+              team: true,
+            },
+          },
           jerseyName: true,
           birthDate: true,
           isAdmin: true,
           position: true,
+          positions: true,
+          primaryPosition: true,
+          signature: true,
           jerseySize: true,
           status: true,
           remark: true,
@@ -393,10 +405,19 @@ export class AuthService {
       avatarUrl: string | null
       realName: string | null
       subTeam: string | null
+      primaryTeamId: number | null
+      primaryTeam: AuthTeamRecord | null
+      playerTeams: Array<{
+        teamId: number
+        team: AuthTeamRecord
+      }>
       jerseyName: string | null
       birthDate: Date | null
       isAdmin: boolean
       position: string | null
+      positions: string[]
+      primaryPosition: string | null
+      signature: string | null
       jerseySize: string | null
       status: string
       remark: string | null
@@ -415,10 +436,17 @@ export class AuthService {
       avatarUrl: player.avatarUrl,
       realName: player.realName,
       subTeam: player.subTeam,
+      teamIds: player.playerTeams.map((item) => item.teamId),
+      teams: player.playerTeams.map((item) => serializeTeam(item.team)),
+      primaryTeamId: player.primaryTeamId,
+      primaryTeam: player.primaryTeam ? serializeTeam(player.primaryTeam) : null,
       jerseyName: player.jerseyName,
       birthDate: player.birthDate?.toISOString() ?? null,
       isAdmin: player.isAdmin,
       position: player.position,
+      positions: player.positions as FootballPosition[],
+      primaryPosition: player.primaryPosition as FootballPosition | null,
+      signature: player.signature,
       jerseySize: player.jerseySize,
       status: player.status,
       remark: player.remark,
@@ -524,5 +552,26 @@ export class AuthService {
     }
 
     return this.toUserRole(user.role)
+  }
+}
+
+type AuthTeamRecord = {
+  id: number
+  code: string
+  name: string
+  avatarUrl: string | null
+  slogan: string | null
+  sponsorName: string | null
+  sort: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+function serializeTeam(team: AuthTeamRecord): Team {
+  return {
+    ...team,
+    code: team.code as Team['code'],
+    createdAt: team.createdAt.toISOString(),
+    updatedAt: team.updatedAt.toISOString(),
   }
 }

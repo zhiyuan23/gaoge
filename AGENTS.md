@@ -157,6 +157,8 @@ AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 - `pnpm dev:desktop`
 - `pnpm dev:ios`
 - `pnpm dev:desktop-api`
+- `pnpm --filter @gaoge/app-api exec prisma migrate dev`
+- `pnpm --filter @gaoge/app-api db:generate`
 - `pnpm build:desktop`
 - `pnpm build:ios`
 - `pnpm lint`
@@ -165,6 +167,8 @@ AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 - `pnpm lint:style:fix`
 - `pnpm typecheck`
 - `pnpm typecheck:ios`
+
+涉及 `apps/api/prisma/schema.prisma` 或 `apps/api/prisma/migrations/*` 的表结构变更时，开发完成后必须按 [docs/conventions/testing-and-verification.md](docs/conventions/testing-and-verification.md) 的 Prisma 表结构变更小节同步本地数据库、Prisma Client 和运行中的 API 进程，并做受影响接口 smoke test。
 
 ## 提交约定
 

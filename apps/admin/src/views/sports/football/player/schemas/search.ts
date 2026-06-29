@@ -1,15 +1,9 @@
 import type { SearchField, SearchOption } from '@/components/common/EsSearch/types'
 
-import { PLAYER_STATUS_OPTIONS } from './form'
-
-export const PLAYER_SUB_TEAM_OPTIONS: SearchOption[] = [
-  { label: '皇家高歌', value: '皇家高歌' },
-  { label: '高歌国际', value: '高歌国际' },
-  { label: '高歌联', value: '高歌联' },
-]
+import { PLAYER_POSITION_OPTIONS, PLAYER_STATUS_OPTIONS } from './form'
 
 export interface PlayerSearchFieldContext {
-  subTeamOptions: () => SearchOption[]
+  teamOptions: () => SearchOption[]
 }
 
 export function createPlayerOptionList(values: Array<string | null | undefined>): SearchOption[] {
@@ -42,11 +36,22 @@ export function createPlayerSearchFields(ctx: PlayerSearchFieldContext): SearchF
       placeholder: '昵称 / 号码',
     },
     {
-      key: 'subTeam',
-      label: '分队',
+      key: 'teamId',
+      label: '代表球队',
       type: 'select',
       placeholder: '全部',
-      options: ctx.subTeamOptions,
+      options: ctx.teamOptions,
+      props: {
+        filterable: true,
+        clearable: true,
+      },
+    },
+    {
+      key: 'position',
+      label: '位置',
+      type: 'select',
+      placeholder: '全部',
+      options: PLAYER_POSITION_OPTIONS,
       props: {
         filterable: true,
         clearable: true,

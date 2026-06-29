@@ -1,4 +1,6 @@
 import type { DateTimeString } from './common.js'
+import type { FootballPosition } from './player.js'
+import type { Team } from './team.js'
 
 /** 用户角色。admin 可访问后台管理能力，viewer 只读访问，user 为普通用户。 */
 export type UserRole = 'user' | 'admin' | 'viewer'
@@ -76,10 +78,17 @@ export type AdminLoginResponse = AuthLoginResponse
  * @property avatarUrl 球员头像 URL。
  * @property realName 真实姓名。
  * @property subTeam 子球队。
+ * @property teamIds 代表球队 ID 列表。
+ * @property teams 代表球队列表。
+ * @property primaryTeamId 主队 ID。
+ * @property primaryTeam 主队。
  * @property jerseyName 球衣名称。
  * @property birthDate 出生日期。
  * @property isAdmin 是否管理员。
  * @property position 场上位置。
+ * @property positions 可踢位置列表。
+ * @property primaryPosition 主位置。
+ * @property signature 签名或简介。
  * @property jerseySize 球衣尺码。
  * @property status 球员状态。
  * @property remark 备注。
@@ -93,10 +102,17 @@ export interface MiniappPlayerSummary {
   avatarUrl: string | null
   realName: string | null
   subTeam: string | null
+  teamIds: number[]
+  teams: Team[]
+  primaryTeamId: number | null
+  primaryTeam: Team | null
   jerseyName: string | null
   birthDate: DateTimeString | null
   isAdmin: boolean
   position: string | null
+  positions: FootballPosition[]
+  primaryPosition: FootballPosition | null
+  signature: string | null
   jerseySize: string | null
   status: string
   remark: string | null
@@ -163,6 +179,7 @@ export interface MiniappMeResponse {
  * @property birthDate 出生日期。
  * @property position 场上位置。
  * @property jerseySize 球衣尺码。
+ * @property signature 签名或简介。
  * @property remark 备注。
  */
 export interface MiniappUpdateProfilePayload {
@@ -173,6 +190,7 @@ export interface MiniappUpdateProfilePayload {
   birthDate?: DateTimeString | null
   position?: string | null
   jerseySize?: string | null
+  signature?: string | null
   remark?: string | null
 }
 

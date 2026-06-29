@@ -24,6 +24,33 @@
 
 若改动影响全局协议、共享类型或根配置，再评估是否补跑根级校验。
 
+#### 涉及 Prisma 表结构变更
+
+当修改 `apps/api/prisma/schema.prisma`、新增/调整 `apps/api/prisma/migrations/*`，或后端代码开始读写新表/新列时，开发完成后必须同步本地数据库、Prisma Client 和运行中的 API 进程。
+
+本地开发库执行：
+
+```bash
+pnpm --filter @gaoge/app-api exec prisma migrate dev
+pnpm --filter @gaoge/app-api db:generate
+pnpm --filter @gaoge/app-api typecheck
+pnpm --filter @gaoge/app-api test
+pnpm dev:api
+```
+
+如果当前已经有 API 进程在 `3000` 端口运行，需要确认它加载的是最新代码；必要时重启 API 进程后再做接口 smoke test。
+
+生产或部署环境不能使用 `migrate dev`，应执行部署入口：
+
+```bash
+pnpm db:migrate:prod:api
+```
+
+Prisma 表结构变更的最低 smoke test：
+
+- `pnpm --filter @gaoge/app-api exec prisma migrate status` 显示数据库结构已同步
+- 至少请求一次受影响接口，确认不是旧 DTO、旧 Prisma Client 或未迁移数据库导致的 `400` / `500`
+
 ### 改 `apps/admin`
 
 优先执行：

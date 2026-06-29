@@ -4,6 +4,76 @@ import { hashPassword } from '@/common/auth/password.util'
 
 import { AuthService } from './auth.service'
 
+const miniappPlayerProfileSelectExpectation = {
+  id: true,
+  playerNumber: true,
+  nickname: true,
+  avatarUrl: true,
+  realName: true,
+  subTeam: true,
+  primaryTeamId: true,
+  primaryTeam: true,
+  playerTeams: {
+    include: {
+      team: true,
+    },
+  },
+  jerseyName: true,
+  birthDate: true,
+  isAdmin: true,
+  position: true,
+  positions: true,
+  primaryPosition: true,
+  signature: true,
+  jerseySize: true,
+  status: true,
+  remark: true,
+  createdAt: true,
+  updatedAt: true,
+}
+
+const teamSummary = {
+  id: 1,
+  code: 'real',
+  name: '皇家高歌',
+  avatarUrl: null,
+  slogan: null,
+  sponsorName: null,
+  sort: 0,
+  createdAt: '2026-05-01T00:00:00.000Z',
+  updatedAt: '2026-05-01T00:00:00.000Z',
+}
+
+const teamRecord = {
+  ...teamSummary,
+  createdAt: new Date(teamSummary.createdAt),
+  updatedAt: new Date(teamSummary.updatedAt),
+}
+
+const playerProfileExtras = {
+  teamIds: [1],
+  teams: [teamSummary],
+  primaryTeamId: 1,
+  primaryTeam: teamSummary,
+  positions: ['central_midfielder'],
+  primaryPosition: 'central_midfielder',
+  signature: '大师风范',
+}
+
+const playerProfileRelationFields = {
+  primaryTeamId: 1,
+  primaryTeam: teamRecord,
+  playerTeams: [
+    {
+      teamId: 1,
+      team: teamRecord,
+    },
+  ],
+  positions: ['central_midfielder'],
+  primaryPosition: 'central_midfielder',
+  signature: '大师风范',
+}
+
 describe('AuthService miniapp login', () => {
   const createService = () => {
     const prisma = {
@@ -74,23 +144,7 @@ describe('AuthService miniapp login', () => {
 
     expect(prisma.player.findFirst).toHaveBeenCalledWith({
       where: { userId: 1 },
-      select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        realName: true,
-        subTeam: true,
-        jerseyName: true,
-        birthDate: true,
-        isAdmin: true,
-        position: true,
-        jerseySize: true,
-        status: true,
-        remark: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: miniappPlayerProfileSelectExpectation,
     })
   })
 
@@ -135,6 +189,7 @@ describe('AuthService miniapp login', () => {
       avatarUrl: 'https://example.com/p18.png',
       realName: 'Zinedine Zidane',
       subTeam: 'real',
+      ...playerProfileRelationFields,
       jerseyName: 'ZIDANE',
       birthDate: new Date('1990-06-10T00:00:00.000Z'),
       isAdmin: true,
@@ -162,6 +217,7 @@ describe('AuthService miniapp login', () => {
         avatarUrl: 'https://example.com/p18.png',
         realName: 'Zinedine Zidane',
         subTeam: 'real',
+        ...playerProfileExtras,
         jerseyName: 'ZIDANE',
         birthDate: '1990-06-10T00:00:00.000Z',
         isAdmin: true,

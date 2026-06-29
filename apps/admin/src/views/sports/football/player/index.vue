@@ -8,6 +8,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 import type { Player, PlayerPayload } from '@/api/football/player'
 import playersApi from '@/api/football/player'
+import teamsApi from '@/api/football/team'
 import type { SearchFormData, SearchOption } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
 import { useListPage } from '@/composables/useListPage'
@@ -16,11 +17,8 @@ import PlayerFormDialog from './components/PlayerFormDialog.vue'
 import { PLAYER_DEFAULT_SEARCH } from './model/defaults'
 import { buildPlayerListParams } from './model/mapper'
 import type { PlayerSearch } from './model/types'
-import {
-  createPlayerSearchFields,
-  mergePlayerStatusOptions,
-  PLAYER_SUB_TEAM_OPTIONS,
-} from './schemas/search'
+import { getFootballPositionLabel, PLAYER_POSITION_OPTIONS } from './schemas/form'
+import { createPlayerSearchFields, mergePlayerStatusOptions } from './schemas/search'
 import { formatDateTime, PLAYER_TABLE_COLUMNS } from './schemas/table'
 import { PLAYER_PERMISSIONS } from './auth'
 
@@ -30,6 +28,7 @@ defineOptions({
 
 const submitLoading = ref(false)
 const selectionDataList = ref<Player[]>([])
+const teamOptions = ref<SearchOption[]>([])
 
 const {
   search,
@@ -48,7 +47,8 @@ const {
   normalizeSearch(formData: SearchFormData) {
     return {
       keyword: String(formData.keyword ?? ''),
-      subTeam: String(formData.subTeam ?? ''),
+      teamId: typeof formData.teamId === 'number' ? formData.teamId : '',
+      position: String(formData.position ?? '') as PlayerSearch['position'],
     }
   },
 })
@@ -61,19 +61,7 @@ const {
   openEdit,
 } = useCrudDialog<Player>()
 
-const subTeamOptions = computed<SearchOption[]>(() => PLAYER_SUB_TEAM_OPTIONS)
-const positionOptions = computed(() =>
-  Array.from(
-    new Set(
-      tableData.value
-        .map((item) => item.position)
-        .filter((value): value is string => Boolean(value && value.trim())),
-    ),
-  ).map((value) => ({
-    label: value,
-    value,
-  })),
-)
+const positionOptions = computed<SearchOption[]>(() => PLAYER_POSITION_OPTIONS)
 const statusOptions = computed(() => {
   return mergePlayerStatusOptions(
     Array.from(new Set(tableData.value.map((item) => item.status))).map((value) => ({
@@ -85,9 +73,18 @@ const statusOptions = computed(() => {
 
 const searchFields = computed(() =>
   createPlayerSearchFields({
-    subTeamOptions: () => subTeamOptions.value,
+    teamOptions: () => teamOptions.value,
   }),
 )
+
+async function fetchTeamOptions() {
+  const { list } = await teamsApi.list({ page: 1, pageSize: 100 })
+
+  teamOptions.value = list.map((team) => ({
+    label: team.name,
+    value: team.id,
+  }))
+}
 
 function handleAdd() {
   openCreate()
@@ -110,6 +107,16 @@ function handleTableAction(payload: { row: Player; action: { key: string } }) {
 
 function handleSelectionChange(rows: Player[]) {
   selectionDataList.value = rows
+}
+
+function formatTeamNames(row: Player) {
+  return row.teams.length ? row.teams.map((team) => team.name).join('、') : '-'
+}
+
+function formatPositionNames(row: Player) {
+  return row.positions.length
+    ? row.positions.map((position) => getFootballPositionLabel(position)).join('、')
+    : '-'
 }
 
 async function handleDelete(row: Player) {
@@ -149,6 +156,7 @@ async function handleSubmit(payload: PlayerPayload) {
 
 onMounted(() => {
   fetchPlayers()
+  fetchTeamOptions()
 })
 
 watch(tableData, () => {
@@ -159,13 +167,7 @@ watch(tableData, () => {
 <template>
   <div class="absolute-container">
     <FaPageMain class="flex-1 overflow-auto" main-class="flex-1 flex flex-col overflow-auto">
-      <EsSearch
-        v-model="search"
-        :fields="searchFields"
-        :default-visible-count="2"
-        @search="handleSearch"
-      >
-      </EsSearch>
+      <EsSearch v-model="search" :fields="searchFields" @search="handleSearch"> </EsSearch>
 
       <EsListToolbar>
         <template #actions>
@@ -193,6 +195,18 @@ watch(tableData, () => {
               {{ (row.nickname || '?').slice(0, 1) }}
             </ElAvatar>
           </template>
+          <template #teams="{ row }">
+            {{ formatTeamNames(row) }}
+          </template>
+          <template #primaryTeam="{ row }">
+            {{ row.primaryTeam?.name ?? '无主队' }}
+          </template>
+          <template #positions="{ row }">
+            {{ formatPositionNames(row) }}
+          </template>
+          <template #primaryPosition="{ row }">
+            {{ row.primaryPosition ? getFootballPositionLabel(row.primaryPosition) : '无主位置' }}
+          </template>
           <template #createdAt="{ row }">
             {{ formatDateTime(row.createdAt) }}
           </template>
@@ -207,7 +221,7 @@ watch(tableData, () => {
       v-model="dialogVisible"
       :mode="dialogMode"
       :player="currentPlayer"
-      :sub-team-options="subTeamOptions"
+      :team-options="teamOptions"
       :position-options="positionOptions"
       :status-options="statusOptions"
       :loading="submitLoading"

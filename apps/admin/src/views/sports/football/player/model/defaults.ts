@@ -2,7 +2,8 @@ import type { PlayerFormModel, PlayerSearch } from './types'
 
 export const PLAYER_DEFAULT_SEARCH: PlayerSearch = {
   keyword: '',
-  subTeam: '',
+  teamId: '',
+  position: '',
 }
 
 export function createEmptyPlayerForm(): PlayerFormModel {
@@ -13,12 +14,17 @@ export function createEmptyPlayerForm(): PlayerFormModel {
     realName: '',
     avatarUrl: '',
     subTeam: '',
+    teamIds: [],
+    primaryTeamId: '',
     jerseyName: '',
     birthDate: '',
     isAdmin: false,
     position: '',
+    positions: [],
+    primaryPosition: '',
     jerseySize: '',
     status: 'active',
+    signature: '',
     remark: '',
   }
 }

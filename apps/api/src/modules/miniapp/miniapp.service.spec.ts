@@ -2,6 +2,76 @@ import { ConflictException, NotFoundException, UnauthorizedException } from '@ne
 
 import { MiniappService } from './miniapp.service'
 
+const miniappPlayerProfileSelectExpectation = {
+  id: true,
+  playerNumber: true,
+  nickname: true,
+  avatarUrl: true,
+  realName: true,
+  subTeam: true,
+  primaryTeamId: true,
+  primaryTeam: true,
+  playerTeams: {
+    include: {
+      team: true,
+    },
+  },
+  jerseyName: true,
+  birthDate: true,
+  isAdmin: true,
+  position: true,
+  positions: true,
+  primaryPosition: true,
+  signature: true,
+  jerseySize: true,
+  status: true,
+  remark: true,
+  createdAt: true,
+  updatedAt: true,
+}
+
+const teamSummary = {
+  id: 1,
+  code: 'real',
+  name: '皇家高歌',
+  avatarUrl: null,
+  slogan: null,
+  sponsorName: null,
+  sort: 0,
+  createdAt: '2026-05-01T00:00:00.000Z',
+  updatedAt: '2026-05-01T00:00:00.000Z',
+}
+
+const teamRecord = {
+  ...teamSummary,
+  createdAt: new Date(teamSummary.createdAt),
+  updatedAt: new Date(teamSummary.updatedAt),
+}
+
+const playerProfileExtras = {
+  teamIds: [1],
+  teams: [teamSummary],
+  primaryTeamId: 1,
+  primaryTeam: teamSummary,
+  positions: ['striker'],
+  primaryPosition: 'striker',
+  signature: '冲就完了',
+}
+
+const playerProfileRelationFields = {
+  primaryTeamId: 1,
+  primaryTeam: teamRecord,
+  playerTeams: [
+    {
+      teamId: 1,
+      team: teamRecord,
+    },
+  ],
+  positions: ['striker'],
+  primaryPosition: 'striker',
+  signature: '冲就完了',
+}
+
 describe('MiniappService', () => {
   const createService = () => {
     const tx = {
@@ -77,23 +147,7 @@ describe('MiniappService', () => {
       where: {
         userId: 8,
       },
-      select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        realName: true,
-        subTeam: true,
-        jerseyName: true,
-        birthDate: true,
-        isAdmin: true,
-        position: true,
-        jerseySize: true,
-        status: true,
-        remark: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: miniappPlayerProfileSelectExpectation,
     })
   })
 
@@ -228,23 +282,7 @@ describe('MiniappService', () => {
       where: {
         userId: 21,
       },
-      select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        realName: true,
-        subTeam: true,
-        jerseyName: true,
-        birthDate: true,
-        isAdmin: true,
-        position: true,
-        jerseySize: true,
-        status: true,
-        remark: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: miniappPlayerProfileSelectExpectation,
     })
     expect(tx.player.update).not.toHaveBeenCalled()
   })
@@ -286,6 +324,7 @@ describe('MiniappService', () => {
       avatarUrl: 'https://example.com/p88.png',
       realName: 'Kyle Walker',
       subTeam: 'real',
+      ...playerProfileRelationFields,
       jerseyName: 'WALKER',
       birthDate: new Date('1992-05-28T00:00:00.000Z'),
       isAdmin: false,
@@ -314,6 +353,7 @@ describe('MiniappService', () => {
         avatarUrl: 'https://example.com/p88.png',
         realName: 'Kyle Walker',
         subTeam: 'real',
+        ...playerProfileExtras,
         jerseyName: 'WALKER',
         birthDate: '1992-05-28T00:00:00.000Z',
         isAdmin: false,
@@ -334,23 +374,7 @@ describe('MiniappService', () => {
       data: {
         userId: 23,
       },
-      select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        realName: true,
-        subTeam: true,
-        jerseyName: true,
-        birthDate: true,
-        isAdmin: true,
-        position: true,
-        jerseySize: true,
-        status: true,
-        remark: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: miniappPlayerProfileSelectExpectation,
     })
   })
 
@@ -374,44 +398,14 @@ describe('MiniappService', () => {
       where: {
         userId: 22,
       },
-      select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        realName: true,
-        subTeam: true,
-        jerseyName: true,
-        birthDate: true,
-        isAdmin: true,
-        position: true,
-        jerseySize: true,
-        status: true,
-        remark: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: miniappPlayerProfileSelectExpectation,
     })
     expect(tx.player.findFirst).toHaveBeenNthCalledWith(2, {
       where: {
         playerNumber: 100,
       },
       select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        realName: true,
-        subTeam: true,
-        jerseyName: true,
-        birthDate: true,
-        isAdmin: true,
-        position: true,
-        jerseySize: true,
-        status: true,
-        remark: true,
-        createdAt: true,
-        updatedAt: true,
+        ...miniappPlayerProfileSelectExpectation,
         userId: true,
       },
     })
@@ -454,6 +448,7 @@ describe('MiniappService', () => {
       avatarUrl: 'https://example.com/p99-new.png',
       realName: 'New Name',
       subTeam: 'real',
+      ...playerProfileRelationFields,
       jerseyName: 'NEW',
       birthDate: new Date('1991-06-11T00:00:00.000Z'),
       isAdmin: false,
@@ -494,6 +489,7 @@ describe('MiniappService', () => {
         avatarUrl: 'https://example.com/p99-new.png',
         realName: 'New Name',
         subTeam: 'real',
+        ...playerProfileExtras,
         jerseyName: 'NEW',
         birthDate: '1991-06-11T00:00:00.000Z',
         isAdmin: false,
@@ -521,23 +517,7 @@ describe('MiniappService', () => {
         jerseySize: 'L',
         remark: '新备注',
       },
-      select: {
-        id: true,
-        playerNumber: true,
-        nickname: true,
-        avatarUrl: true,
-        realName: true,
-        subTeam: true,
-        jerseyName: true,
-        birthDate: true,
-        isAdmin: true,
-        position: true,
-        jerseySize: true,
-        status: true,
-        remark: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: miniappPlayerProfileSelectExpectation,
     })
     expect(prisma.user.update).not.toHaveBeenCalled()
   })

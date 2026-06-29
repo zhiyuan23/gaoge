@@ -7,9 +7,11 @@ import {
 } from '@nestjs/common'
 
 import type {
+  FootballPosition,
   MiniappBindOptionsResponse,
   MiniappMeResponse,
   MiniappPlayerSummary,
+  Team,
 } from '@gaoge/shared-types'
 
 import { PrismaService } from '@/common/prisma/prisma.service'
@@ -21,10 +23,19 @@ type MiniappPlayerBinding = {
   avatarUrl: string | null
   realName: string | null
   subTeam: string | null
+  primaryTeamId: number | null
+  primaryTeam: MiniappTeamRecord | null
+  playerTeams: Array<{
+    teamId: number
+    team: MiniappTeamRecord
+  }>
   jerseyName: string | null
   birthDate: Date | null
   isAdmin: boolean
   position: string | null
+  positions: string[]
+  primaryPosition: string | null
+  signature: string | null
   jerseySize: string | null
   status: string
   remark: string | null
@@ -43,6 +54,18 @@ type MiniappUserRecord = {
   avatarUrl: string | null
   phone: string | null
   status: string
+}
+
+type MiniappTeamRecord = {
+  id: number
+  code: string
+  name: string
+  avatarUrl: string | null
+  slogan: string | null
+  sponsorName: string | null
+  sort: number
+  createdAt: Date
+  updatedAt: Date
 }
 
 type MiniappUserQueryResult = {
@@ -66,6 +89,7 @@ type MiniappProfileUpdatePayload = {
   position?: string | null
   realName?: string | null
   remark?: string | null
+  signature?: string | null
   subTeam?: string | null
 }
 
@@ -76,10 +100,20 @@ const miniappPlayerProfileSelect = {
   avatarUrl: true,
   realName: true,
   subTeam: true,
+  primaryTeamId: true,
+  primaryTeam: true,
+  playerTeams: {
+    include: {
+      team: true,
+    },
+  },
   jerseyName: true,
   birthDate: true,
   isAdmin: true,
   position: true,
+  positions: true,
+  primaryPosition: true,
+  signature: true,
   jerseySize: true,
   status: true,
   remark: true,
@@ -278,10 +312,17 @@ export class MiniappService {
       avatarUrl: player.avatarUrl,
       realName: player.realName,
       subTeam: player.subTeam,
+      teamIds: player.playerTeams.map((item) => item.teamId),
+      teams: player.playerTeams.map((item) => serializeTeam(item.team)),
+      primaryTeamId: player.primaryTeamId,
+      primaryTeam: player.primaryTeam ? serializeTeam(player.primaryTeam) : null,
       jerseyName: player.jerseyName,
       birthDate: player.birthDate?.toISOString() ?? null,
       isAdmin: player.isAdmin,
       position: player.position,
+      positions: player.positions as FootballPosition[],
+      primaryPosition: player.primaryPosition as FootballPosition | null,
+      signature: player.signature,
       jerseySize: player.jerseySize,
       status: player.status,
       remark: player.remark,
@@ -300,6 +341,7 @@ export class MiniappService {
       position?: string | null
       realName?: string | null
       remark?: string | null
+      signature?: string | null
       subTeam?: string | null
     } = {}
 
@@ -339,6 +381,10 @@ export class MiniappService {
       data.remark = normalizeNullableText(payload.remark)
     }
 
+    if (payload.signature !== undefined) {
+      data.signature = normalizeSignature(payload.signature)
+    }
+
     return data
   }
 }
@@ -375,4 +421,23 @@ function normalizeNullableDate(value: Date | string | null | undefined) {
   }
 
   return date
+}
+
+function normalizeSignature(value: string | null | undefined) {
+  const normalized = normalizeNullableText(value)
+
+  if (normalized && normalized.length > 15) {
+    throw new BadRequestException('签名最多 15 个字')
+  }
+
+  return normalized
+}
+
+function serializeTeam(team: MiniappTeamRecord): Team {
+  return {
+    ...team,
+    code: team.code as Team['code'],
+    createdAt: team.createdAt.toISOString(),
+    updatedAt: team.updatedAt.toISOString(),
+  }
 }

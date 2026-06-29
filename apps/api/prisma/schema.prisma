@@ -43,22 +43,28 @@ model User {
 // 球员表（足球队员）
 // ============================================
 model Player {
-  id           Int       @id @default(autoincrement())
-  openid       String?   @unique // 微信openid，非必填唯一
-  playerNumber Int?      @unique // 球员号码，业务上新增/编辑必填，范围 0~100
-  nickname     String    @unique // 昵称，必填唯一
-  realName     String? // 真实姓名，非必填
-  avatarUrl    String? // 头像，非必填
-  subTeam      String? // 当前分队字段仍保留为文本，后续再迁移为关联模型
-  jerseyName   String? // 球衣名称，非必填
-  birthDate    DateTime? // 出生年月日，非必填
-  isAdmin      Boolean   @default(false) // 是否管理员
-  position     String? // 足球位置，非必填
-  jerseySize   String? // 球衣尺码，非必填
-  status       String    @default("active") // active / inactive
-  remark       String? // 备注
-  userId       Int?      @unique // 绑定的用户ID
-  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  id              Int          @id @default(autoincrement())
+  openid          String?      @unique // 微信openid，非必填唯一
+  playerNumber    Int?         @unique // 球员号码，业务上新增/编辑必填，范围 0~100
+  nickname        String       @unique // 昵称，必填唯一
+  realName        String? // 真实姓名，非必填
+  avatarUrl       String? // 头像，非必填
+  subTeam         String? // 当前分队字段仍保留为文本，后续再迁移为关联模型
+  primaryTeamId   Int?
+  primaryTeam     Team?        @relation("PlayerPrimaryTeam", fields: [primaryTeamId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  playerTeams     PlayerTeam[]
+  jerseyName      String? // 球衣名称，非必填
+  birthDate       DateTime? // 出生年月日，非必填
+  isAdmin         Boolean      @default(false) // 是否管理员
+  position        String? // 足球位置，非必填
+  positions       String[]     @default([])
+  primaryPosition String?
+  jerseySize      String? // 球衣尺码，非必填
+  status          String       @default("active") // active / inactive
+  signature       String?
+  remark          String? // 备注
+  userId          Int?         @unique // 绑定的用户ID
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -67,6 +73,20 @@ model Player {
   @@index([openid])
   @@index([nickname])
   @@index([subTeam])
+  @@index([primaryTeamId])
+  @@index([primaryPosition])
+}
+
+model PlayerTeam {
+  playerId  Int
+  teamId    Int
+  createdAt DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([playerId, teamId])
+  @@index([teamId])
 }
 
 // ============================================
@@ -281,7 +301,9 @@ model Team {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  matchResults MatchRoundResult[]
+  matchResults   MatchRoundResult[]
+  primaryPlayers Player[]           @relation("PlayerPrimaryTeam")
+  playerTeams    PlayerTeam[]
 
   @@index([sort])
 }
