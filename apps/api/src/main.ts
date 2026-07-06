@@ -8,26 +8,13 @@ import { ResponseInterceptor } from './common/http/response.interceptor'
 import { resolveUploadRoot, uploadPublicPrefix } from './common/storage/upload-path'
 import { setupApiDocs } from './swagger/setup-api-docs'
 import { AppModule } from './app.module'
+import { createCorsOptions } from './main-cors'
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
 
   // 启用 CORS（跨域资源共享）
-  app.enableCors({
-    origin: [
-      'http://localhost:9000', // Admin 开发
-      'http://127.0.0.1:9000', // Admin 开发
-      'http://localhost:9527', // H5 开发
-      'http://127.0.0.1:9527', // H5 开发
-      'https://gaoge.cc', // 生产域名
-      'https://www.gaoge.cc',
-      'https://admin.gaoge.cc',
-      'https://api.gaoge.cc',
-    ],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Token'],
-  })
+  app.enableCors(createCorsOptions())
 
   // Swagger 接口文档配置
   const config = new DocumentBuilder()
