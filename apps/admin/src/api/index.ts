@@ -5,6 +5,8 @@ import { ElMessage } from 'element-plus'
 import useUserStore from '@/store/user'
 import { getApiBaseUrl } from '@/utils/url'
 
+import { handleUnauthorized } from './auth-expiration'
+
 const apiPrefix = import.meta.env.VITE_APP_API_PREFIX || ''
 const useProxyPrefix =
   import.meta.env.DEV && import.meta.env.VITE_OPEN_PROXY && apiPrefix.length > 0
@@ -17,6 +19,17 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 })
+
+function handleAuthExpiration(noAuth?: boolean) {
+  const userStore = useUserStore()
+
+  return handleUnauthorized({
+    noAuth,
+    isAuthenticated: () => userStore.isLogin,
+    expireSession: () => userStore.requestLogout(),
+    notifyExpiration: () => ElMessage.warning('登录状态已过期，请重新登录'),
+  })
+}
 
 declare module 'axios' {
   interface AxiosRequestConfig {
@@ -80,7 +93,10 @@ api.interceptors.response.use(
 
     // 登录失效/未授权，跳转到登录页
     if (payload.code === 401) {
-      useUserStore().requestLogout()
+      const handling = handleAuthExpiration(response.config.noAuth)
+      if (handling !== 'business-error') {
+        return Promise.reject(payload)
+      }
     }
 
     // 统一弹出业务错误提示
@@ -94,7 +110,10 @@ api.interceptors.response.use(
   (error) => {
     // 登录失效统一处理
     if (error.response?.status === 401 || error.code === 401) {
-      useUserStore().requestLogout()
+      const handling = handleAuthExpiration(error.config?.noAuth)
+      if (handling === 'business-error' && error.config?.toast !== false) {
+        ElMessage.error(error.response?.data?.errMsg || '身份验证失败')
+      }
     }
     // 非业务异常（网络错误/超时/HTTP错误等）统一提示
     else if (error.config?.toast !== false) {
