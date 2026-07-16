@@ -160,6 +160,7 @@ const useSettingsStore = defineStore(
     // 设置主题颜色模式
     function setColorScheme(color: Required<Settings.app>['colorScheme']) {
       settings.value.app.colorScheme = color
+      updateTheme()
     }
 
     // 更新应用配置
