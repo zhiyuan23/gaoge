@@ -1,128 +1,144 @@
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod'
-import { useForm } from 'vee-validate'
+import type { FormInstance, FormItemRule, FormRules } from 'element-plus'
 import { toast } from 'vue-sonner'
-import * as z from 'zod'
 
 import useUserStore from '@/store/user'
-import { FormControl, FormField, FormItem, FormMessage } from '@/ui/shadcn/ui/form'
 
 defineOptions({
   name: 'EditPasswordForm',
 })
 
+interface PasswordFormModel {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+const emits = defineEmits<{
+  close: []
+  dirtyChange: [dirty: boolean]
+  passwordChanged: []
+}>()
+
 const userStore = useUserStore()
-
+const formRef = ref<FormInstance>()
 const loading = ref(false)
-
-const form = useForm({
-  validationSchema: toTypedSchema(
-    z
-      .object({
-        password: z.string().min(1, '请输入原密码'),
-        newPassword: z
-          .string()
-          .min(1, '请输入新密码')
-          .min(6, '密码长度为6到18位')
-          .max(18, '密码长度为6到18位'),
-        checkPassword: z.string().min(1, '请确认新密码'),
-      })
-      .refine((data) => data.newPassword === data.checkPassword, {
-        message: '两次输入的密码不一致',
-        path: ['checkPassword'],
-      }),
-  ),
-  initialValues: {
-    password: '',
-    newPassword: '',
-    checkPassword: '',
-  },
+const model = reactive<PasswordFormModel>({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
 })
-const onSubmit = form.handleSubmit((values) => {
+
+const validateConfirmPassword: FormItemRule['validator'] = (_rule, value: string, callback) => {
+  if (value !== model.newPassword) {
+    callback(new Error('两次输入的新密码不一致'))
+    return
+  }
+  callback()
+}
+
+const rules: FormRules<PasswordFormModel> = {
+  currentPassword: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 8, max: 64, message: '新密码长度为 8 到 64 位', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    { validator: validateConfirmPassword, trigger: 'blur' },
+  ],
+}
+
+const dirty = computed(() => Object.values(model).some(Boolean))
+
+watch(dirty, (value) => emits('dirtyChange', value), { immediate: true })
+
+async function submit() {
+  await formRef.value?.validate()
   loading.value = true
-  userStore
-    .editPassword(values)
-    .then(async () => {
-      toast.success('模拟修改成功，请重新登录')
-      userStore.logout()
+  try {
+    await userStore.changePassword({
+      currentPassword: model.currentPassword,
+      newPassword: model.newPassword,
     })
-    .finally(() => {
-      loading.value = false
-    })
+    reset()
+    toast.success('密码修改成功，请重新登录')
+    emits('passwordChanged')
+  } finally {
+    loading.value = false
+  }
+}
+
+function reset() {
+  model.currentPassword = ''
+  model.newPassword = ''
+  model.confirmPassword = ''
+  formRef.value?.clearValidate()
+}
+
+defineExpose({
+  reset,
 })
 </script>
 
 <template>
-  <div class="flex-col-stretch-center w-full">
-    <div class="mb-6 space-y-2">
-      <h3 class="color-[var(--el-text-color-primary)] text-4xl font-bold">修改密码</h3>
-      <p class="text-muted-foreground text-sm lg:text-base">请输入原密码、新密码和确认密码</p>
+  <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submit">
+    <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-8">
+      <div class="bg-primary/5 mb-6 flex gap-3 rounded-xl border p-4">
+        <FaIcon name="i-lucide:shield-check" class="text-primary mt-0.5 size-5 shrink-0" />
+        <div>
+          <div class="text-foreground text-sm font-medium">修改后需要重新登录</div>
+          <p class="text-muted-foreground mt-1 text-xs leading-5">
+            为保护账号安全，更新密码后旧的刷新登录状态会失效。
+          </p>
+        </div>
+      </div>
+
+      <ElForm
+        ref="formRef"
+        :model="model"
+        :rules="rules"
+        label-position="top"
+        class="gaoge-form max-w-xl"
+        scroll-to-error
+      >
+        <ElFormItem label="原密码" prop="currentPassword">
+          <ElInput
+            v-model="model.currentPassword"
+            type="password"
+            show-password
+            autocomplete="current-password"
+            placeholder="请输入原密码"
+          />
+        </ElFormItem>
+        <ElFormItem label="新密码" prop="newPassword">
+          <ElInput
+            v-model="model.newPassword"
+            type="password"
+            show-password
+            autocomplete="new-password"
+            placeholder="请输入 8 到 64 位新密码"
+          />
+        </ElFormItem>
+        <ElFormItem label="确认新密码" prop="confirmPassword">
+          <ElInput
+            v-model="model.confirmPassword"
+            type="password"
+            show-password
+            autocomplete="new-password"
+            placeholder="请再次输入新密码"
+          />
+        </ElFormItem>
+      </ElForm>
     </div>
-    <form @submit="onSubmit">
-      <FormField v-slot="{ componentField, errors }" name="password">
-        <FormItem class="relative space-y-0 pb-6">
-          <FormControl>
-            <FaInput
-              type="password"
-              placeholder="请输入原密码"
-              class="w-full"
-              :class="errors.length ? 'border-destructive' : undefined"
-              v-bind="componentField"
-            />
-          </FormControl>
-          <Transition
-            enter-active-class="transition-opacity"
-            enter-from-class="opacity-0"
-            leave-active-class="transition-opacity"
-            leave-to-class="opacity-0"
-          >
-            <FormMessage class="absolute bottom-1 text-xs" />
-          </Transition>
-        </FormItem>
-      </FormField>
-      <FormField v-slot="{ componentField, errors }" name="newPassword">
-        <FormItem class="relative space-y-0 pb-6">
-          <FormControl>
-            <FaInput
-              type="password"
-              placeholder="请输入新密码"
-              class="w-full"
-              :class="errors.length ? 'border-destructive' : undefined"
-              v-bind="componentField"
-            />
-          </FormControl>
-          <Transition
-            enter-active-class="transition-opacity"
-            enter-from-class="opacity-0"
-            leave-active-class="transition-opacity"
-            leave-to-class="opacity-0"
-          >
-            <FormMessage class="absolute bottom-1 text-xs" />
-          </Transition>
-        </FormItem>
-      </FormField>
-      <FormField v-slot="{ componentField, errors }" name="checkPassword">
-        <FormItem class="relative space-y-0 pb-6">
-          <FormControl>
-            <FaInput
-              type="password"
-              placeholder="请确认新密码"
-              class="w-full"
-              :class="errors.length ? 'border-destructive' : undefined"
-              v-bind="componentField"
-            />
-          </FormControl>
-          <Transition
-            enter-active-class="transition-opacity"
-            enter-from-class="opacity-0"
-            leave-active-class="transition-opacity"
-            leave-to-class="opacity-0"
-          >
-            <FormMessage class="absolute bottom-1 text-xs" />
-          </Transition>
-        </FormItem>
-      </FormField>
-      <FaButton :loading="loading" size="lg" class="mt-8 w-full" type="submit"> 保存 </FaButton>
-    </form>
-  </div>
+
+    <footer class="bg-muted/20 flex justify-end gap-3 border-t px-4 py-4 sm:px-8">
+      <FaButton type="button" variant="outline" class="min-h-11" @click="emits('close')">
+        取消
+      </FaButton>
+      <FaButton type="submit" class="min-h-11" :disabled="!dirty" :loading="loading">
+        更新密码
+      </FaButton>
+    </footer>
+  </form>
 </template>

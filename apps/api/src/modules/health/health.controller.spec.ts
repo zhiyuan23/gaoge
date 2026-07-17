@@ -28,9 +28,9 @@ describe('healthController', () => {
   })
 
   it('returns process health status', () => {
-    service.checkApp.mockReturnValue({ status: 'ok' })
+    service.checkApp.mockReturnValue({ app: '@gaoge/app-api', status: 'ok' })
 
-    expect(controller.checkApp()).toEqual({ status: 'ok' })
+    expect(controller.checkApp()).toEqual({ app: '@gaoge/app-api', status: 'ok' })
   })
 
   it('returns database health status', async () => {

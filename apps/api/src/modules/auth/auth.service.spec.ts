@@ -1,6 +1,6 @@
-import { UnauthorizedException } from '@nestjs/common'
+import { BadRequestException, UnauthorizedException } from '@nestjs/common'
 
-import { hashPassword } from '@/common/auth/password.util'
+import { hashPassword, verifyPassword } from '@/common/auth/password.util'
 
 import { AuthService } from './auth.service'
 
@@ -245,7 +245,15 @@ describe('AuthService admin RBAC', () => {
       },
       refreshToken: {
         create: jest.fn(),
+        deleteMany: jest.fn(),
       },
+      $transaction: jest.fn(async (input: unknown) => {
+        if (Array.isArray(input)) {
+          return Promise.all(input)
+        }
+
+        return (input as (tx: any) => Promise<unknown>)(prisma)
+      }),
       userRole: {
         findMany: jest.fn(),
       },
@@ -421,5 +429,114 @@ describe('AuthService admin RBAC', () => {
 
     expect(result.permissions).toContain('system.wechat-share.view')
     expect(result.permissions).toContain('system.wechat-share.update')
+  })
+
+  it('updates the current admin profile and returns the latest serialized user', async () => {
+    const { service, prisma } = createService()
+
+    prisma.user.update.mockResolvedValue({
+      id: 9,
+      account: 'admin',
+      openid: null,
+      nickname: '新昵称',
+      avatarUrl: 'https://example.com/avatar.png',
+      phone: null,
+      role: 'admin',
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: new Date('2026-07-16T08:00:00.000Z'),
+    })
+
+    await expect(
+      service.updateProfile(9, {
+        nickname: '  新昵称  ',
+        avatarUrl: ' https://example.com/avatar.png ',
+      }),
+    ).resolves.toMatchObject({
+      id: 9,
+      account: 'admin',
+      nickname: '新昵称',
+      avatarUrl: 'https://example.com/avatar.png',
+    })
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 9 },
+      data: {
+        nickname: '新昵称',
+        avatarUrl: 'https://example.com/avatar.png',
+      },
+    })
+  })
+
+  it('changes the current admin password and revokes refresh tokens', async () => {
+    const { service, prisma } = createService()
+    const passwordHash = await hashPassword('Admin@123456')
+
+    prisma.user.findUnique.mockResolvedValue({
+      id: 9,
+      account: 'admin',
+      passwordHash,
+      status: 'active',
+      deletedAt: null,
+    })
+    prisma.user.update.mockResolvedValue({ id: 9 })
+    prisma.refreshToken.deleteMany.mockResolvedValue({ count: 2 })
+
+    await expect(
+      service.changePassword(9, {
+        currentPassword: 'Admin@123456',
+        newPassword: 'Admin@654321',
+      }),
+    ).resolves.toEqual({ message: '密码修改成功，请重新登录' })
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 9 },
+      data: {
+        passwordHash: expect.any(String),
+      },
+    })
+    expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { userId: 9 } })
+
+    const updatedHash = (prisma.user.update.mock.calls[0]?.[0] as any).data.passwordHash
+    await expect(verifyPassword('Admin@654321', updatedHash)).resolves.toBe(true)
+  })
+
+  it('rejects password changes when the current password is wrong', async () => {
+    const { service, prisma } = createService()
+
+    prisma.user.findUnique.mockResolvedValue({
+      id: 9,
+      passwordHash: await hashPassword('Admin@123456'),
+      status: 'active',
+      deletedAt: null,
+    })
+
+    await expect(
+      service.changePassword(9, {
+        currentPassword: 'Wrong@123456',
+        newPassword: 'Admin@654321',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException)
+    expect(prisma.$transaction).not.toHaveBeenCalled()
+  })
+
+  it('rejects password changes when the new password matches the current password', async () => {
+    const { service, prisma } = createService()
+    const passwordHash = await hashPassword('Admin@123456')
+
+    prisma.user.findUnique.mockResolvedValue({
+      id: 9,
+      passwordHash,
+      status: 'active',
+      deletedAt: null,
+    })
+
+    await expect(
+      service.changePassword(9, {
+        currentPassword: 'Admin@123456',
+        newPassword: 'Admin@123456',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException)
+    expect(prisma.$transaction).not.toHaveBeenCalled()
   })
 })

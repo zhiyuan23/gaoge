@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 const API_FILTER = '@gaoge/app-api'
+const EXPECTED_API_APP = API_FILTER
 const DEFAULT_HEALTH_URL = process.env.GAOGE_API_HEALTH_URL ?? 'http://127.0.0.1:3000/health'
 const ENTRY_FILE_PATH = fileURLToPath(import.meta.url)
 
@@ -50,7 +51,14 @@ export async function probeApiHealth(fetchImpl = fetch, healthUrl = DEFAULT_HEAL
       signal: AbortSignal.timeout(1000),
     })
 
-    return response.ok
+    if (!response.ok) {
+      return false
+    }
+
+    const payload = await response.json()
+    const health = payload?.data ?? payload
+
+    return health?.app === EXPECTED_API_APP && health?.status === 'ok'
   } catch {
     return false
   }

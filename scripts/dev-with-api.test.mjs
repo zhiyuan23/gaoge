@@ -60,10 +60,48 @@ test('createExecutionPlan returns target-plus-api mode when api probe fails', as
   assert.equal(plan.args.includes('--filter=@gaoge/app-api'), true)
 })
 
-test('probeApiHealth returns true on 2xx response', async () => {
-  const ok = await probeApiHealth(async () => ({ ok: true }))
+test('probeApiHealth returns true when health payload matches this api', async () => {
+  const ok = await probeApiHealth(async () => ({
+    ok: true,
+    json: async () => ({
+      code: 0,
+      data: {
+        app: '@gaoge/app-api',
+        status: 'ok',
+      },
+    }),
+  }))
 
   assert.equal(ok, true)
+})
+
+test('probeApiHealth returns false when another app responds on the api port', async () => {
+  const ok = await probeApiHealth(async () => ({
+    ok: true,
+    json: async () => ({
+      code: 0,
+      data: {
+        app: '@gaoge/compass-api',
+        status: 'ok',
+      },
+    }),
+  }))
+
+  assert.equal(ok, false)
+})
+
+test('probeApiHealth returns false when health payload has no app identity', async () => {
+  const ok = await probeApiHealth(async () => ({
+    ok: true,
+    json: async () => ({
+      code: 0,
+      data: {
+        status: 'ok',
+      },
+    }),
+  }))
+
+  assert.equal(ok, false)
 })
 
 test('probeApiHealth returns false when fetch throws', async () => {

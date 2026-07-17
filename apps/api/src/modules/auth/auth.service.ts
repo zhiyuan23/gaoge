@@ -19,7 +19,9 @@ import { PrismaService } from '@/common/prisma/prisma.service'
 import { WechatService } from '@/common/wechat/wechat.service'
 import { BUILT_IN_PERMISSION_DEFINITIONS } from '@/modules/system/rbac/builtins'
 
+import type { ChangePasswordDto } from './dto/change-password.dto'
 import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from './dto/login.dto'
+import type { UpdateProfileDto } from './dto/update-profile.dto'
 
 export interface JwtPayload {
   sub: number
@@ -346,6 +348,46 @@ export class AuthService {
     }
 
     return this.serializeUser(user)
+  }
+
+  async updateProfile(userId: number, dto: UpdateProfileDto): Promise<AuthUser> {
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        nickname: dto.nickname.trim(),
+        avatarUrl: dto.avatarUrl?.trim() || null,
+      },
+    })
+
+    return this.serializeUser(updatedUser)
+  }
+
+  async changePassword(userId: number, dto: ChangePasswordDto): Promise<{ message: string }> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } })
+    if (!user || user.deletedAt || user.status !== 'active' || !user.passwordHash) {
+      throw new UnauthorizedException('用户不存在或已被禁用')
+    }
+
+    if (!(await verifyPassword(dto.currentPassword, user.passwordHash))) {
+      throw new BadRequestException('原密码不正确')
+    }
+
+    if (await verifyPassword(dto.newPassword, user.passwordHash)) {
+      throw new BadRequestException('新密码不能与原密码相同')
+    }
+
+    const passwordHash = await hashPassword(dto.newPassword)
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          passwordHash,
+        },
+      })
+      await tx.refreshToken.deleteMany({ where: { userId } })
+    })
+
+    return { message: '密码修改成功，请重新登录' }
   }
 
   async getPermission(userId: number): Promise<PermissionResponse> {

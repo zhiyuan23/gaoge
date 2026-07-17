@@ -1,3 +1,10 @@
+import type {
+  AuthRoleSummary,
+  AuthUser,
+  ChangePasswordPayload,
+  UpdateAuthProfilePayload,
+} from '@gaoge/shared-types'
+
 import apiUser from '@/api/user'
 import router from '@/router'
 
@@ -16,24 +23,35 @@ const useUserStore = defineStore(
     const tabbarStore = useTabbarStore()
 
     const account = ref(localStorage.account ?? '')
+    const nickname = ref(localStorage.nickname ?? '')
     const token = ref(localStorage.token ?? '')
     const avatar = ref(localStorage.avatar ?? '')
     const role = ref(localStorage.role ?? '')
     const permissions = ref<string[]>([])
+    const profile = ref<AuthUser | null>(null)
+    const roles = ref<AuthRoleSummary[]>([])
     const isLogin = computed(() => Boolean(token.value))
+    const displayName = computed(() => nickname.value.trim() || account.value)
+
+    function applyProfile(nextProfile: AuthUser) {
+      profile.value = nextProfile
+      account.value = nextProfile.account ?? ''
+      nickname.value = nextProfile.nickname ?? ''
+      avatar.value = nextProfile.avatarUrl ?? ''
+      role.value = nextProfile.role ?? ''
+      localStorage.setItem('account', account.value)
+      localStorage.setItem('nickname', nickname.value)
+      localStorage.setItem('avatar', avatar.value)
+      localStorage.setItem('role', role.value)
+    }
 
     // 登录
     async function login(data: { account: string; password: string }) {
       const res = await apiUser.login(data)
-      const { user, accessToken } = res as any
-      localStorage.setItem('account', user.account ?? '')
+      const { user, accessToken } = res
       localStorage.setItem('token', accessToken)
-      localStorage.setItem('avatar', user.avatarUrl ?? '')
-      localStorage.setItem('role', user.role ?? '')
-      account.value = user.account ?? ''
       token.value = accessToken
-      avatar.value = user.avatarUrl ?? ''
-      role.value = user.role ?? ''
+      applyProfile(user)
     }
 
     // 手动登出
@@ -76,12 +94,16 @@ const useUserStore = defineStore(
     // 登出后清除状态
     function logoutCleanStatus() {
       localStorage.removeItem('account')
+      localStorage.removeItem('nickname')
       localStorage.removeItem('avatar')
       localStorage.removeItem('role')
       account.value = ''
+      nickname.value = ''
       avatar.value = ''
       role.value = ''
       permissions.value = []
+      profile.value = null
+      roles.value = []
       settingsStore.updateSettings({}, true)
       tabbarStore.clean()
       routeStore.removeRoutes()
@@ -95,12 +117,16 @@ const useUserStore = defineStore(
         apiUser.profile(),
       ])
       permissions.value = permissionRes.permissions
-      role.value = profileRes.role
-      avatar.value = profileRes.avatarUrl ?? ''
-      account.value = profileRes.account ?? ''
-      localStorage.setItem('role', role.value)
-      localStorage.setItem('avatar', avatar.value)
-      localStorage.setItem('account', account.value)
+      roles.value = permissionRes.roles
+      applyProfile(profileRes)
+    }
+    async function updateProfile(data: UpdateAuthProfilePayload) {
+      const profileRes = await apiUser.updateProfile(data)
+      applyProfile(profileRes)
+      return profileRes
+    }
+    async function changePassword(data: ChangePasswordPayload) {
+      return apiUser.changePassword(data)
     }
     // 修改密码
     async function editPassword(data: { password: string; newPassword: string }) {
@@ -109,15 +135,21 @@ const useUserStore = defineStore(
 
     return {
       account,
+      nickname,
       token,
       avatar,
       role,
       permissions,
+      profile,
+      roles,
       isLogin,
+      displayName,
       login,
       logout,
       requestLogout,
       getPermissions,
+      updateProfile,
+      changePassword,
       editPassword,
     }
   },

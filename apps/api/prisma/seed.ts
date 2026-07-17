@@ -77,12 +77,13 @@ async function main() {
       })
       console.log(`✅ 创建球员：${player.nickname}`)
     }
+
+    const count = await prisma.player.count()
+    console.log(`\n✨ 完成！共创建 ${count} 名球员`)
   } else {
     console.log('⚠️  未配置球员 seed 数据，跳过球员数据重置')
+    console.log('\n✨ 完成！')
   }
-
-  const count = await prisma.player.count()
-  console.log(`\n✨ 完成！共创建 ${count} 名球员`)
 }
 
 main()

@@ -44,6 +44,23 @@ export interface AuthUser {
   lastLoginAt: DateTimeString | null
 }
 
+/** 后台当前用户资料更新参数。 */
+export interface UpdateAuthProfilePayload {
+  nickname: string
+  avatarUrl: string | null
+}
+
+/** 后台当前用户修改密码参数。 */
+export interface ChangePasswordPayload {
+  currentPassword: string
+  newPassword: string
+}
+
+/** 后台当前用户修改密码响应。 */
+export interface ChangePasswordResponse {
+  message: string
+}
+
 export interface AuthRoleSummary {
   id: number
   code: string

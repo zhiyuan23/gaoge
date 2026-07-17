@@ -5,6 +5,7 @@ import {
   Header,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -13,7 +14,9 @@ import {
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
 
+import { ChangePasswordDto } from './dto/change-password.dto'
 import { AdminLoginDto, MiniappLoginDto, PhoneLoginDto, RefreshTokenDto } from './dto/login.dto'
+import { UpdateProfileDto } from './dto/update-profile.dto'
 import { AuthService } from './auth.service'
 import { JwtAuthGuard } from './jwt-auth.guard'
 
@@ -60,6 +63,24 @@ export class AuthController {
   @Header('Surrogate-Control', 'no-store')
   profile(@Req() request: { user: { id: number } }) {
     return this.authService.getProfile(request.user.id)
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  updateProfile(
+    @Req() request: { user: { id: number } },
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(request.user.id, updateProfileDto)
+  }
+
+  @Patch('password')
+  @UseGuards(JwtAuthGuard)
+  changePassword(
+    @Req() request: { user: { id: number } },
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(request.user.id, changePasswordDto)
   }
 
   @Get('permission')
