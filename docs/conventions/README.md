@@ -18,6 +18,10 @@
 - [env-and-config.md](./env-and-config.md)：环境变量、配置读取与多应用配置边界约定
 - [testing-and-verification.md](./testing-and-verification.md)：按改动范围执行校验与提交前验证约定
 
+运维资料：
+
+- [../ops/production-runtime-guard.md](../ops/production-runtime-guard.md)：生产发布后和重启后的 PM2、release、数据库和关键接口守卫
+
 维护规则：
 
 - 仓库级协作规则、目录职责、依赖方向继续维护在 [AGENTS.md](../../AGENTS.md)

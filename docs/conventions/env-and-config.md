@@ -58,6 +58,7 @@
 - `main.ts`、进程入口、脚本文件可直接读取少量 `process.env.*`
 - 数据库连接仍以 Prisma schema 和 `DATABASE_URL` 为事实来源
 - 上传目录这类部署相关路径必须使用显式环境变量配置；当前 API 上传根目录使用 `API_UPLOAD_ROOT`
+- 生产部署必须通过 `EXPECTED_DATABASE_HOST` 固定期望数据库 host，避免同机多 PostgreSQL 时 `DATABASE_URL` 指向含义不明确的 `127.0.0.1:5432` 或 `localhost:5432`
 
 ## 脚本与工具约定
 

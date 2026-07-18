@@ -5,6 +5,8 @@
 - 外部探测：检查 `https://api.gaoge.cc/health` 和 `https://api.gaoge.cc/health/db`
 - 本机自愈：数据库连续 3 次查询失败时，自动重启 `postgresql@16-main`
 
+发布后和服务器重启后的 PM2、release、数据库 host、CORS 和关键业务接口校验见 [生产运行时守卫](./production-runtime-guard.md)。
+
 ## 1. 安装 Uptime Kuma
 
 要求：服务器已安装 Docker 和 Docker Compose Plugin。

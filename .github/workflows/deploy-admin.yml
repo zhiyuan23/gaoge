@@ -21,6 +21,7 @@ concurrency:
 
 env:
   NODE_VERSION: '22'
+  ADMIN_API_CONTRACT_URLS: ${{ vars.ADMIN_API_CONTRACT_URLS || 'https://api.gaoge.cc/health https://api.gaoge.cc/health/db https://api.gaoge.cc/football/teams?page=1&pageSize=1' }}
 
 jobs:
   verify:
@@ -122,6 +123,12 @@ jobs:
           rsync -avz --delete \
             apps/admin/dist/ \
             ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }}:${{ secrets.ADMIN_DEPLOY_PATH }}/releases/${{ github.sha }}/
+
+      - name: 校验 API 合约
+        run: |
+          for url in $ADMIN_API_CONTRACT_URLS; do
+            curl -fsS --retry 5 --retry-delay 3 "$url" >/dev/null
+          done
 
       - name: 切换 Admin 当前版本
         run: |

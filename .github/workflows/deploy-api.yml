@@ -12,6 +12,7 @@ on:
       - 'pnpm-workspace.yaml'
       - 'package.json'
       - 'turbo.json'
+      - 'scripts/deployment/verify-remote-runtime.sh'
   workflow_dispatch:
 
 concurrency:
@@ -97,6 +98,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+      - name: 检出部署脚本
+        uses: actions/checkout@v5
+
       - name: 下载 API 发布包
         uses: actions/download-artifact@v4
         with:
@@ -120,7 +124,8 @@ jobs:
             mkdir -p \
               ${{ secrets.API_DEPLOY_PATH }}/releases/api \
               ${{ secrets.API_DEPLOY_PATH }}/current \
-              ${{ secrets.API_DEPLOY_PATH }}/shared
+              ${{ secrets.API_DEPLOY_PATH }}/shared \
+              ${{ secrets.API_DEPLOY_PATH }}/tmp
           "
 
       - name: 写入服务端环境变量
@@ -133,6 +138,12 @@ jobs:
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "cat > ${{ secrets.API_DEPLOY_PATH }}/shared/api.env" <<'EOF'
           ${{ secrets.DEPLOY_ENV_FILE_API }}
           EOF
+
+      - name: 上传运行时守卫脚本
+        run: |
+          rsync -avz \
+            scripts/deployment/verify-remote-runtime.sh \
+            ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh
 
       - name: 检查服务端运行环境
         run: |
@@ -209,6 +220,26 @@ jobs:
             cd ${{ secrets.API_DEPLOY_PATH }}/current
             pm2 start ecosystem.config.cjs --only gaoge-api --update-env
             pm2 save
+          '"
+
+      - name: 运行 API 运行时守卫
+        run: |
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
+            set -eo pipefail
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+            set -u
+
+            EXPECTED_PM2_NAME='gaoge-api' \
+            FORBIDDEN_PM2_NAMES='gaoge-server' \
+            EXPECTED_DEPLOY_PATH='${{ secrets.API_DEPLOY_PATH }}' \
+            EXPECTED_RELEASE_PATH='${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}' \
+            EXPECTED_DB_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
+            API_BASE_URL='https://api.gaoge.cc' \
+            CRITICAL_PATHS='/health /health/db /football/teams?page=1&pageSize=1' \
+            CORS_ORIGIN='https://admin.gaoge.cc' \
+            CORS_PATH='/auth/admin/login' \
+            bash ${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh
           '"
 
       - name: 输出 PM2 状态
