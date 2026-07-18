@@ -1,0 +1,12 @@
+@import './styles/tokens.wxss';
+@import './styles/spacing.wxss';
+@import './styles/typography.wxss';
+@import './styles/layout.wxss';
+@import './styles/motion.wxss';
+
+page {
+  min-height: 100vh;
+  color: var(--gg-color-text-primary);
+  background: var(--gg-color-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+}

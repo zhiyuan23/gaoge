@@ -20,6 +20,7 @@
       "@gaoge/shared-schemas": ["./packages/shared/schemas/src/index.ts"],
       "@gaoge/sdk-api-client": ["./packages/sdk/api-client/src/index.ts"],
       "@gaoge/sdk-openapi": ["./packages/sdk/openapi/src/index.ts"],
+      "@gaoge/miniapp-api-contract": ["./packages/miniapp-api-contract/src/index.ts"],
       "@gaoge/ui-tokens": ["./packages/ui/tokens/src/index.ts"],
       "@gaoge/server-database": ["./packages/server/database/src/index.ts"]
     }

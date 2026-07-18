@@ -1,0 +1,3 @@
+.gg-text-muted {
+  color: var(--gg-color-text-muted);
+}

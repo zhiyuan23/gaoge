@@ -1,0 +1,20 @@
+{
+  "pages": ["pages/home/index"],
+  "window": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#f6f7f9",
+    "backgroundTextStyle": "dark"
+  },
+  "renderer": "skyline",
+  "componentFramework": "glass-easel",
+  "lazyCodeLoading": "requiredComponents",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "defaultContentBox": true,
+      "disableABTest": true
+    }
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,17 @@
+{
+  "extends": "../../packages/configs/typescript-config/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": false,
+    "declarationMap": false,
+    "lib": ["ES2022"],
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./miniprogram/*"],
+      "@gaoge/miniapp-api-contract": ["../../packages/miniapp-api-contract/src/index.ts"]
+    },
+    "types": ["miniprogram-api-typings"]
+  },
+  "include": ["miniprogram/**/*.ts"],
+  "exclude": ["dist", "miniprogram_npm", "node_modules"]
+}

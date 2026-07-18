@@ -1,5 +1,11 @@
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common'
-import { Catch, HttpException, HttpStatus } from '@nestjs/common'
+import {
+  Catch,
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common'
 import type { Response } from 'express'
 
 @Catch()
@@ -16,6 +22,24 @@ export class HttpExceptionFilter implements ExceptionFilter {
     // 对于Prisma业务错误，使用400作为错误码而不是500
     if (this.isBusinessError(exception)) {
       errorCode = 400
+    }
+
+    const request = ctx.getRequest?.()
+
+    if (isMiniV1Request(request)) {
+      response.status(HttpStatus.OK).json({
+        success: false,
+        error: {
+          code: resolveMiniErrorCode(exception),
+          message: errMsg,
+        },
+        meta: {
+          requestId: resolveMiniRequestId(request),
+          serverTime: new Date().toISOString(),
+          apiVersion: 'mini-v1',
+        },
+      })
+      return
     }
 
     // 所有错误都返回HTTP 200状态码，在响应体的code字段处理错误状态
@@ -97,4 +121,45 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     return '请求失败，请稍后重试'
   }
+}
+
+function isMiniV1Request(request: unknown) {
+  if (!request || typeof request !== 'object') {
+    return false
+  }
+
+  const path =
+    (request as { path?: string; url?: string; originalUrl?: string }).path ??
+    (request as { url?: string }).url ??
+    (request as { originalUrl?: string }).originalUrl
+
+  return typeof path === 'string' && path.startsWith('/mini/v1/')
+}
+
+function resolveMiniRequestId(request: {
+  headers?: Record<string, string | string[] | undefined>
+}) {
+  const value = request.headers?.['x-request-id']
+
+  if (Array.isArray(value)) {
+    return value[0] || createFallbackRequestId()
+  }
+
+  return value || createFallbackRequestId()
+}
+
+function resolveMiniErrorCode(exception: unknown) {
+  if (exception instanceof UnauthorizedException) {
+    return 'UNAUTHORIZED'
+  }
+
+  if (exception instanceof ForbiddenException) {
+    return 'FORBIDDEN'
+  }
+
+  return 'INTERNAL_ERROR'
+}
+
+function createFallbackRequestId() {
+  return `server-${Date.now()}`
 }

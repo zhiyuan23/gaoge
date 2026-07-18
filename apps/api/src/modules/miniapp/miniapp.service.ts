@@ -16,6 +16,8 @@ import type {
 
 import { PrismaService } from '@/common/prisma/prisma.service'
 
+import type { MiniProfileSummaryDto } from './miniapp-auth.contract'
+
 type MiniappPlayerBinding = {
   id: number
   playerNumber: number | null
@@ -130,6 +132,17 @@ export class MiniappService {
     const player = await this.findBindingByUserId(userId, this.prisma.player)
 
     return this.buildMeResponse(user, player)
+  }
+
+  async getProfileSummary(userId: number): Promise<MiniProfileSummaryDto> {
+    const user = await this.findActiveUser(userId)
+
+    return buildProfileSummary({
+      id: user.id,
+      nickname: user.nickname,
+      avatarUrl: user.avatarUrl,
+      phone: user.phone,
+    })
   }
 
   async listBindOptions(): Promise<MiniappBindOptionsResponse> {
@@ -440,4 +453,32 @@ function serializeTeam(team: MiniappTeamRecord): Team {
     createdAt: team.createdAt.toISOString(),
     updatedAt: team.updatedAt.toISOString(),
   }
+}
+
+export function buildProfileSummary(user: {
+  id: number
+  nickname: string | null
+  avatarUrl: string | null
+  phone: string | null
+}): MiniProfileSummaryDto {
+  return {
+    userId: String(user.id),
+    nickname: user.nickname ?? undefined,
+    avatarUrl: user.avatarUrl ?? undefined,
+    phoneMasked: maskPhone(user.phone),
+    phoneBound: Boolean(user.phone),
+    privacyAccepted: false,
+  }
+}
+
+function maskPhone(phone: string | null) {
+  if (!phone) {
+    return undefined
+  }
+
+  if (phone.length < 7) {
+    return phone
+  }
+
+  return `${phone.slice(0, 3)}****${phone.slice(-4)}`
 }

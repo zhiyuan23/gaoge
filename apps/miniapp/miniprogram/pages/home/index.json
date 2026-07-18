@@ -1,0 +1,8 @@
+{
+  "navigationStyle": "custom",
+  "disableScroll": true,
+  "renderer": "skyline",
+  "usingComponents": {
+    "app-page": "../../components/shell/app-page/index"
+  }
+}

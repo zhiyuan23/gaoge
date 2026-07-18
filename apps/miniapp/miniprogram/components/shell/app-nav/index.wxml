@@ -1,0 +1,13 @@
+<view class="app-nav" style="padding-top: {{statusBarHeight}}px">
+  <view class="app-nav__bar">
+    <button
+      wx:if="{{showBack}}"
+      class="app-nav__back"
+      aria-label="返回"
+      bindtap="onBack"
+    >
+      ‹
+    </button>
+    <view class="app-nav__title">{{title}}</view>
+  </view>
+</view>

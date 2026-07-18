@@ -1,0 +1,21 @@
+{
+  "name": "@gaoge/app-miniapp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"Open apps/miniapp in WeChat DevTools\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint \"miniprogram/**/*.{ts,js}\" \"scripts/**/*.mjs\"",
+    "ci:quality": "node scripts/miniprogram-ci-quality.mjs",
+    "ci:preview": "node scripts/miniprogram-ci-preview.mjs",
+    "clean": "rm -rf dist miniprogram_npm node_modules/.cache"
+  },
+  "dependencies": {
+    "@gaoge/miniapp-api-contract": "workspace:*"
+  },
+  "devDependencies": {
+    "miniprogram-api-typings": "^4.0.4",
+    "miniprogram-ci": "^2.0.0",
+    "typescript": "^5.9.3"
+  }
+}

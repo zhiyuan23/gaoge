@@ -13,3 +13,4 @@ apps/desktop/test-results
 !.env*.example
 apps/api/.env
 apps/api/.env.*
+apps/miniapp/project.private.config.json

@@ -20,6 +20,7 @@
 - `apps/admin`：Vue 3 管理后台应用
 - `apps/web`：Vue Web 应用
 - `apps/uniapp`：uni-app 小程序应用
+- `apps/miniapp`：微信原生 Skyline 小程序应用
 - `apps/desktop`：Electron + React 桌面应用
 - `apps/ios`：iOS + SwiftUI 原生应用
 
@@ -47,5 +48,5 @@ shared -> configs
 
 - 应用目录名优先描述产品角色；同类客户端并存时，可使用平台或技术栈区分
 - 共享包统一使用 `@gaoge/*` scope
-- 应用内部使用 `@/` 作为本地别名
+- 应用内部默认使用 `@/` 作为本地别名；`apps/miniapp` 原生微信小程序 TS 代码当前例外，跨目录导入使用相对路径，除非后续引入能重写 alias 的构建链路
 - 跨包引用统一使用工作区包名

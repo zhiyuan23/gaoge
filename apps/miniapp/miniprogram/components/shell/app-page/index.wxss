@@ -1,0 +1,17 @@
+.app-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--gg-color-bg);
+}
+
+.app-page__scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+.app-page__content {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 32rpx;
+}

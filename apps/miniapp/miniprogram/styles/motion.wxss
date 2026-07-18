@@ -1,0 +1,7 @@
+.gg-pressable {
+  transition: opacity 120ms ease;
+}
+
+.gg-pressable:active {
+  opacity: 0.72;
+}

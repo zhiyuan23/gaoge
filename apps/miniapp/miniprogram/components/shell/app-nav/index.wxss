@@ -1,0 +1,42 @@
+.app-nav {
+  position: relative;
+  z-index: 10;
+  background: rgb(255 255 255 / 92%);
+  border-bottom: 1rpx solid var(--gg-color-border);
+}
+
+.app-nav__bar {
+  display: flex;
+  align-items: center;
+  height: 88rpx;
+  padding: 0 32rpx;
+}
+
+.app-nav__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56rpx;
+  height: 56rpx;
+  padding: 0;
+  margin: 0 16rpx 0 0;
+  font-size: 44rpx;
+  line-height: 1;
+  color: var(--gg-color-text-primary);
+  background: transparent;
+  border: 0;
+}
+
+.app-nav__back::after {
+  border: 0;
+}
+
+.app-nav__title {
+  overflow: hidden;
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 44rpx;
+  color: var(--gg-color-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

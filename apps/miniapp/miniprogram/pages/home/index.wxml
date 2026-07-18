@@ -1,0 +1,15 @@
+<app-page title="{{brandName}}">
+  <view class="home-hero">
+    <view class="home-hero__eyebrow">Skyline Miniapp</view>
+    <view class="home-hero__title">{{title}}</view>
+    <view class="home-hero__desc">
+      赛事小程序技术基座已启动，后续首页聚合数据将从 mini/v1 契约接口接入。
+    </view>
+  </view>
+  <view class="home-section">
+    <view class="home-section__title">第一阶段范围</view>
+    <view class="home-section__item">原生微信小程序 + Skyline + glass-easel</view>
+    <view class="home-section__item">统一页面壳和自定义滚动容器</view>
+    <view class="home-section__item">契约包导出 mini/v1 路由、响应和 DTO</view>
+  </view>
+</app-page>

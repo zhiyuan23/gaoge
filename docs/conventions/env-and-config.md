@@ -19,6 +19,7 @@
 
 - `apps/api` 启动时按 `.env.local`、`.env` 顺序加载
 - 前端应用通过 Vite / uni-app 的环境变量机制读取配置
+- `apps/miniapp` 为微信原生小程序，当前通过 `wx.getAccountInfoSync().miniProgram.envVersion` 在 `miniprogram/config/env.ts` 中选择环境 profile，不使用 Vite / uni-app 环境变量机制
 
 ## 前端应用约定
 
@@ -33,6 +34,12 @@
 - 只允许暴露带前缀的前端变量
 - 页面和业务模块优先通过应用内 API/config 文件消费配置
 - 不在大量组件和页面里散落 `import.meta.env.*`
+
+`apps/miniapp` 例外：
+
+- 原生微信小程序没有 Vite / uni-app 的环境变量注入链路
+- 小程序端只在 `miniprogram/config/env.ts` 维护公开配置 profile
+- `release` 对应正式线上，`develop` / `trial` 对应本地开发
 
 建议：
 

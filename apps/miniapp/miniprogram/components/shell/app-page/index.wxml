@@ -1,0 +1,14 @@
+<view class="app-page">
+  <app-nav title="{{title}}" showBack="{{showBack}}" bind:back="onNavBack" />
+  <scroll-view
+    class="app-page__scroll"
+    scroll-y
+    enhanced
+    show-scrollbar="{{false}}"
+    type="custom"
+  >
+    <view class="app-page__content">
+      <slot />
+    </view>
+  </scroll-view>
+</view>

@@ -9,17 +9,31 @@ export interface ApiResponseEnvelope<T> {
   errMsg: string
 }
 
+export interface MiniApiResultEnvelope<T> {
+  success: boolean
+  data?: T
+  error?: unknown
+  meta: unknown
+}
+
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponseEnvelope<unknown>> {
+export class ResponseInterceptor<T> implements NestInterceptor<
+  T,
+  ApiResponseEnvelope<unknown> | MiniApiResultEnvelope<unknown>
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>,
-  ): Observable<ApiResponseEnvelope<unknown>> {
+  ): Observable<ApiResponseEnvelope<unknown> | MiniApiResultEnvelope<unknown>> {
     applyNoStoreHeaders(context)
 
     return next.handle().pipe(
       map((data) => {
         if (isEnvelope(data)) {
+          return data
+        }
+
+        if (isMiniApiResult(data)) {
           return data
         }
 
@@ -40,6 +54,16 @@ function isEnvelope(value: unknown): value is ApiResponseEnvelope<unknown> {
     'code' in value &&
     'data' in value &&
     'errMsg' in value
+  )
+}
+
+function isMiniApiResult(value: unknown): value is MiniApiResultEnvelope<unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'success' in value &&
+    'data' in value &&
+    'meta' in value
   )
 }
 

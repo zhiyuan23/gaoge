@@ -1,0 +1,10 @@
+page {
+  --gg-color-bg: #f6f7f9;
+  --gg-color-surface: #fff;
+  --gg-color-border: #e5e7eb;
+  --gg-color-text-primary: #111827;
+  --gg-color-text-secondary: #4b5563;
+  --gg-color-text-muted: #6b7280;
+  --gg-color-primary: #0f766e;
+  --gg-color-accent: #f59e0b;
+}

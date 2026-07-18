@@ -17,6 +17,9 @@
       "path": "./apps/uniapp"
     },
     {
+      "path": "./apps/miniapp"
+    },
+    {
       "path": "./packages/shared/types"
     },
     {
@@ -33,6 +36,9 @@
     },
     {
       "path": "./packages/sdk/openapi"
+    },
+    {
+      "path": "./packages/miniapp-api-contract"
     },
     {
       "path": "./packages/ui/tokens"

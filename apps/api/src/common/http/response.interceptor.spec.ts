@@ -22,6 +22,31 @@ describe('responseInterceptor', () => {
     })
   })
 
+  it('passes through mini api result envelopes without wrapping them again', (done) => {
+    const interceptor = new ResponseInterceptor()
+    const miniResult = {
+      success: true,
+      data: {
+        accessToken: 'mini-token',
+      },
+      meta: {
+        requestId: 'req-1',
+        serverTime: '2026-07-18T00:00:00.000Z',
+        apiVersion: 'mini-v1',
+      },
+    }
+    const next: CallHandler = {
+      handle: () => of(miniResult),
+    }
+
+    interceptor.intercept({} as ExecutionContext, next).subscribe({
+      next: (value) => {
+        expect(value).toBe(miniResult)
+      },
+      complete: done,
+    })
+  })
+
   it('sets no-store cache headers for API responses', (done) => {
     const setHeader = jest.fn()
     const interceptor = new ResponseInterceptor()

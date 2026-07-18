@@ -12,8 +12,9 @@
 - `apps/uniapp` 已完成从平级 `gaoge-miniapp` 的首轮迁入，当前为真实 uni-app/Vue 前台项目
 - `apps/desktop` 已完成首轮接入，当前为真实 Electron/React 桌面项目
 - `apps/ios` 已完成首轮接入，当前为真实 iOS/SwiftUI 原生项目
+- `apps/miniapp` 已完成第一阶段接入，当前为微信原生 Skyline/glass-easel 小程序骨架
 - `packages/*` 目前仍以第一阶段共享层骨架为主
-- 根目录工作流已按应用拆分为独立部署入口，`api`、`web`、`admin`、`uniapp`、`desktop`、`ios` 应分别维护自己的发布流程
+- 根目录工作流已按应用拆分为独立部署入口，`api`、`web`、`admin`、`uniapp`、`desktop`、`ios`、`miniapp` 应分别维护自己的发布流程
 
 后续继续引入新的真实项目，或显著调整 `web/admin/api/uniapp` 的目录职责时，必须同步更新本文件，确保 AI 协作规则与真实代码结构一致。
 
@@ -45,6 +46,7 @@
 - `apps/api`
 - `apps/desktop`
 - `apps/ios`
+- `apps/miniapp`
 
 规则：
 
@@ -104,7 +106,7 @@ shared -> configs
 
 - 应用目录名优先表达产品角色；同类客户端并存时，可使用平台或技术栈区分，例如 `uniapp`
 - 共享包统一使用 `@gaoge/*`
-- 应用内部使用 `@/`
+- 应用内部默认使用 `@/`；`apps/miniapp` 原生微信小程序 TS 代码当前例外，因微信开发者工具运行时不重写 tsconfig paths，跨目录导入使用相对路径
 - 跨包引用统一使用工作区包名，不直接引用其他包内部路径
 - 按业务领域组织的接口代码，前后端统一优先采用 `领域/资源` 两级目录，例如 `football/player`
 - 资源代码目录、模块目录、类名优先使用单数，例如 `player`、`PlayerService`
@@ -157,11 +159,14 @@ AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 - `pnpm dev:api`
 - `pnpm dev:desktop`
 - `pnpm dev:ios`
+- `pnpm dev:miniapp`
 - `pnpm dev:desktop-api`
 - `pnpm --filter @gaoge/app-api exec prisma migrate dev`
 - `pnpm --filter @gaoge/app-api db:generate`
 - `pnpm build:desktop`
 - `pnpm build:ios`
+- `pnpm ci:miniapp:quality`
+- `pnpm ci:miniapp:preview`
 - `pnpm lint`
 - `pnpm lint:fix`
 - `pnpm lint:style`
