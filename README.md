@@ -20,7 +20,7 @@
 | `apps/api`     | 统一后端服务，提供鉴权、RBAC 与领域 API | NestJS, Prisma, TypeScript, Swagger                       |
 | `apps/admin`   | 内部管理后台，承载运营与 CRUD 管理      | Vue 3, Vite, TypeScript, Element Plus, Pinia, UnoCSS      |
 | `apps/web`     | 面向用户的 Web 前台                     | Vue 3, Vite, Tailwind CSS                                 |
-| `apps/miniapp` | 微信小程序前台                          | uni-app, Vue 3, TypeScript, TDesign, Pinia, UnoCSS        |
+| `apps/uniapp`  | uni-app 小程序前台                      | uni-app, Vue 3, TypeScript, TDesign, Pinia, UnoCSS        |
 | `apps/desktop` | 桌面客户端，包含本地存储与 Electron 壳  | Electron, React, TypeScript, Tailwind CSS, better-sqlite3 |
 
 ## Monorepo 结构
@@ -144,7 +144,7 @@ shared -> configs
 | 预览构建产物       | `pnpm --filter @gaoge/app-web preview` |
 | 运行测试           | `pnpm --filter @gaoge/app-web test`    |
 
-### `apps/miniapp`
+### `apps/uniapp`
 
 基于 uni-app 的小程序前台，主要服务微信小程序场景，并保留 Vue 体系下的开发体验。
 
@@ -166,14 +166,14 @@ shared -> configs
 
 **常用命令**
 
-| 操作                   | 命令                                         |
-| ---------------------- | -------------------------------------------- |
-| 启动微信小程序开发模式 | `pnpm dev:miniapp`                           |
-| 在应用目录范围启动     | `pnpm --filter @gaoge/app-miniapp dev`       |
-| 启动 H5 调试           | `pnpm --filter @gaoge/app-miniapp dev:h5`    |
-| 启动生产模式调试       | `pnpm --filter @gaoge/app-miniapp dev:prod`  |
-| 构建                   | `pnpm --filter @gaoge/app-miniapp build`     |
-| 类型检查               | `pnpm --filter @gaoge/app-miniapp typecheck` |
+| 操作                   | 命令                                        |
+| ---------------------- | ------------------------------------------- |
+| 启动微信小程序开发模式 | `pnpm dev:uniapp`                           |
+| 在应用目录范围启动     | `pnpm --filter @gaoge/app-uniapp dev`       |
+| 启动 H5 调试           | `pnpm --filter @gaoge/app-uniapp dev:h5`    |
+| 启动生产模式调试       | `pnpm --filter @gaoge/app-uniapp dev:prod`  |
+| 构建                   | `pnpm --filter @gaoge/app-uniapp build`     |
+| 类型检查               | `pnpm --filter @gaoge/app-uniapp typecheck` |
 
 ### `apps/desktop`
 
@@ -291,27 +291,28 @@ pnpm install
 
 以下命令均在仓库根目录执行。
 
-| 命令                  | 说明                                       |
-| --------------------- | ------------------------------------------ |
-| `pnpm dev`            | 启动所有声明了 `dev` 脚本的工作区应用      |
-| `pnpm dev:api`        | 仅启动 API                                 |
-| `pnpm dev:admin`      | 启动管理后台；若 API 未运行会自动一并启动  |
-| `pnpm dev:web`        | 启动 Web 前台；若 API 未运行会自动一并启动 |
-| `pnpm dev:miniapp`    | 启动小程序；若 API 未运行会自动一并启动    |
-| `pnpm dev:desktop`    | 启动桌面端；若 API 未运行会自动一并启动    |
-| `pnpm build`          | 构建全部可构建的应用与共享包               |
-| `pnpm build:desktop`  | 仅构建桌面端                               |
-| `pnpm lint`           | 执行 Prettier 检查、ESLint 与 Stylelint    |
-| `pnpm lint:fix`       | 自动格式化并修复可修复问题                 |
-| `pnpm lint:style`     | 仅执行 Stylelint                           |
-| `pnpm lint:style:fix` | 自动修复样式问题                           |
-| `pnpm typecheck`      | 执行工作区类型检查                         |
-| `pnpm clean`          | 清理工作区构建产物                         |
-| `pnpm cz`             | 使用 Commitizen 生成 conventional commit   |
+| 命令                  | 说明                                             |
+| --------------------- | ------------------------------------------------ |
+| `pnpm dev`            | 启动所有声明了 `dev` 脚本的工作区应用            |
+| `pnpm dev:api`        | 仅启动 API                                       |
+| `pnpm dev:admin`      | 启动管理后台；若 API 未运行会自动一并启动        |
+| `pnpm dev:web`        | 启动 Web 前台；若 API 未运行会自动一并启动       |
+| `pnpm dev:uniapp`     | 启动 uni-app 小程序；若 API 未运行会自动一并启动 |
+| `pnpm dev:desktop`    | 启动桌面端；若 API 未运行会自动一并启动          |
+| `pnpm build`          | 构建全部可构建的应用与共享包                     |
+| `pnpm build:desktop`  | 仅构建桌面端                                     |
+| `pnpm build:uniapp`   | 仅构建 uni-app 小程序                            |
+| `pnpm lint`           | 执行 Prettier 检查、ESLint 与 Stylelint          |
+| `pnpm lint:fix`       | 自动格式化并修复可修复问题                       |
+| `pnpm lint:style`     | 仅执行 Stylelint                                 |
+| `pnpm lint:style:fix` | 自动修复样式问题                                 |
+| `pnpm typecheck`      | 执行工作区类型检查                               |
+| `pnpm clean`          | 清理工作区构建产物                               |
+| `pnpm cz`             | 使用 Commitizen 生成 conventional commit         |
 
 ### API 自动联动启动说明
 
-`pnpm dev:admin`、`pnpm dev:web`、`pnpm dev:miniapp` 与 `pnpm dev:desktop` 由 `scripts/dev-with-api.mjs` 包装执行。
+`pnpm dev:admin`、`pnpm dev:web`、`pnpm dev:uniapp` 与 `pnpm dev:desktop` 由 `scripts/dev-with-api.mjs` 包装执行。
 
 行为如下：
 

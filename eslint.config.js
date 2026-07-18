@@ -140,7 +140,7 @@ export default [
     },
   },
   {
-    files: ['apps/miniapp/**/*.{ts,tsx,vue}'],
+    files: ['apps/uniapp/**/*.{ts,tsx,vue}'],
     rules: {
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-explicit-any': 'off',

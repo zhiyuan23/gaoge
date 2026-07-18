@@ -14,7 +14,7 @@
       "path": "./apps/web"
     },
     {
-      "path": "./apps/miniapp"
+      "path": "./apps/uniapp"
     },
     {
       "path": "./packages/shared/types"

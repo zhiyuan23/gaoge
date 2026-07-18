@@ -60,7 +60,7 @@ export default {
   ],
   overrides: [
     {
-      files: ['apps/miniapp/**/*.{vue,scss,css}'],
+      files: ['apps/uniapp/**/*.{vue,scss,css}'],
       rules: {
         'color-function-alias-notation': null,
         'declaration-block-no-redundant-longhand-properties': null,

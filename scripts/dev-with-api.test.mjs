@@ -10,11 +10,12 @@ import {
   resolvePnpmCommand,
 } from './dev-with-api.mjs'
 
-test('isSupportedTarget returns true for admin, desktop, web and miniapp', () => {
+test('isSupportedTarget returns true for admin, desktop, web and uniapp', () => {
   assert.equal(isSupportedTarget('admin'), true)
   assert.equal(isSupportedTarget('desktop'), true)
   assert.equal(isSupportedTarget('web'), true)
-  assert.equal(isSupportedTarget('miniapp'), true)
+  assert.equal(isSupportedTarget('uniapp'), true)
+  assert.equal(isSupportedTarget('miniapp'), false)
   assert.equal(isSupportedTarget('api'), false)
 })
 
@@ -29,12 +30,12 @@ test('buildTurboArgs omits api filter when api is already running', () => {
 })
 
 test('buildTurboArgs includes api filter and parallel flag when api is not running', () => {
-  assert.deepEqual(buildTurboArgs('miniapp', false), [
+  assert.deepEqual(buildTurboArgs('uniapp', false), [
     'turbo',
     'run',
     'dev',
     '--parallel',
-    '--filter=@gaoge/app-miniapp',
+    '--filter=@gaoge/app-uniapp',
     '--filter=@gaoge/app-api',
   ])
 })

@@ -26,7 +26,7 @@
 
 - `apps/admin`
 - `apps/web`
-- `apps/miniapp`
+- `apps/uniapp`
 
 规则：
 

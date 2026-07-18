@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core'
 import type { NestExpressApplication } from '@nestjs/platform-express'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
+import { resolveListenOptions } from './bootstrap/listen-options'
 import { HttpExceptionFilter } from './common/http/http-exception.filter'
 import { ResponseInterceptor } from './common/http/response.interceptor'
 import { resolveUploadRoot, uploadPublicPrefix } from './common/storage/upload-path'
@@ -52,6 +53,8 @@ async function bootstrap() {
     prefix: `${uploadPublicPrefix}/`,
   })
 
-  await app.listen(process.env.PORT ?? process.env.APP_PORT ?? 3000)
+  const listenOptions = resolveListenOptions()
+
+  await app.listen(listenOptions.port, listenOptions.host)
 }
 bootstrap()

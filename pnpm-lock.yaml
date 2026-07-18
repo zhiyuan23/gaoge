@@ -645,7 +645,7 @@ importers:
         specifier: ^3.1.4
         version: 3.2.4(@types/debug@4.1.13)(@types/node@22.19.17)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.32.0)(sass-embedded@1.99.0)(sass@1.99.0)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3)
 
-  apps/miniapp:
+  apps/uniapp:
     dependencies:
       '@dcloudio/uni-app':
         specifier: 3.0.0-5000620260331001

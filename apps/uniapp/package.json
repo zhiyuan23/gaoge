@@ -1,5 +1,5 @@
 {
-  "name": "@gaoge/app-miniapp",
+  "name": "@gaoge/app-uniapp",
   "private": true,
   "type": "module",
   "scripts": {

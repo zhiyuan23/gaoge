@@ -83,7 +83,7 @@ export type AdminLoginPayload = z.infer<typeof adminLoginSchema>
 - Pinia store 操作
 - 小程序专用请求适配
 
-`apps/admin`、`apps/web`、`apps/miniapp` 可分别在应用内包装 sdk，处理各自的登录态、错误提示和路由跳转。
+`apps/admin`、`apps/web`、`apps/uniapp` 可分别在应用内包装 sdk，处理各自的登录态、错误提示和路由跳转。
 
 ## 当前类型归属规划
 
@@ -209,7 +209,7 @@ pnpm --filter @gaoge/app-api typecheck
 
 触发条件：
 
-- `apps/web` 与 `apps/miniapp` 已真实接入
+- `apps/web` 与 `apps/uniapp` 已真实接入
 - 至少两个应用消费同一接口契约
 - API envelope 和错误处理规则稳定
 
@@ -238,7 +238,7 @@ AI 在后续真正实施类型统一时，必须逐项检查：
 
 原因：
 
-- `web` 与 `miniapp` 尚未完成真实迁入
+- `web` 与 `uniapp` 已完成真实迁入，但共享契约仍处于逐步收敛阶段
 - API 契约仍可能跟随业务调整
 - 过早共享会增加迁移阻力
 
@@ -260,7 +260,7 @@ AI 在后续真正实施类型统一时，必须逐项检查：
 4. 引入 schema 作为校验来源
    - 后端 DTO 与前端表单逐步对齐 schema
 5. 抽取框架无关 API client
-   - 等 `web`、`miniapp` 接入后再做
+   - 等 `web`、`uniapp` 接口消费模式稳定后再做
 
 ## 从 monorepo 迁出独立前端项目
 
@@ -302,7 +302,7 @@ pnpm --filter @gaoge/app-admin typecheck
 - 类型一致性更好
 - 包发布、版本管理成本更高
 
-当前阶段推荐策略 A。等 `web`、`miniapp` 都稳定后，再评估策略 B。
+当前阶段推荐策略 A。等 `web`、`uniapp` 都稳定后，再评估策略 B。
 
 ### 迁出步骤
 
@@ -337,7 +337,8 @@ AI 迁入新项目时应按以下步骤执行。
 1. 先确认项目角色
    - 管理后台放入 `apps/admin`
    - H5/Web 放入 `apps/web`
-   - 小程序放入 `apps/miniapp`
+   - uni-app 小程序放入 `apps/uniapp`
+   - 原生小程序放入 `apps/miniapp`
    - 后端服务放入 `apps/api`
 2. 保留应用私有实现
    - 不把页面、store、router、服务私有逻辑提前放入 `packages`
