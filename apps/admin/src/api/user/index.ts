@@ -23,6 +23,17 @@ export default {
 
   updateProfile: (data: UpdateAuthProfilePayload) => api.patch<AuthUser>('auth/profile', data),
 
+  uploadAvatar: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return api.post<AuthUser>('auth/profile/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
+
   changePassword: (data: ChangePasswordPayload) =>
     api.patch<ChangePasswordResponse>('auth/password', data),
 

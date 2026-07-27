@@ -125,6 +125,11 @@ const useUserStore = defineStore(
       applyProfile(profileRes)
       return profileRes
     }
+    async function uploadAvatar(file: File) {
+      const profileRes = await apiUser.uploadAvatar(file)
+      applyProfile(profileRes)
+      return profileRes
+    }
     async function changePassword(data: ChangePasswordPayload) {
       return apiUser.changePassword(data)
     }
@@ -149,6 +154,7 @@ const useUserStore = defineStore(
       requestLogout,
       getPermissions,
       updateProfile,
+      uploadAvatar,
       changePassword,
       editPassword,
     }

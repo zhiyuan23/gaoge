@@ -1,8 +1,13 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common'
 
 import { hashPassword, verifyPassword } from '@/common/auth/password.util'
+import { deletePreviousAdminAvatarUrls } from '@/common/storage/admin-avatar-storage'
 
 import { AuthService } from './auth.service'
+
+jest.mock('@/common/storage/admin-avatar-storage', () => ({
+  deletePreviousAdminAvatarUrls: jest.fn().mockResolvedValue(undefined),
+}))
 
 const miniappPlayerProfileSelectExpectation = {
   id: true,
@@ -233,6 +238,10 @@ describe('AuthService miniapp login', () => {
 })
 
 describe('AuthService admin RBAC', () => {
+  beforeEach(() => {
+    jest.mocked(deletePreviousAdminAvatarUrls).mockClear()
+  })
+
   const createService = () => {
     const prisma = {
       user: {
@@ -433,7 +442,21 @@ describe('AuthService admin RBAC', () => {
 
   it('updates the current admin profile and returns the latest serialized user', async () => {
     const { service, prisma } = createService()
+    const oldAvatar =
+      'https://gaoge-assets.oss-cn-beijing.aliyuncs.com/gaoge/admin-avatar/9/old.png'
 
+    prisma.user.findUnique.mockResolvedValue({
+      id: 9,
+      account: 'admin',
+      openid: null,
+      nickname: 'Admin',
+      avatarUrl: oldAvatar,
+      phone: null,
+      role: 'admin',
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: new Date('2026-07-15T08:00:00.000Z'),
+    })
     prisma.user.update.mockResolvedValue({
       id: 9,
       account: 'admin',
@@ -465,6 +488,61 @@ describe('AuthService admin RBAC', () => {
         nickname: '新昵称',
         avatarUrl: 'https://example.com/avatar.png',
       },
+    })
+    expect(deletePreviousAdminAvatarUrls).toHaveBeenCalledWith({
+      nextAvatarUrl: 'https://example.com/avatar.png',
+      previousAvatarUrls: [oldAvatar],
+      userId: 9,
+    })
+  })
+
+  it('updates the current admin avatar and deletes the previous managed avatar', async () => {
+    const { service, prisma } = createService()
+    const oldAvatar =
+      'https://gaoge-assets.oss-cn-beijing.aliyuncs.com/gaoge/admin-avatar/9/old.png'
+    const nextAvatar =
+      'https://gaoge-assets.oss-cn-beijing.aliyuncs.com/gaoge/admin-avatar/9/new.png'
+
+    prisma.user.findUnique.mockResolvedValue({
+      id: 9,
+      account: 'admin',
+      openid: null,
+      nickname: 'Admin',
+      avatarUrl: oldAvatar,
+      phone: null,
+      role: 'admin',
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: new Date('2026-07-15T08:00:00.000Z'),
+    })
+    prisma.user.update.mockResolvedValue({
+      id: 9,
+      account: 'admin',
+      openid: null,
+      nickname: 'Admin',
+      avatarUrl: nextAvatar,
+      phone: null,
+      role: 'admin',
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: new Date('2026-07-16T08:00:00.000Z'),
+    })
+
+    await expect(service.updateProfileAvatar(9, nextAvatar)).resolves.toMatchObject({
+      id: 9,
+      avatarUrl: nextAvatar,
+    })
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 9 },
+      data: {
+        avatarUrl: nextAvatar,
+      },
+    })
+    expect(deletePreviousAdminAvatarUrls).toHaveBeenCalledWith({
+      nextAvatarUrl: nextAvatar,
+      previousAvatarUrls: [oldAvatar],
+      userId: 9,
     })
   })
 

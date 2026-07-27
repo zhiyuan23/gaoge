@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ElMessage, type FormInstance, type FormItemRule, type FormRules } from 'element-plus'
+import { ElMessage, type FormInstance, type FormRules, type UploadProps } from 'element-plus'
 
 import useUserStore from '@/store/user'
 import dayjs from '@/utils/dayjs'
@@ -18,40 +18,17 @@ const emits = defineEmits<{
 const userStore = useUserStore()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const avatarUploading = ref(false)
 const model = reactive<ProfileDraft>(createProfileDraft(userStore.profile!))
-
-const validateAvatarUrl: FormItemRule['validator'] = (_rule, value: string, callback) => {
-  const avatarUrl = value.trim()
-  if (!avatarUrl) {
-    callback()
-    return
-  }
-
-  try {
-    const url = new URL(avatarUrl)
-    if (!['http:', 'https:'].includes(url.protocol)) {
-      callback(new Error('头像地址仅支持 http 或 https'))
-      return
-    }
-    callback()
-  } catch {
-    callback(new Error('请输入有效的头像地址'))
-  }
-}
 
 const rules: FormRules<ProfileDraft> = {
   nickname: [
     { required: true, message: '请输入昵称', trigger: 'blur' },
     { min: 1, max: 30, message: '昵称长度为 1 到 30 个字符', trigger: 'blur' },
   ],
-  avatarUrl: [
-    { max: 500, message: '头像地址不能超过 500 个字符', trigger: 'blur' },
-    { validator: validateAvatarUrl, trigger: 'blur' },
-  ],
 }
 
 const dirty = computed(() => Boolean(userStore.profile && isProfileDirty(model, userStore.profile)))
-const avatarFallback = computed(() => userStore.displayName.slice(0, 2).toUpperCase())
 const roleNames = computed(() => {
   if (userStore.roles.length > 0) {
     return userStore.roles.map((role) => role.name).join('、')
@@ -65,12 +42,42 @@ const lastLoginAt = computed(() =>
     ? dayjs(userStore.profile.lastLoginAt).format('YYYY-MM-DD HH:mm')
     : '暂无记录',
 )
+const profileMetaItems = computed(() => [
+  {
+    label: '登录账号',
+    value: userStore.account || '未设置',
+    icon: 'i-lucide:badge-check',
+    tabular: false,
+  },
+  {
+    label: '绑定手机',
+    value: userStore.profile?.phone ?? '未绑定',
+    icon: 'i-lucide:smartphone',
+    tabular: false,
+  },
+  {
+    label: '当前角色',
+    value: roleNames.value,
+    icon: 'i-lucide:shield-check',
+    tabular: false,
+  },
+  {
+    label: '最近登录',
+    value: lastLoginAt.value,
+    icon: 'i-lucide:clock-3',
+    tabular: true,
+  },
+])
 
 watch(dirty, (value) => emits('dirtyChange', value), { immediate: true })
 watch(
   () => userStore.profile,
   (profile) => {
     if (!profile) return
+    if (avatarUploading.value) {
+      model.avatarUrl = profile.avatarUrl ?? ''
+      return
+    }
     Object.assign(model, createProfileDraft(profile))
     nextTick(() => formRef.value?.clearValidate())
   },
@@ -90,9 +97,19 @@ async function submit() {
   }
 }
 
-function clearAvatar() {
-  model.avatarUrl = ''
-  formRef.value?.clearValidate('avatarUrl')
+const uploadAvatar: UploadProps['httpRequest'] = async (options) => {
+  avatarUploading.value = true
+  try {
+    const profile = await userStore.uploadAvatar(options.file as File)
+    model.avatarUrl = profile.avatarUrl ?? ''
+    options.onSuccess?.(profile)
+    ElMessage.success('头像已更新')
+  } catch (error) {
+    throw error
+  } finally {
+    await nextTick()
+    avatarUploading.value = false
+  }
 }
 
 function reset() {
@@ -117,81 +134,61 @@ defineExpose({
         class="gaoge-form"
         scroll-to-error
       >
-        <section class="flex flex-col gap-5 border-b pb-6 sm:flex-row sm:items-center">
-          <FaAvatar
-            :src="model.avatarUrl.trim()"
-            :fallback="avatarFallback"
-            class="size-18 border-3 border-background ring-border shrink-0 rounded-2xl shadow-sm ring-1"
-            shape="square"
-          />
-          <div class="min-w-0 flex-1">
-            <ElFormItem label="个人头像" prop="avatarUrl" class="mb-0!">
-              <div class="flex w-full flex-col gap-2 sm:flex-row">
+        <section class="bg-muted/20 border-border/70 rounded-lg border p-4 sm:p-5">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div class="shrink-0">
+              <div class="text-foreground mb-2 text-sm font-medium">个人头像</div>
+              <ImageUpload
+                v-model="model.avatarUrl"
+                action="#"
+                :http-request="uploadAvatar"
+                :width="88"
+                :height="88"
+                :size="5"
+                :ext="['jpg', 'jpeg', 'png', 'gif', 'webp']"
+                notip
+              />
+            </div>
+            <div class="min-w-0 flex-1">
+              <ElFormItem label="昵称" prop="nickname" class="mb-0!">
                 <ElInput
-                  v-model="model.avatarUrl"
-                  type="url"
-                  placeholder="https://example.com/avatar.png"
-                  aria-label="头像地址"
+                  v-model="model.nickname"
+                  maxlength="30"
+                  show-word-limit
+                  autocomplete="nickname"
+                  placeholder="请输入昵称"
                 />
-                <FaButton
-                  type="button"
-                  variant="outline"
-                  class="min-h-11 shrink-0"
-                  @click="clearAvatar"
-                >
-                  清空
-                </FaButton>
-              </div>
-            </ElFormItem>
-            <p class="text-muted-foreground mt-2 text-xs leading-5">
-              支持 http 或 https 图片地址；无法加载时将显示账号文字头像。
-            </p>
+              </ElFormItem>
+              <p class="text-muted-foreground mt-2 text-xs leading-5">
+                头像支持 jpg、jpeg、png、gif、webp，单张不超过 5MB。
+              </p>
+            </div>
           </div>
         </section>
 
         <section class="pt-6">
-          <ElFormItem label="昵称" prop="nickname">
-            <ElInput
-              v-model="model.nickname"
-              maxlength="30"
-              show-word-limit
-              autocomplete="nickname"
-              placeholder="请输入昵称"
-            />
-          </ElFormItem>
-
-          <div class="mt-6 grid gap-4 sm:grid-cols-2">
-            <div class="space-y-2">
-              <div class="text-foreground text-sm font-medium">登录账号</div>
-              <div
-                class="bg-muted/50 text-foreground flex min-h-11 items-center rounded-lg border px-3 text-sm"
+          <h3 class="text-foreground mb-4 text-base font-semibold">账号概览</h3>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div
+              v-for="item in profileMetaItems"
+              :key="item.label"
+              class="bg-muted/30 border-border/70 min-h-18 flex gap-3 rounded-lg border p-3"
+            >
+              <span
+                class="bg-background text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md border"
+                aria-hidden="true"
               >
-                {{ userStore.account || '未设置' }}
-              </div>
-            </div>
-            <div class="space-y-2">
-              <div class="text-foreground text-sm font-medium">绑定手机</div>
-              <div
-                class="bg-muted/50 text-foreground flex min-h-11 items-center rounded-lg border px-3 text-sm"
-              >
-                {{ userStore.profile?.phone ?? '未绑定' }}
-              </div>
-            </div>
-            <div class="space-y-2">
-              <div class="text-foreground text-sm font-medium">当前角色</div>
-              <div
-                class="bg-muted/50 text-foreground flex min-h-11 items-center rounded-lg border px-3 text-sm"
-              >
-                {{ roleNames }}
-              </div>
-            </div>
-            <div class="space-y-2">
-              <div class="text-foreground text-sm font-medium">最近登录</div>
-              <div
-                class="bg-muted/50 text-foreground flex min-h-11 items-center rounded-lg border px-3 text-sm tabular-nums"
-              >
-                {{ lastLoginAt }}
-              </div>
+                <FaIcon :name="item.icon" class="size-4" />
+              </span>
+              <span class="min-w-0">
+                <span class="text-muted-foreground block text-xs">{{ item.label }}</span>
+                <span
+                  class="text-foreground mt-1 block break-words text-sm font-medium leading-5"
+                  :class="{ 'tabular-nums': item.tabular }"
+                >
+                  {{ item.value }}
+                </span>
+              </span>
             </div>
           </div>
         </section>

@@ -8,11 +8,16 @@ import {
   Patch,
   Post,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import type { Request } from 'express'
 
 import { Roles } from '@/common/auth/roles.decorator'
 import { RolesGuard } from '@/common/auth/roles.guard'
+import { type AdminUploadedFile, saveAdminAvatar } from '@/common/storage/admin-avatar-storage'
 
 import { ChangePasswordDto } from './dto/change-password.dto'
 import { AdminLoginDto, MiniappLoginDto, PhoneLoginDto, RefreshTokenDto } from './dto/login.dto'
@@ -72,6 +77,28 @@ export class AuthController {
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     return this.authService.updateProfile(request.user.id, updateProfileDto)
+  }
+
+  @Post('profile/avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  async uploadProfileAvatar(
+    @Req() request: Request & { user: { id: number } },
+    @UploadedFile() file?: AdminUploadedFile,
+  ) {
+    const avatarUrl = await saveAdminAvatar({
+      file,
+      request,
+      userId: request.user.id,
+    })
+
+    return this.authService.updateProfileAvatar(request.user.id, avatarUrl)
   }
 
   @Patch('password')

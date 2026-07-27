@@ -16,6 +16,7 @@ import type {
 
 import { hashPassword, verifyPassword } from '@/common/auth/password.util'
 import { PrismaService } from '@/common/prisma/prisma.service'
+import { deletePreviousAdminAvatarUrls } from '@/common/storage/admin-avatar-storage'
 import { WechatService } from '@/common/wechat/wechat.service'
 import { BUILT_IN_PERMISSION_DEFINITIONS } from '@/modules/system/rbac/builtins'
 
@@ -351,12 +352,43 @@ export class AuthService {
   }
 
   async updateProfile(userId: number, dto: UpdateProfileDto): Promise<AuthUser> {
+    const previousUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    })
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
         nickname: dto.nickname.trim(),
         avatarUrl: dto.avatarUrl?.trim() || null,
       },
+    })
+
+    await deletePreviousAdminAvatarUrls({
+      nextAvatarUrl: updatedUser.avatarUrl,
+      previousAvatarUrls: [previousUser?.avatarUrl],
+      userId,
+    })
+
+    return this.serializeUser(updatedUser)
+  }
+
+  async updateProfileAvatar(userId: number, avatarUrl: string): Promise<AuthUser> {
+    const previousUser = await this.prisma.user.findUnique({ where: { id: userId } })
+    if (!previousUser || previousUser.deletedAt || previousUser.status !== 'active') {
+      throw new UnauthorizedException('用户不存在或已被禁用')
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        avatarUrl,
+      },
+    })
+
+    await deletePreviousAdminAvatarUrls({
+      nextAvatarUrl: updatedUser.avatarUrl,
+      previousAvatarUrls: [previousUser.avatarUrl],
+      userId,
     })
 
     return this.serializeUser(updatedUser)

@@ -64,7 +64,7 @@ function remove() {
 }
 const beforeUpload: UploadProps['beforeUpload'] = (file) => {
   const fileName = file.name.split('.')
-  const fileExt = fileName.at(-1) ?? ''
+  const fileExt = (fileName.at(-1) ?? '').toLowerCase()
   const isTypeOk = ext.includes(fileExt)
   const isSizeOk = file.size / 1024 / 1024 < size
   if (!isTypeOk) {
