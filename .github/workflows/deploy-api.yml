@@ -315,19 +315,19 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            EXPECTED_PM2_NAME='gaoge-api' \
-            FORBIDDEN_PM2_NAMES='gaoge-server' \
-            EXPECTED_DEPLOY_PATH='${{ secrets.API_DEPLOY_PATH }}' \
-            EXPECTED_RELEASE_PATH='${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}' \
-            EXPECTED_DB_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
-            EXPECTED_DB_PORT='5432' \
-            EXPECTED_DB_NAME='gaoge_db' \
-            DATABASE_GUARD_PATH='${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs' \
-            API_BASE_URL='https://api.gaoge.cc' \
-            CRITICAL_PATHS='/health /health/db' \
-            NON_EMPTY_PATHS='/football/players?page=1&pageSize=1 /football/teams?page=1&pageSize=1 /football/match-rounds?page=1&pageSize=1 /football/asset-records?page=1&pageSize=1' \
-            CORS_ORIGIN='https://admin.gaoge.cc' \
-            CORS_PATH='/auth/admin/login' \
+            EXPECTED_PM2_NAME=\"gaoge-api\" \
+            FORBIDDEN_PM2_NAMES=\"gaoge-server\" \
+            EXPECTED_DEPLOY_PATH=\"${{ secrets.API_DEPLOY_PATH }}\" \
+            EXPECTED_RELEASE_PATH=\"${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}\" \
+            EXPECTED_DB_HOST=\"${{ secrets.EXPECTED_DATABASE_HOST }}\" \
+            EXPECTED_DB_PORT=\"5432\" \
+            EXPECTED_DB_NAME=\"gaoge_db\" \
+            DATABASE_GUARD_PATH=\"${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs\" \
+            API_BASE_URL=\"https://api.gaoge.cc\" \
+            CRITICAL_PATHS=\"/health /health/db\" \
+            NON_EMPTY_PATHS=\"/football/players?page=1&pageSize=1 /football/teams?page=1&pageSize=1 /football/match-rounds?page=1&pageSize=1 /football/asset-records?page=1&pageSize=1\" \
+            CORS_ORIGIN=\"https://admin.gaoge.cc\" \
+            CORS_PATH=\"/auth/admin/login\" \
             bash ${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh
           '"
 
@@ -351,24 +351,24 @@ jobs:
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
 
-            DEPLOY_PATH='${{ secrets.API_DEPLOY_PATH }}' \
-            STATE_DIR='${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}' \
-            SHARED_ENV_FILE='${{ secrets.API_DEPLOY_PATH }}/shared/api.env' \
-            NEXT_ENV_FILE='${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}' \
-            ROLLBACK_TOKEN='${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \
-            RUNTIME_GUARD_PATH='${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh' \
-            EXPECTED_PM2_NAME='gaoge-api' \
-            FORBIDDEN_PM2_NAMES='gaoge-server' \
-            EXPECTED_DEPLOY_PATH='${{ secrets.API_DEPLOY_PATH }}' \
-            EXPECTED_DB_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
-            EXPECTED_DB_PORT='5432' \
-            EXPECTED_DB_NAME='gaoge_db' \
-            DATABASE_GUARD_PATH='${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs' \
-            API_BASE_URL='https://api.gaoge.cc' \
-            CRITICAL_PATHS='/health /health/db' \
-            NON_EMPTY_PATHS='/football/players?page=1&pageSize=1 /football/teams?page=1&pageSize=1 /football/match-rounds?page=1&pageSize=1 /football/asset-records?page=1&pageSize=1' \
-            CORS_ORIGIN='https://admin.gaoge.cc' \
-            CORS_PATH='/auth/admin/login' \
+            DEPLOY_PATH=\"${{ secrets.API_DEPLOY_PATH }}\" \
+            STATE_DIR=\"${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}\" \
+            SHARED_ENV_FILE=\"${{ secrets.API_DEPLOY_PATH }}/shared/api.env\" \
+            NEXT_ENV_FILE=\"${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}\" \
+            ROLLBACK_TOKEN=\"${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}\" \
+            RUNTIME_GUARD_PATH=\"${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh\" \
+            EXPECTED_PM2_NAME=\"gaoge-api\" \
+            FORBIDDEN_PM2_NAMES=\"gaoge-server\" \
+            EXPECTED_DEPLOY_PATH=\"${{ secrets.API_DEPLOY_PATH }}\" \
+            EXPECTED_DB_HOST=\"${{ secrets.EXPECTED_DATABASE_HOST }}\" \
+            EXPECTED_DB_PORT=\"5432\" \
+            EXPECTED_DB_NAME=\"gaoge_db\" \
+            DATABASE_GUARD_PATH=\"${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs\" \
+            API_BASE_URL=\"https://api.gaoge.cc\" \
+            CRITICAL_PATHS=\"/health /health/db\" \
+            NON_EMPTY_PATHS=\"/football/players?page=1&pageSize=1 /football/teams?page=1&pageSize=1 /football/match-rounds?page=1&pageSize=1 /football/asset-records?page=1&pageSize=1\" \
+            CORS_ORIGIN=\"https://admin.gaoge.cc\" \
+            CORS_PATH=\"/auth/admin/login\" \
             bash ${{ secrets.API_DEPLOY_PATH }}/tmp/rollback-api-release.sh
           '"
 

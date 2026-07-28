@@ -94,23 +94,24 @@ test('api deployment uses one database source and persists PM2 only after verifi
   assert.match(rollback, /\[ -f "\$previous_release\/dist\/main\.js" \]/)
   assert.match(rollback, /\[ "\$\(realpath "\$CURRENT_LINK"\)" = "\$previous_release" \]/)
   assert.match(workflow, /pm2 save/)
-  assert.match(workflow, /EXPECTED_PM2_NAME='gaoge-api'/)
-  assert.match(workflow, /FORBIDDEN_PM2_NAMES='gaoge-server'/)
-  assert.match(workflow, /EXPECTED_DEPLOY_PATH='\$\{\{ secrets\.API_DEPLOY_PATH \}\}'/)
+  assert.doesNotMatch(workflow, /NON_EMPTY_PATHS='[^']*&/)
+  assert.match(workflow, /EXPECTED_PM2_NAME=\\"gaoge-api\\"/)
+  assert.match(workflow, /FORBIDDEN_PM2_NAMES=\\"gaoge-server\\"/)
+  assert.match(workflow, /EXPECTED_DEPLOY_PATH=\\"\$\{\{ secrets\.API_DEPLOY_PATH \}\}\\"/)
   assert.match(
     workflow,
-    /EXPECTED_RELEASE_PATH='\$\{\{ secrets\.API_DEPLOY_PATH \}\}\/releases\/api\/\$\{\{ github\.sha \}\}'/,
+    /EXPECTED_RELEASE_PATH=\\"\$\{\{ secrets\.API_DEPLOY_PATH \}\}\/releases\/api\/\$\{\{ github\.sha \}\}\\"/,
   )
-  assert.match(workflow, /EXPECTED_DB_HOST='\$\{\{ secrets\.EXPECTED_DATABASE_HOST \}\}'/)
-  assert.match(workflow, /EXPECTED_DB_PORT='5432'/)
-  assert.match(workflow, /EXPECTED_DB_NAME='gaoge_db'/)
-  assert.match(workflow, /API_BASE_URL='https:\/\/api\.gaoge\.cc'/)
-  assert.match(workflow, /CRITICAL_PATHS='\/health \/health\/db'/)
+  assert.match(workflow, /EXPECTED_DB_HOST=\\"\$\{\{ secrets\.EXPECTED_DATABASE_HOST \}\}\\"/)
+  assert.match(workflow, /EXPECTED_DB_PORT=\\"5432\\"/)
+  assert.match(workflow, /EXPECTED_DB_NAME=\\"gaoge_db\\"/)
+  assert.match(workflow, /API_BASE_URL=\\"https:\/\/api\.gaoge\.cc\\"/)
+  assert.match(workflow, /CRITICAL_PATHS=\\"\/health \/health\/db\\"/)
   assert.match(
     workflow,
-    /NON_EMPTY_PATHS='\/football\/players\?page=1&pageSize=1 \/football\/teams\?page=1&pageSize=1 \/football\/match-rounds\?page=1&pageSize=1 \/football\/asset-records\?page=1&pageSize=1'/,
+    /NON_EMPTY_PATHS=\\"\/football\/players\?page=1&pageSize=1 \/football\/teams\?page=1&pageSize=1 \/football\/match-rounds\?page=1&pageSize=1 \/football\/asset-records\?page=1&pageSize=1\\"/,
   )
-  assert.match(workflow, /CORS_ORIGIN='https:\/\/admin\.gaoge\.cc'/)
+  assert.match(workflow, /CORS_ORIGIN=\\"https:\/\/admin\.gaoge\.cc\\"/)
   assert.match(workflow, /bash \$\{\{ secrets\.API_DEPLOY_PATH \}\}\/tmp\/rollback-api-release\.sh/)
   assert.match(rollback, /bash "\$RUNTIME_GUARD_PATH"/)
   assert.match(rollback, /env -i/)
