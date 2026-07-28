@@ -19,7 +19,7 @@
 | -------------- | --------------------------------------- | --------------------------------------------------------- |
 | `apps/api`     | 统一后端服务，提供鉴权、RBAC 与领域 API | NestJS, Prisma, TypeScript, Swagger                       |
 | `apps/admin`   | 内部管理后台，承载运营与 CRUD 管理      | Vue 3, Vite, TypeScript, Element Plus, Pinia, UnoCSS      |
-| `apps/web`     | 面向用户的 Web 前台                     | Vue 3, Vite, Tailwind CSS                                 |
+| `apps/sports`  | 高歌体育官网前台                        | Vue 3, Vite, Tailwind CSS                                 |
 | `apps/uniapp`  | uni-app 小程序前台                      | uni-app, Vue 3, TypeScript, TDesign, Pinia, UnoCSS        |
 | `apps/desktop` | 桌面客户端，包含本地存储与 Electron 壳  | Electron, React, TypeScript, Tailwind CSS, better-sqlite3 |
 
@@ -55,7 +55,7 @@ shared -> configs
 
 ### `apps/api`
 
-统一后端服务，面向管理后台、Web 前台、小程序与桌面端提供共用的鉴权、RBAC 与业务数据访问能力。
+统一后端服务，面向管理后台、体育官网、小程序与桌面端提供共用的鉴权、RBAC 与业务数据访问能力。
 
 **技术栈**
 
@@ -115,9 +115,9 @@ shared -> configs
 | UAT 构建           | `pnpm --filter @gaoge/app-admin build:uat` |
 | 类型检查           | `pnpm --filter @gaoge/app-admin typecheck` |
 
-### `apps/web`
+### `apps/sports`
 
-面向用户的 Web 前台，适合官网、业务展示类页面以及后续 Web 端用户交互场景。
+高歌体育官网前台，承载球队展示、足球业务展示和公开访问页面。
 
 **技术栈**
 
@@ -130,19 +130,19 @@ shared -> configs
 
 **主要职责**
 
-- 官网或业务展示页面
-- 用户向 Web 路由与前台界面
+- 高歌体育官网公开页面
+- 球队、赛程、资产等体育业务展示
 - 视觉与内容驱动的前端体验
 
 **常用命令**
 
-| 操作               | 命令                                   |
-| ------------------ | -------------------------------------- |
-| 启动开发模式       | `pnpm dev:web`                         |
-| 在应用目录范围启动 | `pnpm --filter @gaoge/app-web dev`     |
-| 构建               | `pnpm --filter @gaoge/app-web build`   |
-| 预览构建产物       | `pnpm --filter @gaoge/app-web preview` |
-| 运行测试           | `pnpm --filter @gaoge/app-web test`    |
+| 操作               | 命令                                      |
+| ------------------ | ----------------------------------------- |
+| 启动开发模式       | `pnpm dev:sports`                         |
+| 在应用目录范围启动 | `pnpm --filter @gaoge/app-sports dev`     |
+| 构建               | `pnpm --filter @gaoge/app-sports build`   |
+| 预览构建产物       | `pnpm --filter @gaoge/app-sports preview` |
+| 运行测试           | `pnpm --filter @gaoge/app-sports test`    |
 
 ### `apps/uniapp`
 
@@ -296,7 +296,7 @@ pnpm install
 | `pnpm dev`            | 启动所有声明了 `dev` 脚本的工作区应用            |
 | `pnpm dev:api`        | 仅启动 API                                       |
 | `pnpm dev:admin`      | 启动管理后台；若 API 未运行会自动一并启动        |
-| `pnpm dev:web`        | 启动 Web 前台；若 API 未运行会自动一并启动       |
+| `pnpm dev:sports`     | 启动高歌体育官网；若 API 未运行会自动一并启动    |
 | `pnpm dev:uniapp`     | 启动 uni-app 小程序；若 API 未运行会自动一并启动 |
 | `pnpm dev:desktop`    | 启动桌面端；若 API 未运行会自动一并启动          |
 | `pnpm build`          | 构建全部可构建的应用与共享包                     |
@@ -312,7 +312,7 @@ pnpm install
 
 ### API 自动联动启动说明
 
-`pnpm dev:admin`、`pnpm dev:web`、`pnpm dev:uniapp` 与 `pnpm dev:desktop` 由 `scripts/dev-with-api.mjs` 包装执行。
+`pnpm dev:admin`、`pnpm dev:sports`、`pnpm dev:uniapp` 与 `pnpm dev:desktop` 由 `scripts/dev-with-api.mjs` 包装执行。
 
 行为如下：
 

@@ -26,7 +26,7 @@
 适用应用：
 
 - `apps/admin`
-- `apps/web`
+- `apps/sports`
 - `apps/uniapp`
 
 规则：

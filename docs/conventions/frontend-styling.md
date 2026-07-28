@@ -38,7 +38,7 @@
 - `SCSS` 主要保留给 `Element Plus` 深度覆盖、第三方组件样式调整、复杂选择器和已有全局样式资源
 - 可以使用 `tailwind-merge` 处理类名合并，但这不代表 admin 页面默认采用 `Tailwind CSS`
 
-### `apps/web`
+### `apps/sports`
 
 - 当前使用 `Tailwind CSS`
 - 新增页面与组件默认优先使用 `Tailwind CSS` 工具类内联写法

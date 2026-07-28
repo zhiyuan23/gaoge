@@ -10,8 +10,8 @@ const TARGET_FILTERS = {
   admin: '@gaoge/app-admin',
   desktop: '@gaoge/app-desktop',
   miniapp: '@gaoge/app-miniapp',
+  sports: '@gaoge/app-sports',
   uniapp: '@gaoge/app-uniapp',
-  web: '@gaoge/app-web',
 }
 
 export function isSupportedTarget(target) {

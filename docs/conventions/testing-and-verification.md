@@ -71,12 +71,12 @@ Prisma 表结构变更的最低 smoke test：
 
 - `pnpm lint`
 
-### 改 `apps/web`
+### 改 `apps/sports`
 
 优先执行：
 
-- `pnpm --filter @gaoge/app-web typecheck`
-- `pnpm --filter @gaoge/app-web test`
+- `pnpm --filter @gaoge/app-sports typecheck`
+- `pnpm --filter @gaoge/app-sports test`
 
 ### 改 `apps/uniapp`
 

@@ -83,7 +83,7 @@ export type AdminLoginPayload = z.infer<typeof adminLoginSchema>
 - Pinia store 操作
 - 小程序专用请求适配
 
-`apps/admin`、`apps/web`、`apps/uniapp` 可分别在应用内包装 sdk，处理各自的登录态、错误提示和路由跳转。
+`apps/admin`、`apps/sports`、`apps/uniapp` 可分别在应用内包装 sdk，处理各自的登录态、错误提示和路由跳转。
 
 ## 当前类型归属规划
 
@@ -209,7 +209,7 @@ pnpm --filter @gaoge/app-api typecheck
 
 触发条件：
 
-- `apps/web` 与 `apps/uniapp` 已真实接入
+- `apps/sports` 与 `apps/uniapp` 已真实接入
 - 至少两个应用消费同一接口契约
 - API envelope 和错误处理规则稳定
 
@@ -336,7 +336,7 @@ AI 迁入新项目时应按以下步骤执行。
 
 1. 先确认项目角色
    - 管理后台放入 `apps/admin`
-   - H5/Web 放入 `apps/web`
+   - 高歌体育官网放入 `apps/sports`
    - uni-app 小程序放入 `apps/uniapp`
    - 原生小程序放入 `apps/miniapp`
    - 后端服务放入 `apps/api`

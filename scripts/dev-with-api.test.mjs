@@ -10,17 +10,23 @@ import {
   resolvePnpmCommand,
 } from './dev-with-api.mjs'
 
-test('isSupportedTarget returns true for admin, desktop, miniapp, web and uniapp', () => {
+test('isSupportedTarget returns true for admin, desktop, miniapp, sports and uniapp', () => {
   assert.equal(isSupportedTarget('admin'), true)
   assert.equal(isSupportedTarget('desktop'), true)
   assert.equal(isSupportedTarget('miniapp'), true)
-  assert.equal(isSupportedTarget('web'), true)
+  assert.equal(isSupportedTarget('sports'), true)
   assert.equal(isSupportedTarget('uniapp'), true)
   assert.equal(isSupportedTarget('api'), false)
+  assert.equal(isSupportedTarget('web'), false)
 })
 
 test('buildTurboArgs omits api filter when api is already running', () => {
-  assert.deepEqual(buildTurboArgs('web', true), ['turbo', 'run', 'dev', '--filter=@gaoge/app-web'])
+  assert.deepEqual(buildTurboArgs('sports', true), [
+    'turbo',
+    'run',
+    'dev',
+    '--filter=@gaoge/app-sports',
+  ])
   assert.deepEqual(buildTurboArgs('desktop', true), [
     'turbo',
     'run',
@@ -140,7 +146,7 @@ test('resolvePnpmCommand falls back to pnpm when npm_execpath is missing', () =>
 })
 
 test('formatModeMessage describes target-only mode', () => {
-  assert.equal(formatModeMessage('web', false), 'API is running, starting web only')
+  assert.equal(formatModeMessage('sports', false), 'API is running, starting sports only')
 })
 
 test('formatModeMessage describes api-plus-target mode', () => {
