@@ -1,0 +1,176 @@
+name: 运维 Sports 域名
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: inspect 只读检查；apply 修复 sports.gaoge.cc 指向当前 Web 站点并签发证书
+        required: true
+        default: inspect
+        type: choice
+        options:
+          - inspect
+          - apply
+
+permissions:
+  contents: read
+
+jobs:
+  sports-domain:
+    name: ${{ inputs.mode }} sports.gaoge.cc
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.WEB_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.WEB_DEPLOY_USER }}
+      WEB_DEPLOY_PATH: ${{ secrets.WEB_DEPLOY_PATH }}
+      ADMIN_DEPLOY_PATH: ${{ secrets.ADMIN_DEPLOY_PATH }}
+
+    steps:
+      - name: 配置 SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 写入服务器 known_hosts
+        run: |
+          : "${DEPLOY_HOST:?WEB_DEPLOY_HOST is required}"
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: 只读检查 Sports 域名配置
+        if: inputs.mode == 'inspect'
+        run: |
+          : "${DEPLOY_USER:?WEB_DEPLOY_USER is required}"
+          : "${WEB_DEPLOY_PATH:?WEB_DEPLOY_PATH is required}"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "WEB_DEPLOY_PATH='$WEB_DEPLOY_PATH' ADMIN_DEPLOY_PATH='$ADMIN_DEPLOY_PATH' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          echo "=== identity ==="
+          hostname
+          whoami
+          id
+
+          echo "=== sudo ==="
+          if sudo -n true 2>/dev/null; then
+            echo "sudo_nopasswd=yes"
+          else
+            echo "sudo_nopasswd=no"
+          fi
+
+          echo "=== paths ==="
+          test -e "$WEB_DEPLOY_PATH/current" && echo "web_current=yes" || echo "web_current=no"
+          test -e "$ADMIN_DEPLOY_PATH/current" && echo "admin_current=yes" || echo "admin_current=no"
+          readlink -f "$WEB_DEPLOY_PATH/current" 2>/dev/null || true
+          readlink -f "$ADMIN_DEPLOY_PATH/current" 2>/dev/null || true
+
+          echo "=== certbot ==="
+          command -v certbot || true
+          sudo -n certbot certificates 2>/dev/null || true
+
+          echo "=== nginx filtered ==="
+          if sudo -n true 2>/dev/null; then
+            sudo -n nginx -T 2>&1 | grep -nE "server_name|root |ssl_certificate|listen |gaoge|sports|admin" | head -n 240 || true
+          else
+            nginx -T 2>&1 | grep -nE "server_name|root |ssl_certificate|listen |gaoge|sports|admin" | head -n 120 || true
+          fi
+          REMOTE
+
+      - name: 修复 Sports 域名到当前 Web 站点
+        if: inputs.mode == 'apply'
+        run: |
+          : "${DEPLOY_USER:?WEB_DEPLOY_USER is required}"
+          : "${WEB_DEPLOY_PATH:?WEB_DEPLOY_PATH is required}"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "WEB_DEPLOY_PATH='$WEB_DEPLOY_PATH' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          if ! sudo -n true 2>/dev/null; then
+            echo "deploy user does not have passwordless sudo"
+            exit 1
+          fi
+
+          if ! command -v certbot >/dev/null 2>&1; then
+            echo "certbot is not installed"
+            exit 1
+          fi
+
+          if [ ! -d "$WEB_DEPLOY_PATH/current" ]; then
+            echo "WEB_DEPLOY_PATH/current does not exist: $WEB_DEPLOY_PATH/current"
+            exit 1
+          fi
+
+          tmp_conf="$(mktemp)"
+          cat > "$tmp_conf" <<NGINX
+          server {
+              listen 80;
+              listen [::]:80;
+              server_name sports.gaoge.cc;
+
+              root $WEB_DEPLOY_PATH/current;
+              index index.html;
+
+              location ^~ /.well-known/acme-challenge/ {
+                  try_files \$uri =404;
+              }
+
+              location / {
+                  return 301 https://\$host\$request_uri;
+              }
+          }
+          NGINX
+
+          sudo install -m 0644 "$tmp_conf" /etc/nginx/sites-available/gaoge-sports.conf
+          sudo ln -sfn /etc/nginx/sites-available/gaoge-sports.conf /etc/nginx/sites-enabled/gaoge-sports.conf
+          sudo nginx -t
+          sudo systemctl reload nginx
+
+          sudo certbot certonly \
+            --webroot \
+            -w "$WEB_DEPLOY_PATH/current" \
+            -d sports.gaoge.cc \
+            --cert-name sports.gaoge.cc \
+            --non-interactive \
+            --agree-tos \
+            --register-unsafely-without-email
+
+          cat > "$tmp_conf" <<NGINX
+          server {
+              listen 80;
+              listen [::]:80;
+              server_name sports.gaoge.cc;
+
+              root $WEB_DEPLOY_PATH/current;
+
+              location ^~ /.well-known/acme-challenge/ {
+                  try_files \$uri =404;
+              }
+
+              location / {
+                  return 301 https://\$host\$request_uri;
+              }
+          }
+
+          server {
+              listen 443 ssl http2;
+              listen [::]:443 ssl http2;
+              server_name sports.gaoge.cc;
+
+              ssl_certificate /etc/letsencrypt/live/sports.gaoge.cc/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/sports.gaoge.cc/privkey.pem;
+
+              root $WEB_DEPLOY_PATH/current;
+              index index.html;
+
+              location / {
+                  try_files \$uri \$uri/ /index.html;
+              }
+          }
+          NGINX
+
+          sudo install -m 0644 "$tmp_conf" /etc/nginx/sites-available/gaoge-sports.conf
+          sudo nginx -t
+          sudo systemctl reload nginx
+          rm -f "$tmp_conf"
+
+          echo "sports domain nginx and certificate applied"
+          REMOTE
