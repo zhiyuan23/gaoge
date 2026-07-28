@@ -35,8 +35,9 @@ test('api deployment uploads and runs the gaoge runtime guard after PM2 save', (
 
   assert.match(workflow, /group:\s+gaoge-production-deployment/)
   assert.match(workflow, /cancel-in-progress:\s+false/)
-  assert.match(workflow, /echo Remote API migration started[\s\S]*date '\+%F %T %Z'/)
-  assert.match(workflow, /echo Restarting gaoge-api with PM2[\s\S]*date '\+%F %T %Z'/)
+  assert.match(workflow, /echo Remote API migration started[\s\S]*date/)
+  assert.match(workflow, /echo Restarting gaoge-api with PM2[\s\S]*date/)
+  assert.doesNotMatch(workflow, /date '\+%F %T %Z'/)
   assert.match(workflow, /free -h \|\| true/)
   assert.match(workflow, /scripts\/deployment\/verify-remote-runtime\.sh/)
   assert.match(workflow, /pm2 save/)

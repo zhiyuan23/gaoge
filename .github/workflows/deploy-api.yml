@@ -198,7 +198,7 @@ jobs:
             cd \"\$RELEASE_DIR\"
             export DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"
             echo Remote API migration started
-            date '+%F %T %Z'
+            date
             free -h || true
             ps -eo pid,ppid,user,stat,etime,rss,pmem,pcpu,cmd --sort=-rss | head -20 || true
             ./node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma
@@ -223,7 +223,7 @@ jobs:
             pm2 delete gaoge-api >/dev/null 2>&1 || true
             cd ${{ secrets.API_DEPLOY_PATH }}/current
             echo Restarting gaoge-api with PM2
-            date '+%F %T %Z'
+            date
             free -h || true
             ps -eo pid,ppid,user,stat,etime,rss,pmem,pcpu,cmd --sort=-rss | head -20 || true
             pm2 start ecosystem.config.cjs --only gaoge-api --update-env
