@@ -148,6 +148,18 @@ test('probe accepts the canonical database with non-empty critical tables', () =
   assert.doesNotMatch(result.stdout + result.stderr, /secret|gaoge_user/)
 })
 
+test('probe accepts PostgreSQL inet addresses with the host prefix length', () => {
+  const result = runGuard(['probe', '--env-file', canonicalEnv], {
+    FAKE_PSQL_OUTPUT: JSON.stringify({
+      ...healthyProbe,
+      serverAddress: '::1/128',
+    }),
+  })
+
+  assert.equal(result.status, 0, result.stderr)
+  assert.match(result.stdout, /verified ::1:5432\/gaoge_db/)
+})
+
 for (const field of ['users', 'players', 'teams', 'matches', 'assets']) {
   test(`probe rejects zero ${field}`, () => {
     const output = { ...healthyProbe, [field]: 0 }

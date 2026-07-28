@@ -106,7 +106,8 @@ export const probeDatabase = (target, expected) => {
     throw new GuardError('invalid database probe response')
   }
 
-  const actual = `${probe.serverAddress}:${probe.serverPort}/${probe.database}`
+  const serverAddress = String(probe.serverAddress).replace(/\/\d+$/, '')
+  const actual = `${serverAddress}:${probe.serverPort}/${probe.database}`
   const required = `${expected.host}:${expected.port}/${expected.database}`
   if (actual !== required) {
     throw new GuardError(`database identity mismatch: got ${actual}, expected ${required}`)
