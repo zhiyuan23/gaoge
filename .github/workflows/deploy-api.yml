@@ -13,6 +13,9 @@ on:
       - 'package.json'
       - 'turbo.json'
       - 'scripts/deployment/verify-remote-runtime.sh'
+      - 'scripts/deployment/production-database-guard.mjs'
+      - 'scripts/deployment/rollback-api-release.sh'
+      - 'scripts/deployment/prepare-api-rollback-state.sh'
   workflow_dispatch:
 
 concurrency:
@@ -62,7 +65,7 @@ jobs:
       - name: 生成 Prisma Client
         run: pnpm --filter @gaoge/app-api db:generate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://build:build@127.0.0.1:1/build
 
       - name: 类型检查
         run: pnpm --filter @gaoge/app-api typecheck
@@ -78,7 +81,7 @@ jobs:
       - name: 生成发布目录 Prisma Client
         run: pnpm --dir ${{ env.API_RELEASE_DIR }} exec prisma generate --schema prisma/schema.prisma
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://build:build@127.0.0.1:1/build
 
       - name: 压缩 API 发布包
         run: tar -czf ${{ env.API_RELEASE_ARCHIVE }} -C ${{ env.API_RELEASE_DIR }} .
@@ -123,27 +126,19 @@ jobs:
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "
             mkdir -p \
               ${{ secrets.API_DEPLOY_PATH }}/releases/api \
-              ${{ secrets.API_DEPLOY_PATH }}/current \
               ${{ secrets.API_DEPLOY_PATH }}/shared \
-              ${{ secrets.API_DEPLOY_PATH }}/tmp
+              ${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state \
+              ${{ secrets.API_DEPLOY_PATH }}/backups
           "
 
-      - name: 写入服务端环境变量
-        run: |
-          if [ -z "${{ secrets.DEPLOY_ENV_FILE_API }}" ]; then
-            echo "GitHub Secret DEPLOY_ENV_FILE_API 为空" >&2
-            exit 1
-          fi
-
-          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "cat > ${{ secrets.API_DEPLOY_PATH }}/shared/api.env" <<'EOF'
-          ${{ secrets.DEPLOY_ENV_FILE_API }}
-          EOF
-
-      - name: 上传运行时守卫脚本
+      - name: 上传部署守卫脚本
         run: |
           rsync -avz \
             scripts/deployment/verify-remote-runtime.sh \
-            ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh
+            scripts/deployment/production-database-guard.mjs \
+            scripts/deployment/rollback-api-release.sh \
+            scripts/deployment/prepare-api-rollback-state.sh \
+            ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}/tmp/
 
       - name: 检查服务端运行环境
         run: |
@@ -155,6 +150,64 @@ jobs:
 
             command -v node >/dev/null 2>&1 || { echo \"node not found\" >&2; exit 1; }
             command -v pm2 >/dev/null 2>&1 || { echo \"pm2 not found\" >&2; exit 1; }
+            command -v psql >/dev/null 2>&1 || { echo \"psql not found\" >&2; exit 1; }
+            command -v pg_dump >/dev/null 2>&1 || { echo \"pg_dump not found\" >&2; exit 1; }
+            command -v pg_restore >/dev/null 2>&1 || { echo \"pg_restore not found\" >&2; exit 1; }
+            command -v realpath >/dev/null 2>&1 || { echo \"realpath not found\" >&2; exit 1; }
+            command -v cmp >/dev/null 2>&1 || { echo \"cmp not found\" >&2; exit 1; }
+            node -e \"if (Number.parseInt(process.versions.node, 10) !== 22) process.exit(1)\" || {
+              echo \"production Node 22 is required\" >&2
+              exit 1
+            }
+          '"
+
+      - name: 保存发布回滚状态
+        run: |
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
+            set -euo pipefail
+            DEPLOY_PATH=${{ secrets.API_DEPLOY_PATH }}
+            STATE_ROOT=\$DEPLOY_PATH/tmp/deploy-state
+            STATE_DIR=\$STATE_ROOT/${{ github.run_id }}-${{ github.run_attempt }}
+            SHARED_ENV_FILE=\$DEPLOY_PATH/shared/api.env
+
+            find \"\$STATE_ROOT\" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf -- {} +
+            DEPLOY_PATH=\"\$DEPLOY_PATH\" \
+            STATE_ROOT=\"\$STATE_ROOT\" \
+            STATE_DIR=\"\$STATE_DIR\" \
+            SHARED_ENV_FILE=\"\$SHARED_ENV_FILE\" \
+            bash \"\$DEPLOY_PATH/tmp/prepare-api-rollback-state.sh\"
+          '"
+
+      - name: 原子写入并验证服务端环境变量
+        env:
+          DEPLOY_ENV_FILE_API: ${{ secrets.DEPLOY_ENV_FILE_API }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DEPLOY_ENV_FILE_API" ]; then
+            echo "GitHub Secret DEPLOY_ENV_FILE_API 为空" >&2
+            exit 1
+          fi
+
+          NEXT_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}
+          printf '%s\n' "$DEPLOY_ENV_FILE_API" |
+            ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "umask 077; cat > \"${NEXT_ENV_FILE}\""
+
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
+            set -euo pipefail
+            NEXT_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}
+            SHARED_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env
+            STATE_DIR=${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
+
+            EXPECTED_DATABASE_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
+            EXPECTED_DATABASE_PORT='5432' \
+            EXPECTED_DATABASE_NAME='gaoge_db' \
+            node ${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs validate \
+              --env-file \"\$NEXT_ENV_FILE\"
+
+            chmod 600 \"\$NEXT_ENV_FILE\"
+            touch \"\$STATE_DIR/env-installing\"
+            mv \"\$NEXT_ENV_FILE\" \"\$SHARED_ENV_FILE\"
+            mv \"\$STATE_DIR/env-installing\" \"\$STATE_DIR/env-installed\"
           '"
 
       - name: 解压 API 发布包
@@ -186,7 +239,7 @@ jobs:
             ln -sfn ${{ secrets.API_DEPLOY_PATH }}/shared/api.env \"\$RELEASE_DIR/.env\"
           '"
 
-      - name: 执行生产迁移
+      - name: 校验、备份并执行生产迁移
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
@@ -196,23 +249,31 @@ jobs:
 
             RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}
             cd \"\$RELEASE_DIR\"
-            export DATABASE_URL=\"${{ secrets.DATABASE_URL }}\"
+
+            EXPECTED_DATABASE_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
+            EXPECTED_DATABASE_PORT='5432' \
+            EXPECTED_DATABASE_NAME='gaoge_db' \
+            node ${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs probe \
+              --env-file .env
+
+            EXPECTED_DATABASE_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
+            EXPECTED_DATABASE_PORT='5432' \
+            EXPECTED_DATABASE_NAME='gaoge_db' \
+            node ${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs backup \
+              --env-file .env \
+              --backup-dir ${{ secrets.API_DEPLOY_PATH }}/backups \
+              --retention 14
+
             echo Remote API migration started
             date
             free -h || true
             ps -eo pid,ppid,user,stat,etime,rss,pmem,pcpu,cmd --sort=-rss | head -20 || true
-            ./node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma
+            env -i HOME=\"\$HOME\" PATH=\"\$PATH\" \
+              node --env-file=.env ./node_modules/prisma/build/index.js migrate deploy --schema prisma/schema.prisma
           '"
 
-      - name: 切换 API 当前版本
-        run: |
-          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
-            set -eo pipefail
-            rm -rf ${{ secrets.API_DEPLOY_PATH }}/current
-            ln -sfn ${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }} ${{ secrets.API_DEPLOY_PATH }}/current
-          '"
-
-      - name: 重启 PM2 服务
+      - name: 切换 API 版本并重启 PM2
+        id: switch-release
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
@@ -220,14 +281,30 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            pm2 delete gaoge-api >/dev/null 2>&1 || true
-            cd ${{ secrets.API_DEPLOY_PATH }}/current
+            DEPLOY_PATH=${{ secrets.API_DEPLOY_PATH }}
+            STATE_DIR=\$DEPLOY_PATH/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
+            CURRENT_LINK=\$DEPLOY_PATH/current
+            NEXT_CURRENT_LINK=\$DEPLOY_PATH/.current-next-${{ github.run_id }}-${{ github.run_attempt }}
+            NEW_RELEASE=\$DEPLOY_PATH/releases/api/${{ github.sha }}
+
+            [ ! -e \"\$CURRENT_LINK\" ] || [ -L \"\$CURRENT_LINK\" ] || {
+              echo \"Current release path is not a symlink: \$CURRENT_LINK\" >&2
+              exit 1
+            }
+            touch \"\$STATE_DIR/switched\"
+            rm -f \"\$NEXT_CURRENT_LINK\"
+            ln -s \"\$NEW_RELEASE\" \"\$NEXT_CURRENT_LINK\"
+            mv -Tf \"\$NEXT_CURRENT_LINK\" \"\$CURRENT_LINK\"
+            PM2_HOME_VALUE=\${PM2_HOME:-\$HOME/.pm2}
+            env -i HOME=\"\$HOME\" PATH=\"\$PATH\" PM2_HOME=\"\$PM2_HOME_VALUE\" \
+              pm2 delete gaoge-api >/dev/null 2>&1 || true
+            cd \"\$CURRENT_LINK\"
             echo Restarting gaoge-api with PM2
             date
             free -h || true
             ps -eo pid,ppid,user,stat,etime,rss,pmem,pcpu,cmd --sort=-rss | head -20 || true
-            pm2 start ecosystem.config.cjs --only gaoge-api --update-env
-            pm2 save
+            env -i HOME=\"\$HOME\" PATH=\"\$PATH\" PM2_HOME=\"\$PM2_HOME_VALUE\" \
+              pm2 start ecosystem.config.cjs --only gaoge-api --update-env
           '"
 
       - name: 运行 API 运行时守卫
@@ -238,16 +315,61 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            EXPECTED_PM2_NAME='gaoge-api' \
-            FORBIDDEN_PM2_NAMES='gaoge-server' \
-            EXPECTED_DEPLOY_PATH='${{ secrets.API_DEPLOY_PATH }}' \
-            EXPECTED_RELEASE_PATH='${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}' \
-            EXPECTED_DB_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
-            API_BASE_URL='https://api.gaoge.cc' \
-            CRITICAL_PATHS='/health /health/db /football/teams?page=1&pageSize=1' \
-            CORS_ORIGIN='https://admin.gaoge.cc' \
-            CORS_PATH='/auth/admin/login' \
+            EXPECTED_PM2_NAME=\"gaoge-api\" \
+            FORBIDDEN_PM2_NAMES=\"gaoge-server\" \
+            EXPECTED_DEPLOY_PATH=\"${{ secrets.API_DEPLOY_PATH }}\" \
+            EXPECTED_RELEASE_PATH=\"${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}\" \
+            EXPECTED_DB_HOST=\"${{ secrets.EXPECTED_DATABASE_HOST }}\" \
+            EXPECTED_DB_PORT=\"5432\" \
+            EXPECTED_DB_NAME=\"gaoge_db\" \
+            DATABASE_GUARD_PATH=\"${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs\" \
+            API_BASE_URL=\"https://api.gaoge.cc\" \
+            CRITICAL_PATHS=\"/health /health/db\" \
+            NON_EMPTY_PATHS=\"/football/players?page=1&pageSize=1 /football/teams?page=1&pageSize=1 /football/match-rounds?page=1&pageSize=1 /football/asset-records?page=1&pageSize=1\" \
+            CORS_ORIGIN=\"https://admin.gaoge.cc\" \
+            CORS_PATH=\"/auth/admin/login\" \
             bash ${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh
+          '"
+
+      - name: 保存已验证的 PM2 状态
+        run: |
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
+            set -euo pipefail
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+            PM2_HOME_VALUE=\${PM2_HOME:-\$HOME/.pm2}
+            env -i HOME=\"\$HOME\" PATH=\"\$PATH\" PM2_HOME=\"\$PM2_HOME_VALUE\" pm2 save
+            STATE_DIR=${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
+            rm -rf \"\$STATE_DIR\"
+          '"
+
+      - name: 发布失败时恢复 API 版本与环境
+        if: failure()
+        run: |
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
+            set -euo pipefail
+            [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
+            [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
+
+            DEPLOY_PATH=\"${{ secrets.API_DEPLOY_PATH }}\" \
+            STATE_DIR=\"${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}\" \
+            SHARED_ENV_FILE=\"${{ secrets.API_DEPLOY_PATH }}/shared/api.env\" \
+            NEXT_ENV_FILE=\"${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}\" \
+            ROLLBACK_TOKEN=\"${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}\" \
+            RUNTIME_GUARD_PATH=\"${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh\" \
+            EXPECTED_PM2_NAME=\"gaoge-api\" \
+            FORBIDDEN_PM2_NAMES=\"gaoge-server\" \
+            EXPECTED_DEPLOY_PATH=\"${{ secrets.API_DEPLOY_PATH }}\" \
+            EXPECTED_DB_HOST=\"${{ secrets.EXPECTED_DATABASE_HOST }}\" \
+            EXPECTED_DB_PORT=\"5432\" \
+            EXPECTED_DB_NAME=\"gaoge_db\" \
+            DATABASE_GUARD_PATH=\"${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs\" \
+            API_BASE_URL=\"https://api.gaoge.cc\" \
+            CRITICAL_PATHS=\"/health /health/db\" \
+            NON_EMPTY_PATHS=\"/football/players?page=1&pageSize=1 /football/teams?page=1&pageSize=1 /football/match-rounds?page=1&pageSize=1 /football/asset-records?page=1&pageSize=1\" \
+            CORS_ORIGIN=\"https://admin.gaoge.cc\" \
+            CORS_PATH=\"/auth/admin/login\" \
+            bash ${{ secrets.API_DEPLOY_PATH }}/tmp/rollback-api-release.sh
           '"
 
       - name: 输出 PM2 状态
@@ -260,13 +382,3 @@ jobs:
             pm2 status gaoge-api
             pm2 logs gaoge-api --lines 50 --nostream
           '"
-
-      - name: 健康检查
-        run: |
-          for i in {1..12}; do
-            if curl -fsS ${{ secrets.API_HEALTH_URL }}; then
-              exit 0
-            fi
-            sleep 5
-          done
-          exit 1

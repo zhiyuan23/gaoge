@@ -20,8 +20,12 @@ API_BASE_URL="${API_BASE_URL:?API_BASE_URL is required}"
 FORBIDDEN_PM2_NAMES="${FORBIDDEN_PM2_NAMES:-}"
 EXPECTED_RELEASE_PATH="${EXPECTED_RELEASE_PATH:-}"
 EXPECTED_RELEASE_SHA="${EXPECTED_RELEASE_SHA:-}"
-EXPECTED_DB_HOST="${EXPECTED_DB_HOST:-}"
+EXPECTED_DB_HOST="${EXPECTED_DB_HOST:?EXPECTED_DB_HOST is required}"
+EXPECTED_DB_PORT="${EXPECTED_DB_PORT:?EXPECTED_DB_PORT is required}"
+EXPECTED_DB_NAME="${EXPECTED_DB_NAME:?EXPECTED_DB_NAME is required}"
+DATABASE_GUARD_PATH="${DATABASE_GUARD_PATH:-${EXPECTED_DEPLOY_PATH%/}/tmp/production-database-guard.mjs}"
 CRITICAL_PATHS="${CRITICAL_PATHS:-/health /health/db}"
+NON_EMPTY_PATHS="${NON_EMPTY_PATHS:-}"
 CORS_ORIGIN="${CORS_ORIGIN:-}"
 CORS_PATH="${CORS_PATH:-/auth/admin/login}"
 
@@ -50,28 +54,12 @@ fi
 
 ENV_FILE="${CURRENT_TARGET}/.env"
 [[ -f "$ENV_FILE" ]] || fail "missing runtime env file: $ENV_FILE"
+[[ -f "$DATABASE_GUARD_PATH" ]] || fail "missing database guard: $DATABASE_GUARD_PATH"
 
-DATABASE_LINE="$(grep -E '^DATABASE_URL=' "$ENV_FILE" | tail -n 1 || true)"
-[[ -n "$DATABASE_LINE" ]] || fail "DATABASE_URL is missing from $ENV_FILE"
-
-DATABASE_URL="${DATABASE_LINE#DATABASE_URL=}"
-DATABASE_URL="${DATABASE_URL%\"}"
-DATABASE_URL="${DATABASE_URL#\"}"
-DATABASE_URL="${DATABASE_URL%\'}"
-DATABASE_URL="${DATABASE_URL#\'}"
-
-case "$DATABASE_URL" in
-  *'@127.0.0.1:5432/'* | *'@localhost:5432/'*)
-    fail 'DATABASE_URL points to ambiguous local PostgreSQL host 127.0.0.1:5432 or localhost:5432'
-    ;;
-esac
-
-if [[ -n "$EXPECTED_DB_HOST" ]]; then
-  case "$DATABASE_URL" in
-    *"@${EXPECTED_DB_HOST}/"* | *"@${EXPECTED_DB_HOST}?"* | *"@${EXPECTED_DB_HOST}") ;;
-    *) fail "DATABASE_URL does not use expected database host: ${EXPECTED_DB_HOST}" ;;
-  esac
-fi
+EXPECTED_DATABASE_HOST="$EXPECTED_DB_HOST" \
+  EXPECTED_DATABASE_PORT="$EXPECTED_DB_PORT" \
+  EXPECTED_DATABASE_NAME="$EXPECTED_DB_NAME" \
+  node "$DATABASE_GUARD_PATH" probe --env-file "$ENV_FILE"
 
 PM2_JSON="$(pm2 jlist)"
 PM2_JSON_FILE="$(mktemp)"
@@ -128,9 +116,18 @@ trap - EXIT
 for path in $CRITICAL_PATHS; do
   url="${API_BASE_URL%/}${path}"
   response_file="$(mktemp)"
-  curl -fsS --retry 5 --retry-delay 3 "$url" >"$response_file"
+  curl -fsS --connect-timeout 10 --max-time 30 --retry 5 --retry-delay 3 "$url" >"$response_file"
 
-  if grep -Eq '"code"[[:space:]]*:' "$response_file" && ! grep -Eq '"code"[[:space:]]*:[[:space:]]*0($|[[:space:],}])' "$response_file"; then
+  if ! RESPONSE_FILE="$response_file" node <<'NODE'
+const fs = require('node:fs')
+
+const response = JSON.parse(fs.readFileSync(process.env.RESPONSE_FILE, 'utf8'))
+if (response?.code !== 0) {
+  console.error('[runtime-guard] ERROR: critical response code is not zero')
+  process.exit(1)
+}
+NODE
+  then
     rm -f "$response_file"
     fail "critical probe returned a failing response envelope: $url"
   fi
@@ -139,10 +136,41 @@ for path in $CRITICAL_PATHS; do
   log "critical probe passed: $url"
 done
 
+for path in $NON_EMPTY_PATHS; do
+  url="${API_BASE_URL%/}${path}"
+  response_file="$(mktemp)"
+  curl -fsS --connect-timeout 10 --max-time 30 --retry 5 --retry-delay 3 "$url" >"$response_file"
+
+  if ! RESPONSE_FILE="$response_file" node <<'NODE'
+const fs = require('node:fs')
+
+const response = JSON.parse(fs.readFileSync(process.env.RESPONSE_FILE, 'utf8'))
+
+if (response?.code !== 0) {
+  console.error('[runtime-guard] ERROR: response code is not zero')
+  process.exit(1)
+}
+
+if (!Number.isInteger(response?.data?.total) || response.data.total < 1) {
+  console.error(
+    '[runtime-guard] ERROR: response data.total must be greater than zero',
+  )
+  process.exit(1)
+}
+NODE
+  then
+    rm -f "$response_file"
+    fail "non-empty probe returned an invalid response: $url"
+  fi
+
+  rm -f "$response_file"
+  log "non-empty probe passed: $url"
+done
+
 if [[ -n "$CORS_ORIGIN" ]]; then
   cors_url="${API_BASE_URL%/}${CORS_PATH}"
   headers_file="$(mktemp)"
-  curl -fsS -I -X OPTIONS \
+  curl -fsS --connect-timeout 10 --max-time 30 -I -X OPTIONS \
     -H "Origin: ${CORS_ORIGIN}" \
     -H 'Access-Control-Request-Method: POST' \
     "$cors_url" >"$headers_file"
@@ -150,6 +178,11 @@ if [[ -n "$CORS_ORIGIN" ]]; then
   if ! grep -iq "^access-control-allow-origin: ${CORS_ORIGIN}" "$headers_file"; then
     rm -f "$headers_file"
     fail "CORS preflight does not allow ${CORS_ORIGIN}: $cors_url"
+  fi
+
+  if ! grep -Eiq '^access-control-allow-methods:.*(^|[[:space:],])POST([[:space:],]|$)' "$headers_file"; then
+    rm -f "$headers_file"
+    fail "CORS preflight does not allow POST: $cors_url"
   fi
 
   rm -f "$headers_file"

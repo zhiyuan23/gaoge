@@ -58,13 +58,26 @@
 - `main.ts`、进程入口、脚本文件可直接读取少量 `process.env.*`
 - 数据库连接仍以 Prisma schema 和 `DATABASE_URL` 为事实来源
 - 上传目录这类部署相关路径必须使用显式环境变量配置；当前 API 上传根目录使用 `API_UPLOAD_ROOT`
-- 生产部署必须通过 `EXPECTED_DATABASE_HOST` 固定期望数据库 host，避免同机多 PostgreSQL 时 `DATABASE_URL` 指向含义不明确的 `127.0.0.1:5432` 或 `localhost:5432`
+
+### API 生产数据库
+
+- GitHub Secret `DEPLOY_ENV_FILE_API` 是 API 生产配置的唯一来源，其中必须且只能包含一个 `DATABASE_URL`
+- 服务器唯一运行时配置文件为 `/var/www/gaoge/api/shared/api.env`；release 的 `.env` 软链接、Prisma migration 和 PM2 运行时都读取这同一文件
+- `DATABASE_URL` 必须明确且只配置一次 `schema=public`；缺失、重复或使用其他 schema 都会阻止发布
+- workflow 构建 Prisma Client 时只使用无真实权限的占位连接串，不读取独立的生产 `DATABASE_URL` Secret
+- 当前项目唯一允许的生产目标为 Ubuntu PostgreSQL 16 的 `[::1]:5432/gaoge_db`，服务名为 `postgresql@16-main`，数据目录为 `/var/lib/postgresql/16/main`
+- `EXPECTED_DATABASE_HOST` 只保存断言值 `::1`，不得保存连接串、端口或密码
+- 宝塔 PostgreSQL 暂时为 Compass 保留；其 `127.0.0.1:5432/gaoge_db` 不是 Gaoge 的有效目标
+- 修改生产数据库配置时必须更新完整的 `DEPLOY_ENV_FILE_API`，不能另外新增 migration 专用或 PM2 专用连接串
+- workflow 通过 GitHub Actions step env 和 `printf` 传输完整配置；migration 先使用 `env -i` 清空继承环境，再通过 Node 22 `--env-file` 加载配置；所有正向和回滚 PM2 启动也先清空继承环境，ecosystem 再使用 Node `parseEnv` 解析 `.env` 并把结果作为显式 `env` 传给应用。这样服务器 profile、GitHub runner 或 PM2 旧环境中的同名变量都不能覆盖生产配置文件
+- 禁止用 Shell `source`/`.` 执行 dotenv 文件，也禁止直接使用会保留同名继承变量的 `process.loadEnvFile` 作为 PM2 生产配置加载方式
 
 ## 脚本与工具约定
 
 - 开发辅助脚本可读取环境变量，但要控制在脚本入口集中处理
 - 脚本依赖的关键变量，应在注释、示例文件或文档中声明
 - 不在多个 shell 脚本和 Node 脚本里各自发明同名不同义的变量
+- 生产数据库校验统一由 `scripts/deployment/production-database-guard.mjs` 负责，Shell 脚本不重复解析连接串
 
 ## 命名建议
 
@@ -77,3 +90,4 @@
 - 提交真实密钥、生产数据库地址或第三方私钥
 - 在共享包里依赖某个应用的环境变量
 - 在页面细节里广泛散落环境变量判断
+- 在 API workflow 中使用独立的 `${{ secrets.DATABASE_URL }}`，或让 migration 与运行时读取不同环境文件

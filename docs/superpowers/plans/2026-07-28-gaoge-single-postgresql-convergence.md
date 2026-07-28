@@ -50,6 +50,7 @@ test('accepts the canonical Gaoge production database target', () => {
     host: '::1',
     port: 5432,
     database: 'gaoge_db',
+    schema: 'public',
     username: 'gaoge_user',
     password: 'secret',
   })
@@ -109,11 +110,17 @@ export const parseDatabaseTarget = (databaseUrl) => {
     throw new GuardError(`unsupported database protocol: ${parsed.protocol}`)
   }
 
+  const schemas = parsed.searchParams.getAll('schema')
+  if (schemas.length !== 1 || schemas[0] !== 'public') {
+    throw new GuardError('DATABASE_URL must contain exactly one schema=public')
+  }
+
   return {
     protocol: parsed.protocol,
     host: parsed.hostname.replace(/^\[(.*)\]$/, '$1'),
     port: Number(parsed.port || 5432),
     database: decodeURIComponent(parsed.pathname.replace(/^\//, '')),
+    schema: schemas[0],
     username: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
   }
@@ -121,8 +128,8 @@ export const parseDatabaseTarget = (databaseUrl) => {
 
 export const validateConfiguredTarget = (envFile, expected) => {
   const target = parseDatabaseTarget(readDatabaseUrl(envFile))
-  const actual = `${target.host}:${target.port}/${target.database}`
-  const required = `${expected.host}:${expected.port}/${expected.database}`
+  const actual = `${target.host}:${target.port}/${target.database}?schema=${target.schema}`
+  const required = `${expected.host}:${expected.port}/${expected.database}?schema=${expected.schema}`
 
   if (actual !== required) {
     throw new GuardError(`database target mismatch: got ${actual}, expected ${required}`)
@@ -153,6 +160,7 @@ const healthyProbe = {
   serverAddress: '::1',
   serverPort: 5432,
   database: 'gaoge_db',
+  schema: 'public',
   users: 7,
   players: 39,
   teams: 3,
@@ -418,6 +426,9 @@ git commit -m "fix(deploy): reject wrong or empty production database"
 **Files:**
 
 - Modify: `.github/workflows/deploy-api.yml`
+- Create: `scripts/deployment/prepare-api-rollback-state.sh`
+- Create: `scripts/deployment/rollback-api-release.sh`
+- Create: `scripts/verify-api-release-rollback.test.mjs`
 - Modify: `scripts/verify-production-runtime-guard.test.mjs`
 
 **Interfaces:**
@@ -437,7 +448,11 @@ assert.match(workflow, /api\.env\.next-/)
 assert.match(workflow, /mv .*api\.env/)
 assert.match(workflow, /node .*production-database-guard\.mjs probe/)
 assert.match(workflow, /node .*production-database-guard\.mjs backup/)
-assert.match(workflow, /set -a[\s\S]*\. \.\/\.env[\s\S]*set \+a/)
+assert.match(
+  remoteWorkflow,
+  /env -i HOME="\$HOME" PATH="\$PATH"\s+node --env-file=\.env \.\/node_modules\/prisma\/build\/index\.js migrate deploy/,
+)
+assert.doesNotMatch(workflow, /\. \.\/\.env/)
 assert.match(workflow, /id:\s+switch-release/)
 assert.match(workflow, /if:\s+failure\(\)/)
 assert.match(workflow, /previous-release/)
@@ -482,7 +497,7 @@ Require `psql`, `pg_dump`, `pg_restore`, `node`, and `pm2` during server environ
 
 - [ ] **Step 5: Save rollback state and atomically install the environment**
 
-Create `${API_DEPLOY_PATH}/tmp/deploy-state/${GITHUB_SHA}`. Save:
+Create `${API_DEPLOY_PATH}/tmp/deploy-state/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`. Save:
 
 ```text
 previous-release
@@ -521,13 +536,12 @@ node ${API_DEPLOY_PATH}/tmp/production-database-guard.mjs backup \
   --retention 14
 ```
 
-Load migration environment from the release:
+Clear inherited variables and load the migration environment with Node's dotenv parser, without executing the file as shell code:
 
 ```bash
-set -a
-. ./.env
-set +a
-./node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma
+env -i HOME="$HOME" PATH="$PATH" \
+  node --env-file=.env ./node_modules/prisma/build/index.js migrate deploy \
+  --schema prisma/schema.prisma
 ```
 
 - [ ] **Step 7: Delay PM2 persistence until post-start verification**
@@ -551,12 +565,13 @@ Call `pm2 save` only after this guard succeeds.
 
 With `if: failure()`, SSH to the server and:
 
-1. Read the saved previous release.
-2. Restore `previous-api.env` when present.
-3. Restore the `current` symlink when the previous release exists.
-4. If `switch-release` ran, restart `gaoge-api` from restored `current`.
-5. Verify `/health` and `/health/db`.
-6. Save the restored PM2 state.
+1. Read the saved previous release and explicit previous-environment state.
+2. If `switch-release` ran, resolve and validate the previous release root plus its startup files before mutating the environment or `current`.
+3. Pre-stage and verify `previous-api.env` in the shared environment directory.
+4. Atomically restore `current`, verify its resolved target, then atomically activate the pre-staged environment. Compensate `current` to the active release if activation fails.
+5. Restart `gaoge-api` from restored `current` through a sanitized PM2 environment.
+6. Run the complete database, API payload, and CORS runtime guard.
+7. Save the restored PM2 state and remove rollback state; also remove rollback state on an unsuccessful rollback exit.
 
 Do not invoke Prisma or restore the database backup in this step.
 
@@ -682,7 +697,6 @@ Run:
 
 ```bash
 pnpm exec prettier --check \
-  infra/deploy/postgres/check-postgres.sh \
   scripts/verify-postgres-healthcheck.test.mjs \
   docs/conventions/env-and-config.md \
   docs/conventions/testing-and-verification.md \
@@ -740,11 +754,9 @@ Run:
 pnpm exec prettier --check \
   .github/workflows/deploy-api.yml \
   scripts/deployment/production-database-guard.mjs \
-  scripts/deployment/verify-remote-runtime.sh \
   scripts/production-database-guard.test.mjs \
   scripts/verify-production-runtime-guard.test.mjs \
   scripts/verify-postgres-healthcheck.test.mjs \
-  infra/deploy/postgres/check-postgres.sh \
   docs/conventions/env-and-config.md \
   docs/conventions/testing-and-verification.md \
   docs/ops/production-runtime-guard.md \
