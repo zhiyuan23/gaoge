@@ -55,6 +55,8 @@ test('api deployment uses one database source and persists PM2 only after verifi
   assert.match(workflow, /scripts\/deployment\/verify-remote-runtime\.sh/)
   assert.match(workflow, /scripts\/deployment\/production-database-guard\.mjs/)
   assert.match(workflow, /scripts\/deployment\/rollback-api-release\.sh/)
+  assert.match(workflow, /command -v realpath/)
+  assert.match(workflow, /Number\.parseInt\(process\.versions\.node, 10\) !== 22/)
   assert.match(workflow, /api\.env\.next-\$\{\{ github\.sha \}\}/)
   assert.match(workflow, /mv .*NEXT_ENV_FILE.*SHARED_ENV_FILE/)
   assert.match(workflow, /env:\s+DEPLOY_ENV_FILE_API: \$\{\{ secrets\.DEPLOY_ENV_FILE_API \}\}/)

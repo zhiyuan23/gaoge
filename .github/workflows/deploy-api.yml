@@ -151,6 +151,11 @@ jobs:
             command -v psql >/dev/null 2>&1 || { echo \"psql not found\" >&2; exit 1; }
             command -v pg_dump >/dev/null 2>&1 || { echo \"pg_dump not found\" >&2; exit 1; }
             command -v pg_restore >/dev/null 2>&1 || { echo \"pg_restore not found\" >&2; exit 1; }
+            command -v realpath >/dev/null 2>&1 || { echo \"realpath not found\" >&2; exit 1; }
+            node -e \"if (Number.parseInt(process.versions.node, 10) !== 22) process.exit(1)\" || {
+              echo \"production Node 22 is required\" >&2
+              exit 1
+            }
           '"
 
       - name: 保存发布回滚状态
