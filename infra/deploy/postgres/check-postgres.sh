@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-STATE_DIR=/var/lib/postgresql/healthcheck
+STATE_DIR="${POSTGRES_HEALTHCHECK_STATE_DIR:-/var/lib/postgresql/healthcheck}"
 FAIL_FILE="$STATE_DIR/fail_count"
-LOG_FILE=/var/log/postgres-healthcheck.log
+LOG_FILE="${POSTGRES_HEALTHCHECK_LOG_FILE:-/var/log/postgres-healthcheck.log}"
 SERVICE_NAME=postgresql@16-main
 DB_NAME=postgres
 PG_SOCKET_DIR=/var/run/postgresql

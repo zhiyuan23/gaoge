@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
-import { existsSync, readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 
@@ -29,7 +31,11 @@ test('remote runtime guard validates gaoge production process, release, database
   assert.match(guard, /pm2 jlist/)
   assert.match(guard, /CRITICAL_PATHS/)
   assert.match(guard, /NON_EMPTY_PATHS/)
+  assert.match(guard, /response\?\.code !== 0/)
+  assert.match(guard, /critical response code is not zero/)
   assert.match(guard, /data\.total/)
+  assert.match(guard, /access-control-allow-methods/)
+  assert.match(guard, /POST/)
   assert.match(guard, /curl -fsS/)
 })
 
@@ -48,17 +54,27 @@ test('api deployment uses one database source and persists PM2 only after verifi
   assert.match(workflow, /scripts\/deployment\/production-database-guard\.mjs/)
   assert.match(workflow, /api\.env\.next-\$\{\{ github\.sha \}\}/)
   assert.match(workflow, /mv .*NEXT_ENV_FILE.*SHARED_ENV_FILE/)
+  assert.match(workflow, /env:\s+DEPLOY_ENV_FILE_API: \$\{\{ secrets\.DEPLOY_ENV_FILE_API \}\}/)
+  assert.match(workflow, /printf '%s\\n' "\$DEPLOY_ENV_FILE_API"/)
+  assert.doesNotMatch(workflow, /\. \.\/\.env/)
+  assert.doesNotMatch(workflow, /DEPLOY_ENV_FILE_API \}\}[\s\S]*EOF/)
   assert.match(workflow, /production-database-guard\.mjs validate[\s\S]*--env-file/)
   assert.match(workflow, /production-database-guard\.mjs probe[\s\S]*--env-file/)
   assert.match(
     workflow,
     /production-database-guard\.mjs backup[\s\S]*--backup-dir[\s\S]*--retention 14/,
   )
-  assert.match(workflow, /set -a[\s\S]*\. \.\/\.env[\s\S]*set \+a/)
+  assert.match(
+    workflow,
+    /node --env-file=\.env \.\/node_modules\/prisma\/build\/index\.js migrate deploy/,
+  )
   assert.match(workflow, /id:\s+switch-release/)
   assert.match(workflow, /if:\s+failure\(\)/)
   assert.match(workflow, /previous-release/)
   assert.match(workflow, /previous-api\.env/)
+  assert.match(workflow, /deploy-state\/\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}/)
+  assert.match(workflow, /mv -Tf/)
+  assert.doesNotMatch(workflow, /rm -rf .*current/)
   assert.match(workflow, /pm2 save/)
   assert.match(workflow, /EXPECTED_PM2_NAME='gaoge-api'/)
   assert.match(workflow, /FORBIDDEN_PM2_NAMES='gaoge-server'/)
@@ -84,6 +100,35 @@ test('api deployment uses one database source and persists PM2 only after verifi
   assert.ok(firstPm2Save > runtimeGuardStep)
 })
 
+test('Node env-file preserves shell-sensitive values without executing them', () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'gaoge-safe-env-'))
+  const marker = path.join(directory, 'must-not-exist')
+  const envFile = path.join(directory, 'api.env')
+  writeFileSync(
+    envFile,
+    [
+      'DOLLAR_VALUE="value$HOME"',
+      `COMMAND_VALUE="$(touch ${marker})"`,
+      'SPACE_VALUE="hello world"',
+      '',
+    ].join('\n'),
+  )
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      `--env-file=${envFile}`,
+      '-e',
+      'process.stdout.write(JSON.stringify([process.env.DOLLAR_VALUE, process.env.COMMAND_VALUE, process.env.SPACE_VALUE]))',
+    ],
+    { encoding: 'utf8' },
+  )
+
+  assert.equal(result.status, 0, result.stderr)
+  assert.deepEqual(JSON.parse(result.stdout), ['value$HOME', `$(touch ${marker})`, 'hello world'])
+  assert.equal(existsSync(marker), false)
+})
+
 test('admin deployment verifies the API contract before switching frontend release', () => {
   const workflow = readWorkspaceFile('.github/workflows/deploy-admin.yml')
 
@@ -101,6 +146,8 @@ test('admin deployment verifies the API contract before switching frontend relea
 test('api PM2 production runtime defaults to a single instance with override support', () => {
   const ecosystem = readWorkspaceFile('apps/api/ecosystem.config.cjs')
 
+  assert.match(ecosystem, /process\.loadEnvFile/)
+  assert.match(ecosystem, /process\.loadEnvFile\(`\$\{__dirname\}\/\.env`\)/)
   assert.match(ecosystem, /parseInstances/)
   assert.match(ecosystem, /process\.env\.PM2_INSTANCES/)
   assert.match(ecosystem, /return 1/)

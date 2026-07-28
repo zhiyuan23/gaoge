@@ -63,11 +63,13 @@
 
 - GitHub Secret `DEPLOY_ENV_FILE_API` 是 API 生产配置的唯一来源，其中必须且只能包含一个 `DATABASE_URL`
 - 服务器唯一运行时配置文件为 `/var/www/gaoge/api/shared/api.env`；release 的 `.env` 软链接、Prisma migration 和 PM2 运行时都读取这同一文件
+- `DATABASE_URL` 必须明确且只配置一次 `schema=public`；缺失、重复或使用其他 schema 都会阻止发布
 - workflow 构建 Prisma Client 时只使用无真实权限的占位连接串，不读取独立的生产 `DATABASE_URL` Secret
 - 当前项目唯一允许的生产目标为 Ubuntu PostgreSQL 16 的 `[::1]:5432/gaoge_db`，服务名为 `postgresql@16-main`，数据目录为 `/var/lib/postgresql/16/main`
 - `EXPECTED_DATABASE_HOST` 只保存断言值 `::1`，不得保存连接串、端口或密码
 - 宝塔 PostgreSQL 暂时为 Compass 保留；其 `127.0.0.1:5432/gaoge_db` 不是 Gaoge 的有效目标
 - 修改生产数据库配置时必须更新完整的 `DEPLOY_ENV_FILE_API`，不能另外新增 migration 专用或 PM2 专用连接串
+- workflow 通过 GitHub Actions step env 和 `printf` 传输完整配置；migration 使用 Node 22 `--env-file`，PM2 ecosystem 使用 `process.loadEnvFile`。禁止用 Shell `source`/`.` 执行 dotenv 文件
 
 ## 脚本与工具约定
 

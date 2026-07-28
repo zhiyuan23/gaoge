@@ -21,6 +21,7 @@ API workflow 在发布后执行：
 - 保存旧 `current` 与旧 `shared/api.env`
 - 校验临时环境文件后原子替换 `shared/api.env`
 - 使用同一环境文件探测数据库、生成已验证备份并执行 Prisma migration
+- 使用 `github.run_id` 与 `github.run_attempt` 隔离每次回滚状态，并通过同目录临时软链和 `mv -Tf` 原子切换 `current`
 - `pm2 start ecosystem.config.cjs --only gaoge-api --update-env`
 - 运行守卫脚本
 - 全部验收通过后执行 `pm2 save`
@@ -28,6 +29,8 @@ API workflow 在发布后执行：
 Admin 与 API production workflow 共用 `gaoge-production-deployment` 并发队列，避免同一次 push 并行打到同一台服务器。API PM2 默认 1 个实例；如确认服务器内存容量足够，可通过生产环境变量 `PM2_INSTANCES` 设置为正整数或 `max`。
 
 探测、备份、migration 或发布后验收失败时，workflow 自动恢复旧 release 和旧环境文件。数据库 migration 不自动逆向回滚，数据库备份也不自动恢复。
+
+生产 dotenv 只按 dotenv 语义解析，绝不能由 Shell 执行。包含 `$`、空格、引号或命令替换样式文本的值必须保持字面含义。
 
 Admin workflow 在切换 `current` 前执行 API 合约探针。默认探针：
 

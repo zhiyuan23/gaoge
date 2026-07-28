@@ -41,8 +41,12 @@ export const parseDatabaseTarget = (databaseUrl) => {
   }
 
   const database = decodeURIComponent(parsed.pathname.replace(/^\//, ''))
+  const schemas = parsed.searchParams.getAll('schema')
   if (!parsed.hostname || !database || !parsed.username) {
     throw new GuardError('DATABASE_URL is missing host, database, or username')
+  }
+  if (schemas.length !== 1 || schemas[0] !== 'public') {
+    throw new GuardError('DATABASE_URL must contain exactly one schema=public')
   }
 
   return {
@@ -50,6 +54,7 @@ export const parseDatabaseTarget = (databaseUrl) => {
     host: parsed.hostname.replace(/^\[(.*)\]$/, '$1'),
     port: Number(parsed.port || 5432),
     database,
+    schema: schemas[0],
     username: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
   }
@@ -57,8 +62,8 @@ export const parseDatabaseTarget = (databaseUrl) => {
 
 export const validateConfiguredTarget = (envFile, expected) => {
   const target = parseDatabaseTarget(readDatabaseUrl(envFile))
-  const actual = `${target.host}:${target.port}/${target.database}`
-  const required = `${expected.host}:${expected.port}/${expected.database}`
+  const actual = `${target.host}:${target.port}/${target.database}?schema=${target.schema}`
+  const required = `${expected.host}:${expected.port}/${expected.database}?schema=${expected.schema}`
 
   if (actual !== required) {
     throw new GuardError(`database target mismatch: got ${actual}, expected ${required}`)
@@ -72,6 +77,7 @@ select json_build_object(
   'serverAddress', inet_server_addr()::text,
   'serverPort', inet_server_port(),
   'database', current_database(),
+  'schema', current_schema(),
   'users', (select count(*) from "User"),
   'players', (select count(*) from "Player"),
   'teams', (select count(*) from "Team"),
@@ -87,6 +93,7 @@ const postgresEnvironment = (target) => ({
   PGDATABASE: target.database,
   PGUSER: target.username,
   PGPASSWORD: target.password,
+  PGOPTIONS: '-c search_path=public',
 })
 
 export const probeDatabase = (target, expected) => {
@@ -107,8 +114,8 @@ export const probeDatabase = (target, expected) => {
   }
 
   const serverAddress = String(probe.serverAddress).replace(/\/\d+$/, '')
-  const actual = `${serverAddress}:${probe.serverPort}/${probe.database}`
-  const required = `${expected.host}:${expected.port}/${expected.database}`
+  const actual = `${serverAddress}:${probe.serverPort}/${probe.database}?schema=${probe.schema}`
+  const required = `${expected.host}:${expected.port}/${expected.database}?schema=${expected.schema}`
   if (actual !== required) {
     throw new GuardError(`database identity mismatch: got ${actual}, expected ${required}`)
   }
@@ -196,6 +203,7 @@ const expectedTarget = () => ({
   host: process.env.EXPECTED_DATABASE_HOST || '::1',
   port: Number(process.env.EXPECTED_DATABASE_PORT || 5432),
   database: process.env.EXPECTED_DATABASE_NAME || 'gaoge_db',
+  schema: 'public',
 })
 
 const main = () => {

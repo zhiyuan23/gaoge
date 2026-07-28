@@ -156,10 +156,12 @@ jobs:
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -euo pipefail
             DEPLOY_PATH=${{ secrets.API_DEPLOY_PATH }}
-            STATE_DIR=\$DEPLOY_PATH/tmp/deploy-state/${{ github.sha }}
+            STATE_ROOT=\$DEPLOY_PATH/tmp/deploy-state
+            STATE_DIR=\$STATE_ROOT/${{ github.run_id }}-${{ github.run_attempt }}
             SHARED_ENV_FILE=\$DEPLOY_PATH/shared/api.env
 
-            mkdir -p \"\$STATE_DIR\"
+            find \"\$STATE_ROOT\" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf -- {} +
+            mkdir \"\$STATE_DIR\"
             chmod 700 \"\$STATE_DIR\"
             if [ -L \"\$DEPLOY_PATH/current\" ]; then
               readlink -f \"\$DEPLOY_PATH/current\" > \"\$STATE_DIR/previous-release\"
@@ -172,16 +174,18 @@ jobs:
           '"
 
       - name: 原子写入并验证服务端环境变量
+        env:
+          DEPLOY_ENV_FILE_API: ${{ secrets.DEPLOY_ENV_FILE_API }}
         run: |
-          if [ -z "${{ secrets.DEPLOY_ENV_FILE_API }}" ]; then
+          set -euo pipefail
+          if [ -z "$DEPLOY_ENV_FILE_API" ]; then
             echo "GitHub Secret DEPLOY_ENV_FILE_API 为空" >&2
             exit 1
           fi
 
           NEXT_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}
-          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "umask 077; cat > \"${NEXT_ENV_FILE}\"" <<'EOF'
-          ${{ secrets.DEPLOY_ENV_FILE_API }}
-          EOF
+          printf '%s\n' "$DEPLOY_ENV_FILE_API" |
+            ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "umask 077; cat > \"${NEXT_ENV_FILE}\""
 
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -euo pipefail
@@ -252,14 +256,11 @@ jobs:
               --backup-dir ${{ secrets.API_DEPLOY_PATH }}/backups \
               --retention 14
 
-            set -a
-            . ./.env
-            set +a
             echo Remote API migration started
             date
             free -h || true
             ps -eo pid,ppid,user,stat,etime,rss,pmem,pcpu,cmd --sort=-rss | head -20 || true
-            ./node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma
+            node --env-file=.env ./node_modules/prisma/build/index.js migrate deploy --schema prisma/schema.prisma
           '"
 
       - name: 切换 API 版本并重启 PM2
@@ -271,15 +272,22 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            STATE_DIR=${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.sha }}
+            DEPLOY_PATH=${{ secrets.API_DEPLOY_PATH }}
+            STATE_DIR=\$DEPLOY_PATH/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
+            CURRENT_LINK=\$DEPLOY_PATH/current
+            NEXT_CURRENT_LINK=\$DEPLOY_PATH/.current-next-${{ github.run_id }}-${{ github.run_attempt }}
+            NEW_RELEASE=\$DEPLOY_PATH/releases/api/${{ github.sha }}
+
+            [ ! -e \"\$CURRENT_LINK\" ] || [ -L \"\$CURRENT_LINK\" ] || {
+              echo \"Current release path is not a symlink: \$CURRENT_LINK\" >&2
+              exit 1
+            }
             touch \"\$STATE_DIR/switched\"
-            rm -rf ${{ secrets.API_DEPLOY_PATH }}/current
-            ln -sfn ${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }} ${{ secrets.API_DEPLOY_PATH }}/current
+            rm -f \"\$NEXT_CURRENT_LINK\"
+            ln -s \"\$NEW_RELEASE\" \"\$NEXT_CURRENT_LINK\"
+            mv -Tf \"\$NEXT_CURRENT_LINK\" \"\$CURRENT_LINK\"
             pm2 delete gaoge-api >/dev/null 2>&1 || true
-            cd ${{ secrets.API_DEPLOY_PATH }}/current
-            set -a
-            . ./.env
-            set +a
+            cd \"\$CURRENT_LINK\"
             echo Restarting gaoge-api with PM2
             date
             free -h || true
@@ -318,6 +326,8 @@ jobs:
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             pm2 save
+            STATE_DIR=${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
+            rm -rf \"\$STATE_DIR\"
           '"
 
       - name: 发布失败时恢复 API 版本与环境
@@ -329,7 +339,7 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
 
             DEPLOY_PATH=${{ secrets.API_DEPLOY_PATH }}
-            STATE_DIR=\$DEPLOY_PATH/tmp/deploy-state/${{ github.sha }}
+            STATE_DIR=\$DEPLOY_PATH/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
             SHARED_ENV_FILE=\$DEPLOY_PATH/shared/api.env
             NEXT_ENV_FILE=\$DEPLOY_PATH/shared/api.env.next-${{ github.sha }}
 
@@ -353,8 +363,23 @@ jobs:
             fi
 
             if [ -n \"\$previous_release\" ] && [ -d \"\$previous_release\" ]; then
-              rm -rf \"\$DEPLOY_PATH/current\"
-              ln -sfn \"\$previous_release\" \"\$DEPLOY_PATH/current\"
+              case \"\$previous_release\" in
+                \"\$DEPLOY_PATH\"/releases/api/*) ;;
+                *)
+                  echo \"Previous release is outside the API release root\" >&2
+                  exit 1
+                  ;;
+              esac
+
+              CURRENT_LINK=\$DEPLOY_PATH/current
+              ROLLBACK_LINK=\$DEPLOY_PATH/.current-rollback-${{ github.run_id }}-${{ github.run_attempt }}
+              [ ! -e \"\$CURRENT_LINK\" ] || [ -L \"\$CURRENT_LINK\" ] || {
+                echo \"Current release path is not a symlink: \$CURRENT_LINK\" >&2
+                exit 1
+              }
+              rm -f \"\$ROLLBACK_LINK\"
+              ln -s \"\$previous_release\" \"\$ROLLBACK_LINK\"
+              mv -Tf \"\$ROLLBACK_LINK\" \"\$CURRENT_LINK\"
             fi
 
             if [ -f \"\$STATE_DIR/switched\" ]; then
@@ -364,9 +389,6 @@ jobs:
               }
               pm2 delete gaoge-api >/dev/null 2>&1 || true
               cd \"\$DEPLOY_PATH/current\"
-              set -a
-              . ./.env
-              set +a
               pm2 start ecosystem.config.cjs --only gaoge-api --update-env
               curl -fsS --retry 5 --retry-delay 3 https://api.gaoge.cc/health >/dev/null
               curl -fsS --retry 5 --retry-delay 3 https://api.gaoge.cc/health/db >/dev/null

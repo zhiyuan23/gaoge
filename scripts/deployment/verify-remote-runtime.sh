@@ -116,9 +116,18 @@ trap - EXIT
 for path in $CRITICAL_PATHS; do
   url="${API_BASE_URL%/}${path}"
   response_file="$(mktemp)"
-  curl -fsS --retry 5 --retry-delay 3 "$url" >"$response_file"
+  curl -fsS --connect-timeout 10 --max-time 30 --retry 5 --retry-delay 3 "$url" >"$response_file"
 
-  if grep -Eq '"code"[[:space:]]*:' "$response_file" && ! grep -Eq '"code"[[:space:]]*:[[:space:]]*0($|[[:space:],}])' "$response_file"; then
+  if ! RESPONSE_FILE="$response_file" node <<'NODE'
+const fs = require('node:fs')
+
+const response = JSON.parse(fs.readFileSync(process.env.RESPONSE_FILE, 'utf8'))
+if (response?.code !== 0) {
+  console.error('[runtime-guard] ERROR: critical response code is not zero')
+  process.exit(1)
+}
+NODE
+  then
     rm -f "$response_file"
     fail "critical probe returned a failing response envelope: $url"
   fi
@@ -130,7 +139,7 @@ done
 for path in $NON_EMPTY_PATHS; do
   url="${API_BASE_URL%/}${path}"
   response_file="$(mktemp)"
-  curl -fsS --retry 5 --retry-delay 3 "$url" >"$response_file"
+  curl -fsS --connect-timeout 10 --max-time 30 --retry 5 --retry-delay 3 "$url" >"$response_file"
 
   if ! RESPONSE_FILE="$response_file" node <<'NODE'
 const fs = require('node:fs')
@@ -161,7 +170,7 @@ done
 if [[ -n "$CORS_ORIGIN" ]]; then
   cors_url="${API_BASE_URL%/}${CORS_PATH}"
   headers_file="$(mktemp)"
-  curl -fsS -I -X OPTIONS \
+  curl -fsS --connect-timeout 10 --max-time 30 -I -X OPTIONS \
     -H "Origin: ${CORS_ORIGIN}" \
     -H 'Access-Control-Request-Method: POST' \
     "$cors_url" >"$headers_file"
@@ -169,6 +178,11 @@ if [[ -n "$CORS_ORIGIN" ]]; then
   if ! grep -iq "^access-control-allow-origin: ${CORS_ORIGIN}" "$headers_file"; then
     rm -f "$headers_file"
     fail "CORS preflight does not allow ${CORS_ORIGIN}: $cors_url"
+  fi
+
+  if ! grep -Eiq '^access-control-allow-methods:.*(^|[[:space:],])POST([[:space:],]|$)' "$headers_file"; then
+    rm -f "$headers_file"
+    fail "CORS preflight does not allow POST: $cors_url"
   fi
 
   rm -f "$headers_file"

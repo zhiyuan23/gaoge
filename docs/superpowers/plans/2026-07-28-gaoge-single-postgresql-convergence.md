@@ -50,6 +50,7 @@ test('accepts the canonical Gaoge production database target', () => {
     host: '::1',
     port: 5432,
     database: 'gaoge_db',
+    schema: 'public',
     username: 'gaoge_user',
     password: 'secret',
   })
@@ -109,11 +110,17 @@ export const parseDatabaseTarget = (databaseUrl) => {
     throw new GuardError(`unsupported database protocol: ${parsed.protocol}`)
   }
 
+  const schemas = parsed.searchParams.getAll('schema')
+  if (schemas.length !== 1 || schemas[0] !== 'public') {
+    throw new GuardError('DATABASE_URL must contain exactly one schema=public')
+  }
+
   return {
     protocol: parsed.protocol,
     host: parsed.hostname.replace(/^\[(.*)\]$/, '$1'),
     port: Number(parsed.port || 5432),
     database: decodeURIComponent(parsed.pathname.replace(/^\//, '')),
+    schema: schemas[0],
     username: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
   }
@@ -121,8 +128,8 @@ export const parseDatabaseTarget = (databaseUrl) => {
 
 export const validateConfiguredTarget = (envFile, expected) => {
   const target = parseDatabaseTarget(readDatabaseUrl(envFile))
-  const actual = `${target.host}:${target.port}/${target.database}`
-  const required = `${expected.host}:${expected.port}/${expected.database}`
+  const actual = `${target.host}:${target.port}/${target.database}?schema=${target.schema}`
+  const required = `${expected.host}:${expected.port}/${expected.database}?schema=${expected.schema}`
 
   if (actual !== required) {
     throw new GuardError(`database target mismatch: got ${actual}, expected ${required}`)
@@ -153,6 +160,7 @@ const healthyProbe = {
   serverAddress: '::1',
   serverPort: 5432,
   database: 'gaoge_db',
+  schema: 'public',
   users: 7,
   players: 39,
   teams: 3,
@@ -437,7 +445,11 @@ assert.match(workflow, /api\.env\.next-/)
 assert.match(workflow, /mv .*api\.env/)
 assert.match(workflow, /node .*production-database-guard\.mjs probe/)
 assert.match(workflow, /node .*production-database-guard\.mjs backup/)
-assert.match(workflow, /set -a[\s\S]*\. \.\/\.env[\s\S]*set \+a/)
+assert.match(
+  workflow,
+  /node --env-file=\.env \.\/node_modules\/prisma\/build\/index\.js migrate deploy/,
+)
+assert.doesNotMatch(workflow, /\. \.\/\.env/)
 assert.match(workflow, /id:\s+switch-release/)
 assert.match(workflow, /if:\s+failure\(\)/)
 assert.match(workflow, /previous-release/)
@@ -482,7 +494,7 @@ Require `psql`, `pg_dump`, `pg_restore`, `node`, and `pm2` during server environ
 
 - [ ] **Step 5: Save rollback state and atomically install the environment**
 
-Create `${API_DEPLOY_PATH}/tmp/deploy-state/${GITHUB_SHA}`. Save:
+Create `${API_DEPLOY_PATH}/tmp/deploy-state/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}`. Save:
 
 ```text
 previous-release
@@ -521,13 +533,11 @@ node ${API_DEPLOY_PATH}/tmp/production-database-guard.mjs backup \
   --retention 14
 ```
 
-Load migration environment from the release:
+Load the migration environment with Node's dotenv parser, without executing the file as shell code:
 
 ```bash
-set -a
-. ./.env
-set +a
-./node_modules/.bin/prisma migrate deploy --schema prisma/schema.prisma
+node --env-file=.env ./node_modules/prisma/build/index.js migrate deploy \
+  --schema prisma/schema.prisma
 ```
 
 - [ ] **Step 7: Delay PM2 persistence until post-start verification**
@@ -682,7 +692,6 @@ Run:
 
 ```bash
 pnpm exec prettier --check \
-  infra/deploy/postgres/check-postgres.sh \
   scripts/verify-postgres-healthcheck.test.mjs \
   docs/conventions/env-and-config.md \
   docs/conventions/testing-and-verification.md \
@@ -740,11 +749,9 @@ Run:
 pnpm exec prettier --check \
   .github/workflows/deploy-api.yml \
   scripts/deployment/production-database-guard.mjs \
-  scripts/deployment/verify-remote-runtime.sh \
   scripts/production-database-guard.test.mjs \
   scripts/verify-production-runtime-guard.test.mjs \
   scripts/verify-postgres-healthcheck.test.mjs \
-  infra/deploy/postgres/check-postgres.sh \
   docs/conventions/env-and-config.md \
   docs/conventions/testing-and-verification.md \
   docs/ops/production-runtime-guard.md \

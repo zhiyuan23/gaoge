@@ -15,6 +15,7 @@ const canonicalExpected = {
   host: '::1',
   port: 5432,
   database: 'gaoge_db',
+  schema: 'public',
 }
 const guardPath = path.join(process.cwd(), 'scripts/deployment/production-database-guard.mjs')
 
@@ -91,6 +92,7 @@ test('accepts the canonical Gaoge production database target', () => {
     host: '::1',
     port: 5432,
     database: 'gaoge_db',
+    schema: 'public',
     username: 'gaoge_user',
     password: 'secret',
   })
@@ -99,6 +101,7 @@ test('accepts the canonical Gaoge production database target', () => {
     host: '::1',
     port: 5432,
     database: 'gaoge_db',
+    schema: 'public',
     username: 'gaoge_user',
     password: 'secret',
   })
@@ -124,6 +127,18 @@ test('rejects missing and duplicate DATABASE_URL lines', () => {
   )
 })
 
+for (const databaseUrl of [
+  'postgresql://gaoge_user:secret@[::1]:5432/gaoge_db',
+  'postgresql://gaoge_user:secret@[::1]:5432/gaoge_db?schema=private',
+  'postgresql://gaoge_user:secret@[::1]:5432/gaoge_db?schema=public&schema=private',
+]) {
+  test(`rejects non-canonical schema in ${databaseUrl}`, () => {
+    const envFile = writeEnv(`DATABASE_URL="${databaseUrl}"\n`)
+
+    assert.throws(() => validateConfiguredTarget(envFile, canonicalExpected))
+  })
+}
+
 const canonicalEnv = writeEnv(
   'DATABASE_URL="postgresql://gaoge_user:secret@[::1]:5432/gaoge_db?schema=public"\n',
 )
@@ -131,6 +146,7 @@ const healthyProbe = {
   serverAddress: '::1',
   serverPort: 5432,
   database: 'gaoge_db',
+  schema: 'public',
   users: 7,
   players: 39,
   teams: 3,
