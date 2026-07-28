@@ -16,8 +16,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-admin-production
-  cancel-in-progress: true
+  group: gaoge-production-deployment
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: '22'

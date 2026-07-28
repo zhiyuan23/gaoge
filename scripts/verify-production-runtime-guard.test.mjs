@@ -33,6 +33,11 @@ test('remote runtime guard validates gaoge production process, release, database
 test('api deployment uploads and runs the gaoge runtime guard after PM2 save', () => {
   const workflow = readWorkspaceFile('.github/workflows/deploy-api.yml')
 
+  assert.match(workflow, /group:\s+gaoge-production-deployment/)
+  assert.match(workflow, /cancel-in-progress:\s+false/)
+  assert.match(workflow, /Remote API migration started/)
+  assert.match(workflow, /Restarting gaoge-api with PM2/)
+  assert.match(workflow, /free -h \|\| true/)
   assert.match(workflow, /scripts\/deployment\/verify-remote-runtime\.sh/)
   assert.match(workflow, /pm2 save/)
   assert.match(workflow, /EXPECTED_PM2_NAME='gaoge-api'/)
@@ -54,6 +59,8 @@ test('api deployment uploads and runs the gaoge runtime guard after PM2 save', (
 test('admin deployment verifies the API contract before switching frontend release', () => {
   const workflow = readWorkspaceFile('.github/workflows/deploy-admin.yml')
 
+  assert.match(workflow, /group:\s+gaoge-production-deployment/)
+  assert.match(workflow, /cancel-in-progress:\s+false/)
   assert.match(workflow, /ADMIN_API_CONTRACT_URLS/)
   assert.match(workflow, /校验 API 合约/)
   assert.match(workflow, /curl -fsS --retry 5 --retry-delay 3/)
@@ -61,4 +68,13 @@ test('admin deployment verifies the API contract before switching frontend relea
     workflow,
     /ln -sfn \$\{\{ secrets\.ADMIN_DEPLOY_PATH \}\}\/releases\/\$\{\{ github\.sha \}\} \$\{\{ secrets\.ADMIN_DEPLOY_PATH \}\}\/current/,
   )
+})
+
+test('api PM2 production runtime defaults to a single instance with override support', () => {
+  const ecosystem = readWorkspaceFile('apps/api/ecosystem.config.cjs')
+
+  assert.match(ecosystem, /parseInstances/)
+  assert.match(ecosystem, /process\.env\.PM2_INSTANCES/)
+  assert.match(ecosystem, /return 1/)
+  assert.doesNotMatch(ecosystem, /instances:\s*'max'/)
 })

@@ -1,10 +1,24 @@
+const parseInstances = (value) => {
+  if (!value) {
+    return 1
+  }
+
+  if (value === 'max') {
+    return value
+  }
+
+  const parsed = Number.parseInt(value, 10)
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
+}
+
 module.exports = {
   apps: [
     {
       name: 'gaoge-api',
       cwd: __dirname,
       script: 'dist/main.js',
-      instances: 'max',
+      instances: parseInstances(process.env.PM2_INSTANCES),
       exec_mode: 'cluster',
       env: {
         NODE_ENV: 'production',

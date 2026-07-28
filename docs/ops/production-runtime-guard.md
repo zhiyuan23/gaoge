@@ -21,6 +21,8 @@ API workflow 在发布后执行：
 - `pm2 save`
 - 运行守卫脚本
 
+Admin 与 API production workflow 共用 `gaoge-production-deployment` 并发队列，避免同一次 push 并行打到同一台服务器。API PM2 默认 1 个实例；如确认服务器内存容量足够，可通过生产环境变量 `PM2_INSTANCES` 设置为正整数或 `max`。
+
 Admin workflow 在切换 `current` 前执行 API 合约探针。默认探针：
 
 ```text
