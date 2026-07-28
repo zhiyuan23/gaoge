@@ -11,6 +11,14 @@ on:
         options:
           - inspect
           - apply
+      ssh_user:
+        description: 使用哪个 SSH 用户执行
+        required: true
+        default: web
+        type: choice
+        options:
+          - web
+          - root
 
 permissions:
   contents: read
@@ -41,9 +49,14 @@ jobs:
       - name: 只读检查 Sports 域名配置
         if: inputs.mode == 'inspect'
         run: |
-          : "${DEPLOY_USER:?WEB_DEPLOY_USER is required}"
+          if [ "${{ inputs.ssh_user }}" = "root" ]; then
+            TARGET_USER="root"
+          else
+            : "${DEPLOY_USER:?WEB_DEPLOY_USER is required}"
+            TARGET_USER="$DEPLOY_USER"
+          fi
           : "${WEB_DEPLOY_PATH:?WEB_DEPLOY_PATH is required}"
-          ssh "$DEPLOY_USER@$DEPLOY_HOST" "WEB_DEPLOY_PATH='$WEB_DEPLOY_PATH' ADMIN_DEPLOY_PATH='$ADMIN_DEPLOY_PATH' bash -s" <<'REMOTE'
+          ssh "$TARGET_USER@$DEPLOY_HOST" "WEB_DEPLOY_PATH='$WEB_DEPLOY_PATH' ADMIN_DEPLOY_PATH='$ADMIN_DEPLOY_PATH' bash -s" <<'REMOTE'
           set -euo pipefail
 
           echo "=== identity ==="
@@ -79,9 +92,14 @@ jobs:
       - name: 修复 Sports 域名到当前 Web 站点
         if: inputs.mode == 'apply'
         run: |
-          : "${DEPLOY_USER:?WEB_DEPLOY_USER is required}"
+          if [ "${{ inputs.ssh_user }}" = "root" ]; then
+            TARGET_USER="root"
+          else
+            : "${DEPLOY_USER:?WEB_DEPLOY_USER is required}"
+            TARGET_USER="$DEPLOY_USER"
+          fi
           : "${WEB_DEPLOY_PATH:?WEB_DEPLOY_PATH is required}"
-          ssh "$DEPLOY_USER@$DEPLOY_HOST" "WEB_DEPLOY_PATH='$WEB_DEPLOY_PATH' bash -s" <<'REMOTE'
+          ssh "$TARGET_USER@$DEPLOY_HOST" "WEB_DEPLOY_PATH='$WEB_DEPLOY_PATH' bash -s" <<'REMOTE'
           set -euo pipefail
 
           if ! sudo -n true 2>/dev/null; then
