@@ -69,7 +69,8 @@
 - `EXPECTED_DATABASE_HOST` 只保存断言值 `::1`，不得保存连接串、端口或密码
 - 宝塔 PostgreSQL 暂时为 Compass 保留；其 `127.0.0.1:5432/gaoge_db` 不是 Gaoge 的有效目标
 - 修改生产数据库配置时必须更新完整的 `DEPLOY_ENV_FILE_API`，不能另外新增 migration 专用或 PM2 专用连接串
-- workflow 通过 GitHub Actions step env 和 `printf` 传输完整配置；migration 使用 Node 22 `--env-file`，PM2 ecosystem 使用 `process.loadEnvFile`。禁止用 Shell `source`/`.` 执行 dotenv 文件
+- workflow 通过 GitHub Actions step env 和 `printf` 传输完整配置；migration 先使用 `env -i` 清空继承环境，再通过 Node 22 `--env-file` 加载配置；PM2 ecosystem 使用 Node `parseEnv` 解析 `.env` 并把结果作为显式 `env` 传给应用。这样服务器 profile、GitHub runner 或 PM2 旧环境中的同名变量都不能覆盖生产配置文件
+- 禁止用 Shell `source`/`.` 执行 dotenv 文件，也禁止直接使用会保留同名继承变量的 `process.loadEnvFile` 作为 PM2 生产配置加载方式
 
 ## 脚本与工具约定
 

@@ -426,6 +426,8 @@ git commit -m "fix(deploy): reject wrong or empty production database"
 **Files:**
 
 - Modify: `.github/workflows/deploy-api.yml`
+- Create: `scripts/deployment/rollback-api-release.sh`
+- Create: `scripts/verify-api-release-rollback.test.mjs`
 - Modify: `scripts/verify-production-runtime-guard.test.mjs`
 
 **Interfaces:**
@@ -446,8 +448,8 @@ assert.match(workflow, /mv .*api\.env/)
 assert.match(workflow, /node .*production-database-guard\.mjs probe/)
 assert.match(workflow, /node .*production-database-guard\.mjs backup/)
 assert.match(
-  workflow,
-  /node --env-file=\.env \.\/node_modules\/prisma\/build\/index\.js migrate deploy/,
+  remoteWorkflow,
+  /env -i HOME="\$HOME" PATH="\$PATH"\s+node --env-file=\.env \.\/node_modules\/prisma\/build\/index\.js migrate deploy/,
 )
 assert.doesNotMatch(workflow, /\. \.\/\.env/)
 assert.match(workflow, /id:\s+switch-release/)
@@ -533,10 +535,11 @@ node ${API_DEPLOY_PATH}/tmp/production-database-guard.mjs backup \
   --retention 14
 ```
 
-Load the migration environment with Node's dotenv parser, without executing the file as shell code:
+Clear inherited variables and load the migration environment with Node's dotenv parser, without executing the file as shell code:
 
 ```bash
-node --env-file=.env ./node_modules/prisma/build/index.js migrate deploy \
+env -i HOME="$HOME" PATH="$PATH" \
+  node --env-file=.env ./node_modules/prisma/build/index.js migrate deploy \
   --schema prisma/schema.prisma
 ```
 
@@ -562,11 +565,12 @@ Call `pm2 save` only after this guard succeeds.
 With `if: failure()`, SSH to the server and:
 
 1. Read the saved previous release.
-2. Restore `previous-api.env` when present.
-3. Restore the `current` symlink when the previous release exists.
-4. If `switch-release` ran, restart `gaoge-api` from restored `current`.
-5. Verify `/health` and `/health/db`.
-6. Save the restored PM2 state.
+2. If `switch-release` ran, resolve and validate the previous release root plus its startup files before mutating the environment or `current`.
+3. Restore `previous-api.env` when present.
+4. Atomically restore `current` and verify its resolved target.
+5. Restart `gaoge-api` from restored `current`.
+6. Run the complete database, API payload, and CORS runtime guard.
+7. Save the restored PM2 state and remove rollback state; also remove rollback state on an unsuccessful rollback exit.
 
 Do not invoke Prisma or restore the database backup in this step.
 

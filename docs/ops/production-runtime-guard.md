@@ -9,9 +9,10 @@
 ```bash
 scripts/deployment/verify-remote-runtime.sh
 scripts/deployment/production-database-guard.mjs
+scripts/deployment/rollback-api-release.sh
 ```
 
-数据库守卫负责解析唯一的 `DATABASE_URL`、验证实际 PostgreSQL 身份和关键表计数，并在迁移前创建可恢复备份。运行时守卫检查 PM2、`current` 软链、数据库身份、业务接口和 CORS。守卫本身不修改数据库内容。
+数据库守卫负责解析唯一的 `DATABASE_URL`、验证实际 PostgreSQL 身份和关键表计数，并在迁移前创建可恢复备份。运行时守卫检查 PM2、`current` 软链、数据库身份、业务接口和 CORS。回滚脚本负责先验证旧 release，再恢复环境和软链并重新运行完整守卫。守卫本身不修改数据库内容。
 
 ## GitHub Actions 集成
 
@@ -20,7 +21,7 @@ API workflow 在发布后执行：
 - 上传两份守卫脚本到 `${{ secrets.API_DEPLOY_PATH }}/tmp/`
 - 保存旧 `current` 与旧 `shared/api.env`
 - 校验临时环境文件后原子替换 `shared/api.env`
-- 使用同一环境文件探测数据库、生成已验证备份并执行 Prisma migration
+- 使用同一环境文件探测数据库、生成已验证备份，并在清空继承环境后执行 Prisma migration
 - 使用 `github.run_id` 与 `github.run_attempt` 隔离每次回滚状态，并通过同目录临时软链和 `mv -Tf` 原子切换 `current`
 - `pm2 start ecosystem.config.cjs --only gaoge-api --update-env`
 - 运行守卫脚本
@@ -28,9 +29,11 @@ API workflow 在发布后执行：
 
 Admin 与 API production workflow 共用 `gaoge-production-deployment` 并发队列，避免同一次 push 并行打到同一台服务器。API PM2 默认 1 个实例；如确认服务器内存容量足够，可通过生产环境变量 `PM2_INSTANCES` 设置为正整数或 `max`。
 
-探测、备份、migration 或发布后验收失败时，workflow 自动恢复旧 release 和旧环境文件。数据库 migration 不自动逆向回滚，数据库备份也不自动恢复。
+探测、备份、migration 或发布后验收失败时，workflow 自动恢复旧 release 和旧环境文件。若已经切换 release，回滚会先验证旧目录位于 API release 根目录且包含启动文件；恢复后再次运行完整的数据库、接口和 CORS 守卫，成功后才保存 PM2 状态。数据库 migration 不自动逆向回滚，数据库备份也不自动恢复。
 
 生产 dotenv 只按 dotenv 语义解析，绝不能由 Shell 执行。包含 `$`、空格、引号或命令替换样式文本的值必须保持字面含义。
+
+回滚状态中的旧环境副本权限为 `600`、目录权限为 `700`。发布成功或回滚步骤退出时立即删除；后续发布还会清理超过 7 天的异常残留目录。
 
 Admin workflow 在切换 `current` 前执行 API 合约探针。默认探针：
 

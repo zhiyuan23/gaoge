@@ -14,6 +14,7 @@ on:
       - 'turbo.json'
       - 'scripts/deployment/verify-remote-runtime.sh'
       - 'scripts/deployment/production-database-guard.mjs'
+      - 'scripts/deployment/rollback-api-release.sh'
   workflow_dispatch:
 
 concurrency:
@@ -134,6 +135,7 @@ jobs:
           rsync -avz \
             scripts/deployment/verify-remote-runtime.sh \
             scripts/deployment/production-database-guard.mjs \
+            scripts/deployment/rollback-api-release.sh \
             ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}/tmp/
 
       - name: 检查服务端运行环境
@@ -260,7 +262,8 @@ jobs:
             date
             free -h || true
             ps -eo pid,ppid,user,stat,etime,rss,pmem,pcpu,cmd --sort=-rss | head -20 || true
-            node --env-file=.env ./node_modules/prisma/build/index.js migrate deploy --schema prisma/schema.prisma
+            env -i HOME=\"\$HOME\" PATH=\"\$PATH\" \
+              node --env-file=.env ./node_modules/prisma/build/index.js migrate deploy --schema prisma/schema.prisma
           '"
 
       - name: 切换 API 版本并重启 PM2
@@ -338,62 +341,25 @@ jobs:
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
 
-            DEPLOY_PATH=${{ secrets.API_DEPLOY_PATH }}
-            STATE_DIR=\$DEPLOY_PATH/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
-            SHARED_ENV_FILE=\$DEPLOY_PATH/shared/api.env
-            NEXT_ENV_FILE=\$DEPLOY_PATH/shared/api.env.next-${{ github.sha }}
-
-            if [ ! -d \"\$STATE_DIR\" ]; then
-              echo \"No rollback state was created; nothing to restore\"
-              exit 0
-            fi
-
-            rm -f \"\$NEXT_ENV_FILE\"
-            if [ -f \"\$STATE_DIR/previous-api.env\" ]; then
-              cp -p \"\$STATE_DIR/previous-api.env\" \"\$SHARED_ENV_FILE.rollback-${{ github.sha }}\"
-              chmod 600 \"\$SHARED_ENV_FILE.rollback-${{ github.sha }}\"
-              mv \"\$SHARED_ENV_FILE.rollback-${{ github.sha }}\" \"\$SHARED_ENV_FILE\"
-            elif [ ! -f \"\$STATE_DIR/had-api-env\" ]; then
-              rm -f \"\$SHARED_ENV_FILE\"
-            fi
-
-            previous_release=
-            if [ -s \"\$STATE_DIR/previous-release\" ]; then
-              previous_release=\$(cat \"\$STATE_DIR/previous-release\")
-            fi
-
-            if [ -n \"\$previous_release\" ] && [ -d \"\$previous_release\" ]; then
-              case \"\$previous_release\" in
-                \"\$DEPLOY_PATH\"/releases/api/*) ;;
-                *)
-                  echo \"Previous release is outside the API release root\" >&2
-                  exit 1
-                  ;;
-              esac
-
-              CURRENT_LINK=\$DEPLOY_PATH/current
-              ROLLBACK_LINK=\$DEPLOY_PATH/.current-rollback-${{ github.run_id }}-${{ github.run_attempt }}
-              [ ! -e \"\$CURRENT_LINK\" ] || [ -L \"\$CURRENT_LINK\" ] || {
-                echo \"Current release path is not a symlink: \$CURRENT_LINK\" >&2
-                exit 1
-              }
-              rm -f \"\$ROLLBACK_LINK\"
-              ln -s \"\$previous_release\" \"\$ROLLBACK_LINK\"
-              mv -Tf \"\$ROLLBACK_LINK\" \"\$CURRENT_LINK\"
-            fi
-
-            if [ -f \"\$STATE_DIR/switched\" ]; then
-              [ -n \"\$previous_release\" ] || {
-                echo \"Cannot restart gaoge-api: previous release is unavailable\" >&2
-                exit 1
-              }
-              pm2 delete gaoge-api >/dev/null 2>&1 || true
-              cd \"\$DEPLOY_PATH/current\"
-              pm2 start ecosystem.config.cjs --only gaoge-api --update-env
-              curl -fsS --retry 5 --retry-delay 3 https://api.gaoge.cc/health >/dev/null
-              curl -fsS --retry 5 --retry-delay 3 https://api.gaoge.cc/health/db >/dev/null
-              pm2 save
-            fi
+            DEPLOY_PATH='${{ secrets.API_DEPLOY_PATH }}' \
+            STATE_DIR='${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}' \
+            SHARED_ENV_FILE='${{ secrets.API_DEPLOY_PATH }}/shared/api.env' \
+            NEXT_ENV_FILE='${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}' \
+            ROLLBACK_TOKEN='${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \
+            RUNTIME_GUARD_PATH='${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh' \
+            EXPECTED_PM2_NAME='gaoge-api' \
+            FORBIDDEN_PM2_NAMES='gaoge-server' \
+            EXPECTED_DEPLOY_PATH='${{ secrets.API_DEPLOY_PATH }}' \
+            EXPECTED_DB_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
+            EXPECTED_DB_PORT='5432' \
+            EXPECTED_DB_NAME='gaoge_db' \
+            DATABASE_GUARD_PATH='${{ secrets.API_DEPLOY_PATH }}/tmp/production-database-guard.mjs' \
+            API_BASE_URL='https://api.gaoge.cc' \
+            CRITICAL_PATHS='/health /health/db' \
+            NON_EMPTY_PATHS='/football/players?page=1&pageSize=1 /football/teams?page=1&pageSize=1 /football/match-rounds?page=1&pageSize=1 /football/asset-records?page=1&pageSize=1' \
+            CORS_ORIGIN='https://admin.gaoge.cc' \
+            CORS_PATH='/auth/admin/login' \
+            bash ${{ secrets.API_DEPLOY_PATH }}/tmp/rollback-api-release.sh
           '"
 
       - name: 输出 PM2 状态

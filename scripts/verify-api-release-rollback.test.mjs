@@ -1,0 +1,135 @@
+import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readlinkSync,
+  realpathSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import test from 'node:test'
+
+const workspaceRoot = process.cwd()
+const rollbackScript = path.join(workspaceRoot, 'scripts/deployment/rollback-api-release.sh')
+
+const createFixture = () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'gaoge-api-rollback-'))
+  const deployPath = path.join(root, 'api')
+  const stateDir = path.join(deployPath, 'tmp/deploy-state/run-attempt')
+  const sharedDirectory = path.join(deployPath, 'shared')
+  const releaseRoot = path.join(deployPath, 'releases/api')
+  const newRelease = path.join(releaseRoot, 'new-release')
+  const previousRelease = path.join(releaseRoot, 'previous-release')
+  const sharedEnvFile = path.join(sharedDirectory, 'api.env')
+  const nextEnvFile = path.join(sharedDirectory, 'api.env.next')
+
+  mkdirSync(stateDir, { recursive: true })
+  mkdirSync(sharedDirectory, { recursive: true })
+  mkdirSync(newRelease, { recursive: true })
+  writeFileSync(sharedEnvFile, 'DATABASE_URL="new"\n')
+  writeFileSync(nextEnvFile, 'DATABASE_URL="next"\n')
+  writeFileSync(path.join(stateDir, 'previous-api.env'), 'DATABASE_URL="old"\n')
+  writeFileSync(path.join(stateDir, 'had-api-env'), '')
+  writeFileSync(path.join(stateDir, 'switched'), '')
+  symlinkSync(newRelease, path.join(deployPath, 'current'))
+
+  return {
+    deployPath,
+    newRelease,
+    nextEnvFile,
+    previousRelease,
+    sharedEnvFile,
+    stateDir,
+  }
+}
+
+const runRollback = (fixture, extraEnv = {}) =>
+  spawnSync('bash', [rollbackScript], {
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      DEPLOY_PATH: fixture.deployPath,
+      STATE_DIR: fixture.stateDir,
+      SHARED_ENV_FILE: fixture.sharedEnvFile,
+      NEXT_ENV_FILE: fixture.nextEnvFile,
+      ROLLBACK_TOKEN: 'test-run',
+      ...extraEnv,
+    },
+  })
+
+test('rollback refuses a missing previous release before changing environment or current', () => {
+  const fixture = createFixture()
+  writeFileSync(path.join(fixture.stateDir, 'previous-release'), fixture.previousRelease)
+
+  const result = runRollback(fixture)
+
+  assert.notEqual(result.status, 0)
+  assert.match(result.stderr, /previous release is unavailable/)
+  assert.equal(readFileSync(fixture.sharedEnvFile, 'utf8'), 'DATABASE_URL="new"\n')
+  assert.equal(readlinkSync(path.join(fixture.deployPath, 'current')), fixture.newRelease)
+  assert.equal(existsSync(fixture.stateDir), false)
+})
+
+test('rollback restores a valid release and environment before saving PM2 state', () => {
+  const fixture = createFixture()
+  mkdirSync(path.join(fixture.previousRelease, 'dist'), { recursive: true })
+  writeFileSync(path.join(fixture.previousRelease, 'dist/main.js'), '')
+  writeFileSync(path.join(fixture.previousRelease, 'ecosystem.config.cjs'), 'module.exports = {}')
+  writeFileSync(path.join(fixture.stateDir, 'previous-release'), fixture.previousRelease)
+
+  const binDirectory = path.join(path.dirname(fixture.deployPath), 'bin')
+  const pm2Log = path.join(path.dirname(fixture.deployPath), 'pm2.log')
+  const guardLog = path.join(path.dirname(fixture.deployPath), 'guard.log')
+  const fakePm2 = path.join(binDirectory, 'pm2')
+  const fakeGuard = path.join(binDirectory, 'runtime-guard.sh')
+  const fakeAtomicMove = path.join(binDirectory, 'atomic-move')
+  mkdirSync(binDirectory)
+  writeFileSync(fakePm2, '#!/usr/bin/env bash\nprintf "%s\\n" "$*" >> "$PM2_LOG"\n')
+  writeFileSync(
+    fakeGuard,
+    [
+      '#!/usr/bin/env bash',
+      'set -euo pipefail',
+      '[ "$(realpath "$EXPECTED_DEPLOY_PATH/current")" = "$EXPECTED_RELEASE_PATH" ]',
+      'printf "%s\\n" "$EXPECTED_RELEASE_PATH" > "$GUARD_LOG"',
+      '',
+    ].join('\n'),
+  )
+  writeFileSync(
+    fakeAtomicMove,
+    '#!/usr/bin/env bash\nset -euo pipefail\n[ "$1" = "-Tf" ]\nrm -f "$3"\n/bin/mv "$2" "$3"\n',
+  )
+  chmodSync(fakePm2, 0o755)
+  chmodSync(fakeGuard, 0o755)
+  chmodSync(fakeAtomicMove, 0o755)
+
+  const result = runRollback(fixture, {
+    ATOMIC_MOVE_BIN: fakeAtomicMove,
+    EXPECTED_DEPLOY_PATH: fixture.deployPath,
+    GUARD_LOG: guardLog,
+    PM2_BIN: fakePm2,
+    PM2_LOG: pm2Log,
+    RUNTIME_GUARD_PATH: fakeGuard,
+  })
+
+  assert.equal(result.status, 0, result.stderr)
+  assert.equal(readFileSync(fixture.sharedEnvFile, 'utf8'), 'DATABASE_URL="old"\n')
+  assert.equal(
+    realpathSync(path.join(fixture.deployPath, 'current')),
+    realpathSync(fixture.previousRelease),
+  )
+  assert.equal(readFileSync(guardLog, 'utf8').trim(), realpathSync(fixture.previousRelease))
+  assert.deepEqual(readFileSync(pm2Log, 'utf8').trim().split('\n'), [
+    'delete gaoge-api',
+    'start ecosystem.config.cjs --only gaoge-api --update-env',
+    'save',
+  ])
+  assert.equal(existsSync(fixture.nextEnvFile), false)
+  assert.equal(existsSync(fixture.stateDir), false)
+})
