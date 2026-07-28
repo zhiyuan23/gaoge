@@ -9,9 +9,12 @@ export function createApiClient(baseURL: string): ApiClient {
   return {
     baseURL,
     async get<T>(path: string) {
+      void path
+
       return {
+        code: 0,
         data: undefined as T,
-        requestId: `${baseURL}:${path}`,
+        errMsg: '',
       }
     },
   }
