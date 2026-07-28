@@ -46,6 +46,16 @@ pnpm dev:api
 pnpm db:migrate:prod:api
 ```
 
+正式生产 workflow 在执行 `prisma migrate deploy` 前还必须依次完成：
+
+- 校验配置目标和实际实例均为 `[::1]:5432/gaoge_db`
+- 确认 User、Player、Team、MatchRound、FootballAssetRecord 五张关键表均非空
+- 创建 custom-format `pg_dump`
+- 使用 `pg_restore --list` 验证备份可读取，并输出大小和 SHA-256
+- 只保留最新 14 份 `gaoge-db-pre-migration-*.dump`
+
+发布失败时 workflow 自动恢复旧 release 和 `shared/api.env`，但不自动执行 migration 逆向回滚或恢复数据库备份。所有生产 migration 必须保持旧、新 release 在短期内兼容；数据恢复必须人工执行。
+
 Prisma 表结构变更的最低 smoke test：
 
 - `pnpm --filter @gaoge/app-api exec prisma migrate status` 显示数据库结构已同步
@@ -93,6 +103,34 @@ Prisma 表结构变更的最低 smoke test：
 - `pnpm lint`
 
 必要时再补应用定向测试。
+
+### 改生产部署、数据库守卫或 PostgreSQL 自愈脚本
+
+至少执行：
+
+```bash
+node --test \
+  scripts/production-database-guard.test.mjs \
+  scripts/verify-production-runtime-guard.test.mjs \
+  scripts/verify-postgres-healthcheck.test.mjs
+bash -n scripts/deployment/verify-remote-runtime.sh
+bash -n infra/deploy/postgres/check-postgres.sh
+pnpm exec prettier --check \
+  .github/workflows/deploy-api.yml \
+  scripts/deployment/production-database-guard.mjs \
+  scripts/production-database-guard.test.mjs \
+  scripts/verify-production-runtime-guard.test.mjs \
+  scripts/verify-postgres-healthcheck.test.mjs
+```
+
+生产发布后还要获得以下新鲜证据：
+
+- 数据库身份为 `::1:5432/gaoge_db`
+- 五类关键业务计数均大于零，且不低于发布前基线
+- 四个只读业务接口返回 `code=0` 且 `data.total > 0`
+- `gaoge-api` 在线，`current` 指向本次 SHA，Admin CORS 预检通过
+- 本次迁移前备份存在、权限为 `600` 且 `pg_restore --list` 成功
+- `pm2-deploy.service` enabled/active，deploy 用户的 PM2 dump 只保存 `gaoge-api`
 
 ## 提交前要求
 
