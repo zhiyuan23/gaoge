@@ -12,6 +12,9 @@ describe('cors-options', () => {
 
   it('keeps production origins allowed', () => {
     expect(isAllowedCorsOrigin('https://admin.gaoge.cc', { NODE_ENV: 'production' })).toBe(true)
+    expect(isAllowedCorsOrigin('https://sports.gaoge.cc', { NODE_ENV: 'production' })).toBe(true)
+    expect(isAllowedCorsOrigin('https://gaoge.cc', { NODE_ENV: 'production' })).toBe(true)
+    expect(isAllowedCorsOrigin('https://www.gaoge.cc', { NODE_ENV: 'production' })).toBe(true)
   })
 
   it('reflects allowed origins for credentialed CORS requests', () => {

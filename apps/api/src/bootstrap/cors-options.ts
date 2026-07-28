@@ -10,6 +10,7 @@ interface CorsEnv {
 const productionOrigins = [
   'https://gaoge.cc',
   'https://www.gaoge.cc',
+  'https://sports.gaoge.cc',
   'https://admin.gaoge.cc',
   'https://api.gaoge.cc',
 ]
