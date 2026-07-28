@@ -567,8 +567,8 @@ With `if: failure()`, SSH to the server and:
 
 1. Read the saved previous release and explicit previous-environment state.
 2. If `switch-release` ran, resolve and validate the previous release root plus its startup files before mutating the environment or `current`.
-3. Atomically restore `current` and verify its resolved target.
-4. Restore the verified `previous-api.env` only when environment installation was attempted.
+3. Pre-stage and verify `previous-api.env` in the shared environment directory.
+4. Atomically restore `current`, verify its resolved target, then atomically activate the pre-staged environment. Compensate `current` to the active release if activation fails.
 5. Restart `gaoge-api` from restored `current` through a sanitized PM2 environment.
 6. Run the complete database, API payload, and CORS runtime guard.
 7. Save the restored PM2 state and remove rollback state; also remove rollback state on an unsuccessful rollback exit.

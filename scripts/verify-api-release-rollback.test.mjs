@@ -214,6 +214,51 @@ test('failed release switch keeps the new environment paired with the new releas
   assert.equal(existsSync(fixture.stateDir), false)
 })
 
+test('failed environment pre-staging keeps the new environment paired with the new release', () => {
+  const fixture = createFixture()
+  prepareValidPreviousRelease(fixture)
+  const failingCopy = path.join(path.dirname(fixture.deployPath), 'copy-and-fail')
+  writeFileSync(failingCopy, '#!/usr/bin/env bash\nprintf "partial\\n" > "$3"\nexit 1\n')
+  chmodSync(failingCopy, 0o755)
+
+  const result = runRollback(fixture, {
+    ROLLBACK_COPY_BIN: failingCopy,
+    RUNTIME_GUARD_PATH: '/must-not-run',
+  })
+
+  assert.notEqual(result.status, 0)
+  assert.match(result.stderr, /Failed to pre-stage the previous API environment/)
+  assert.equal(readFileSync(fixture.sharedEnvFile, 'utf8'), 'DATABASE_URL="new"\n')
+  assert.equal(readlinkSync(path.join(fixture.deployPath, 'current')), fixture.newRelease)
+  assert.equal(existsSync(fixture.stateDir), false)
+})
+
+test('failed environment activation compensates current back to the new release', () => {
+  const fixture = createFixture()
+  prepareValidPreviousRelease(fixture)
+  const binDirectory = path.join(path.dirname(fixture.deployPath), 'bin')
+  const failingEnvironmentMove = path.join(binDirectory, 'environment-move-and-fail')
+  mkdirSync(binDirectory)
+  const fakeAtomicMove = createFakeAtomicMove(binDirectory)
+  writeFileSync(failingEnvironmentMove, '#!/usr/bin/env bash\nexit 1\n')
+  chmodSync(failingEnvironmentMove, 0o755)
+
+  const result = runRollback(fixture, {
+    ATOMIC_MOVE_BIN: fakeAtomicMove,
+    ENV_MOVE_BIN: failingEnvironmentMove,
+    RUNTIME_GUARD_PATH: '/must-not-run',
+  })
+
+  assert.notEqual(result.status, 0)
+  assert.match(result.stderr, /Failed to activate the previous API environment/)
+  assert.equal(readFileSync(fixture.sharedEnvFile, 'utf8'), 'DATABASE_URL="new"\n')
+  assert.equal(
+    realpathSync(path.join(fixture.deployPath, 'current')),
+    realpathSync(fixture.newRelease),
+  )
+  assert.equal(existsSync(fixture.stateDir), false)
+})
+
 test('failed PM2 start never saves the restored process state', () => {
   const fixture = createFixture()
   prepareValidPreviousRelease(fixture)

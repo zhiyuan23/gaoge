@@ -12,6 +12,8 @@ set -euo pipefail
 
 PM2_BIN="${PM2_BIN:-pm2}"
 ATOMIC_MOVE_BIN="${ATOMIC_MOVE_BIN:-mv}"
+ENV_MOVE_BIN="${ENV_MOVE_BIN:-mv}"
+ROLLBACK_COPY_BIN="${ROLLBACK_COPY_BIN:-cp}"
 CURRENT_LINK="$DEPLOY_PATH/current"
 PM2_HOME_VALUE="${PM2_HOME:-$HOME/.pm2}"
 
@@ -36,8 +38,20 @@ cleanup_rollback_state() {
 }
 trap cleanup_rollback_state EXIT
 
+compensate_active_release() {
+  rollback_link="$DEPLOY_PATH/.current-compensation-$ROLLBACK_TOKEN"
+  rm -f "$rollback_link"
+  ln -s "$active_release" "$rollback_link"
+  "$ATOMIC_MOVE_BIN" -Tf "$rollback_link" "$CURRENT_LINK"
+  [ "$(realpath "$CURRENT_LINK")" = "$active_release" ] || {
+    echo "Failed to compensate current after environment activation failure" >&2
+    exit 1
+  }
+}
+
 switched=false
 previous_release=
+active_release=
 environment_install_attempted=false
 
 if [ -f "$STATE_DIR/env-installed" ] || [ -f "$STATE_DIR/env-installing" ]; then
@@ -88,6 +102,24 @@ if [ -f "$STATE_DIR/switched" ]; then
     echo "Current release path is not a symlink: $CURRENT_LINK" >&2
     exit 1
   }
+  active_release=$(realpath "$CURRENT_LINK" 2>/dev/null || true)
+  [ -n "$active_release" ] && [ -d "$active_release" ] || {
+    echo "Cannot roll back gaoge-api: active release is unavailable" >&2
+    exit 1
+  }
+fi
+
+if [ "$environment_install_attempted" = true ] && [ -f "$STATE_DIR/had-api-env" ]; then
+  rollback_env_file="$SHARED_ENV_FILE.rollback-$ROLLBACK_TOKEN"
+  if ! "$ROLLBACK_COPY_BIN" -p "$STATE_DIR/previous-api.env" "$rollback_env_file"; then
+    echo "Failed to pre-stage the previous API environment" >&2
+    exit 1
+  fi
+  chmod 600 "$rollback_env_file"
+  cmp -s "$STATE_DIR/previous-api.env" "$rollback_env_file" || {
+    echo "Pre-staged API environment verification failed" >&2
+    exit 1
+  }
 fi
 
 if [ "$switched" = true ]; then
@@ -105,13 +137,18 @@ fi
 rm -f "$NEXT_ENV_FILE"
 if [ "$environment_install_attempted" = true ]; then
   if [ -f "$STATE_DIR/had-api-env" ]; then
-    rollback_env_file="$SHARED_ENV_FILE.rollback-$ROLLBACK_TOKEN"
-    cp -p "$STATE_DIR/previous-api.env" "$rollback_env_file"
-    chmod 600 "$rollback_env_file"
-    mv "$rollback_env_file" "$SHARED_ENV_FILE"
+    if ! "$ENV_MOVE_BIN" "$rollback_env_file" "$SHARED_ENV_FILE"; then
+      [ "$switched" = false ] || compensate_active_release
+      echo "Failed to activate the previous API environment" >&2
+      exit 1
+    fi
     rollback_env_file=
   else
-    rm -f "$SHARED_ENV_FILE"
+    if ! rm -f "$SHARED_ENV_FILE"; then
+      [ "$switched" = false ] || compensate_active_release
+      echo "Failed to remove the API environment during rollback" >&2
+      exit 1
+    fi
   fi
 fi
 

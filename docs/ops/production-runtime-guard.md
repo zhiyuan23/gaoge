@@ -30,7 +30,7 @@ API workflow 在发布后执行：
 
 Admin 与 API production workflow 共用 `gaoge-production-deployment` 并发队列，避免同一次 push 并行打到同一台服务器。API PM2 默认 1 个实例；如确认服务器内存容量足够，可通过生产环境变量 `PM2_INSTANCES` 设置为正整数或 `max`。
 
-探测、备份、migration 或发布后验收失败时，workflow 自动恢复旧 release 和旧环境文件。若已经切换 release，回滚会先验证并原子切换旧 release，再恢复旧环境；PM2 始终在只保留 `HOME`、`PATH`、`PM2_HOME` 的清洁环境中启动，避免旧 release 的 ecosystem 继承错误数据库变量。恢复后再次运行完整的数据库、接口和 CORS 守卫，成功后才保存 PM2 状态。数据库 migration 不自动逆向回滚，数据库备份也不自动恢复。
+探测、备份、migration 或发布后验收失败时，workflow 自动恢复旧 release 和旧环境文件。若已经切换 release，回滚会先把已验证的旧环境预暂存到 `shared` 同目录，再原子切换旧 release 并通过原子重命名激活旧环境；若环境激活仍失败，会补偿切回原 release，避免代码与配置错配。PM2 始终在只保留 `HOME`、`PATH`、`PM2_HOME` 的清洁环境中启动，避免旧 release 的 ecosystem 继承错误数据库变量。恢复后再次运行完整的数据库、接口和 CORS 守卫，成功后才保存 PM2 状态。数据库 migration 不自动逆向回滚，数据库备份也不自动恢复。
 
 生产 dotenv 只按 dotenv 语义解析，绝不能由 Shell 执行。包含 `$`、空格、引号或命令替换样式文本的值必须保持字面含义。
 

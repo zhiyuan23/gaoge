@@ -154,6 +154,7 @@ jobs:
             command -v pg_dump >/dev/null 2>&1 || { echo \"pg_dump not found\" >&2; exit 1; }
             command -v pg_restore >/dev/null 2>&1 || { echo \"pg_restore not found\" >&2; exit 1; }
             command -v realpath >/dev/null 2>&1 || { echo \"realpath not found\" >&2; exit 1; }
+            command -v cmp >/dev/null 2>&1 || { echo \"cmp not found\" >&2; exit 1; }
             node -e \"if (Number.parseInt(process.versions.node, 10) !== 22) process.exit(1)\" || {
               echo \"production Node 22 is required\" >&2
               exit 1
@@ -336,7 +337,8 @@ jobs:
             set -euo pipefail
             [ -f ~/.bashrc ] && set +u && . ~/.bashrc && set -u || true
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
-            pm2 save
+            PM2_HOME_VALUE=\${PM2_HOME:-\$HOME/.pm2}
+            env -i HOME=\"\$HOME\" PATH=\"\$PATH\" PM2_HOME=\"\$PM2_HOME_VALUE\" pm2 save
             STATE_DIR=${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
             rm -rf \"\$STATE_DIR\"
           '"
