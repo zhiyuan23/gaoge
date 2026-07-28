@@ -33,16 +33,32 @@ test('remote runtime guard validates gaoge production process, release, database
   assert.match(guard, /curl -fsS/)
 })
 
-test('api deployment uploads and runs the gaoge runtime guard after PM2 save', () => {
+test('api deployment uses one database source and persists PM2 only after verification', () => {
   const workflow = readWorkspaceFile('.github/workflows/deploy-api.yml')
 
   assert.match(workflow, /group:\s+gaoge-production-deployment/)
   assert.match(workflow, /cancel-in-progress:\s+false/)
+  assert.doesNotMatch(workflow, /secrets\.DATABASE_URL/)
+  assert.equal(workflow.match(/postgresql:\/\/build:build@127\.0\.0\.1:1\/build/g)?.length, 2)
   assert.match(workflow, /echo Remote API migration started[\s\S]*date/)
   assert.match(workflow, /echo Restarting gaoge-api with PM2[\s\S]*date/)
   assert.doesNotMatch(workflow, /date '\+%F %T %Z'/)
   assert.match(workflow, /free -h \|\| true/)
   assert.match(workflow, /scripts\/deployment\/verify-remote-runtime\.sh/)
+  assert.match(workflow, /scripts\/deployment\/production-database-guard\.mjs/)
+  assert.match(workflow, /api\.env\.next-\$\{\{ github\.sha \}\}/)
+  assert.match(workflow, /mv .*NEXT_ENV_FILE.*SHARED_ENV_FILE/)
+  assert.match(workflow, /production-database-guard\.mjs validate[\s\S]*--env-file/)
+  assert.match(workflow, /production-database-guard\.mjs probe[\s\S]*--env-file/)
+  assert.match(
+    workflow,
+    /production-database-guard\.mjs backup[\s\S]*--backup-dir[\s\S]*--retention 14/,
+  )
+  assert.match(workflow, /set -a[\s\S]*\. \.\/\.env[\s\S]*set \+a/)
+  assert.match(workflow, /id:\s+switch-release/)
+  assert.match(workflow, /if:\s+failure\(\)/)
+  assert.match(workflow, /previous-release/)
+  assert.match(workflow, /previous-api\.env/)
   assert.match(workflow, /pm2 save/)
   assert.match(workflow, /EXPECTED_PM2_NAME='gaoge-api'/)
   assert.match(workflow, /FORBIDDEN_PM2_NAMES='gaoge-server'/)
@@ -52,12 +68,20 @@ test('api deployment uploads and runs the gaoge runtime guard after PM2 save', (
     /EXPECTED_RELEASE_PATH='\$\{\{ secrets\.API_DEPLOY_PATH \}\}\/releases\/api\/\$\{\{ github\.sha \}\}'/,
   )
   assert.match(workflow, /EXPECTED_DB_HOST='\$\{\{ secrets\.EXPECTED_DATABASE_HOST \}\}'/)
+  assert.match(workflow, /EXPECTED_DB_PORT='5432'/)
+  assert.match(workflow, /EXPECTED_DB_NAME='gaoge_db'/)
   assert.match(workflow, /API_BASE_URL='https:\/\/api\.gaoge\.cc'/)
+  assert.match(workflow, /CRITICAL_PATHS='\/health \/health\/db'/)
   assert.match(
     workflow,
-    /CRITICAL_PATHS='\/health \/health\/db \/football\/teams\?page=1&pageSize=1'/,
+    /NON_EMPTY_PATHS='\/football\/players\?page=1&pageSize=1 \/football\/teams\?page=1&pageSize=1 \/football\/match-rounds\?page=1&pageSize=1 \/football\/asset-records\?page=1&pageSize=1'/,
   )
   assert.match(workflow, /CORS_ORIGIN='https:\/\/admin\.gaoge\.cc'/)
+
+  const runtimeGuardStep = workflow.indexOf('运行 API 运行时守卫')
+  const firstPm2Save = workflow.indexOf('pm2 save')
+  assert.notEqual(runtimeGuardStep, -1)
+  assert.ok(firstPm2Save > runtimeGuardStep)
 })
 
 test('admin deployment verifies the API contract before switching frontend release', () => {
