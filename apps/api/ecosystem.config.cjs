@@ -1,5 +1,6 @@
-const { readFileSync } = process.getBuiltinModule('node:fs')
-const { parseEnv } = process.getBuiltinModule('node:util')
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { readFileSync } = require('node:fs')
+const { parseEnv } = require('node:util')
 
 let runtimeEnv = {}
 

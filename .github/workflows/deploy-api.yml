@@ -15,6 +15,7 @@ on:
       - 'scripts/deployment/verify-remote-runtime.sh'
       - 'scripts/deployment/production-database-guard.mjs'
       - 'scripts/deployment/rollback-api-release.sh'
+      - 'scripts/deployment/prepare-api-rollback-state.sh'
   workflow_dispatch:
 
 concurrency:
@@ -136,6 +137,7 @@ jobs:
             scripts/deployment/verify-remote-runtime.sh \
             scripts/deployment/production-database-guard.mjs \
             scripts/deployment/rollback-api-release.sh \
+            scripts/deployment/prepare-api-rollback-state.sh \
             ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}/tmp/
 
       - name: 检查服务端运行环境
@@ -168,16 +170,11 @@ jobs:
             SHARED_ENV_FILE=\$DEPLOY_PATH/shared/api.env
 
             find \"\$STATE_ROOT\" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf -- {} +
-            mkdir \"\$STATE_DIR\"
-            chmod 700 \"\$STATE_DIR\"
-            if [ -L \"\$DEPLOY_PATH/current\" ]; then
-              readlink -f \"\$DEPLOY_PATH/current\" > \"\$STATE_DIR/previous-release\"
-            fi
-            if [ -f \"\$SHARED_ENV_FILE\" ]; then
-              cp -p \"\$SHARED_ENV_FILE\" \"\$STATE_DIR/previous-api.env\"
-              chmod 600 \"\$STATE_DIR/previous-api.env\"
-              touch \"\$STATE_DIR/had-api-env\"
-            fi
+            DEPLOY_PATH=\"\$DEPLOY_PATH\" \
+            STATE_ROOT=\"\$STATE_ROOT\" \
+            STATE_DIR=\"\$STATE_DIR\" \
+            SHARED_ENV_FILE=\"\$SHARED_ENV_FILE\" \
+            bash \"\$DEPLOY_PATH/tmp/prepare-api-rollback-state.sh\"
           '"
 
       - name: 原子写入并验证服务端环境变量
@@ -198,6 +195,7 @@ jobs:
             set -euo pipefail
             NEXT_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}
             SHARED_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env
+            STATE_DIR=${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
 
             EXPECTED_DATABASE_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
             EXPECTED_DATABASE_PORT='5432' \
@@ -206,7 +204,9 @@ jobs:
               --env-file \"\$NEXT_ENV_FILE\"
 
             chmod 600 \"\$NEXT_ENV_FILE\"
+            touch \"\$STATE_DIR/env-installing\"
             mv \"\$NEXT_ENV_FILE\" \"\$SHARED_ENV_FILE\"
+            mv \"\$STATE_DIR/env-installing\" \"\$STATE_DIR/env-installed\"
           '"
 
       - name: 解压 API 发布包
@@ -294,13 +294,16 @@ jobs:
             rm -f \"\$NEXT_CURRENT_LINK\"
             ln -s \"\$NEW_RELEASE\" \"\$NEXT_CURRENT_LINK\"
             mv -Tf \"\$NEXT_CURRENT_LINK\" \"\$CURRENT_LINK\"
-            pm2 delete gaoge-api >/dev/null 2>&1 || true
+            PM2_HOME_VALUE=\${PM2_HOME:-\$HOME/.pm2}
+            env -i HOME=\"\$HOME\" PATH=\"\$PATH\" PM2_HOME=\"\$PM2_HOME_VALUE\" \
+              pm2 delete gaoge-api >/dev/null 2>&1 || true
             cd \"\$CURRENT_LINK\"
             echo Restarting gaoge-api with PM2
             date
             free -h || true
             ps -eo pid,ppid,user,stat,etime,rss,pmem,pcpu,cmd --sort=-rss | head -20 || true
-            pm2 start ecosystem.config.cjs --only gaoge-api --update-env
+            env -i HOME=\"\$HOME\" PATH=\"\$PATH\" PM2_HOME=\"\$PM2_HOME_VALUE\" \
+              pm2 start ecosystem.config.cjs --only gaoge-api --update-env
           '"
 
       - name: 运行 API 运行时守卫

@@ -426,6 +426,7 @@ git commit -m "fix(deploy): reject wrong or empty production database"
 **Files:**
 
 - Modify: `.github/workflows/deploy-api.yml`
+- Create: `scripts/deployment/prepare-api-rollback-state.sh`
 - Create: `scripts/deployment/rollback-api-release.sh`
 - Create: `scripts/verify-api-release-rollback.test.mjs`
 - Modify: `scripts/verify-production-runtime-guard.test.mjs`
@@ -564,11 +565,11 @@ Call `pm2 save` only after this guard succeeds.
 
 With `if: failure()`, SSH to the server and:
 
-1. Read the saved previous release.
+1. Read the saved previous release and explicit previous-environment state.
 2. If `switch-release` ran, resolve and validate the previous release root plus its startup files before mutating the environment or `current`.
-3. Restore `previous-api.env` when present.
-4. Atomically restore `current` and verify its resolved target.
-5. Restart `gaoge-api` from restored `current`.
+3. Atomically restore `current` and verify its resolved target.
+4. Restore the verified `previous-api.env` only when environment installation was attempted.
+5. Restart `gaoge-api` from restored `current` through a sanitized PM2 environment.
 6. Run the complete database, API payload, and CORS runtime guard.
 7. Save the restored PM2 state and remove rollback state; also remove rollback state on an unsuccessful rollback exit.
 

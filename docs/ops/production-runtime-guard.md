@@ -9,6 +9,7 @@
 ```bash
 scripts/deployment/verify-remote-runtime.sh
 scripts/deployment/production-database-guard.mjs
+scripts/deployment/prepare-api-rollback-state.sh
 scripts/deployment/rollback-api-release.sh
 ```
 
@@ -19,7 +20,7 @@ scripts/deployment/rollback-api-release.sh
 API workflow 在发布后执行：
 
 - 上传两份守卫脚本到 `${{ secrets.API_DEPLOY_PATH }}/tmp/`
-- 保存旧 `current` 与旧 `shared/api.env`
+- 先记录旧环境存在/不存在的明确状态，再通过临时文件、内容比对和原子重命名保存旧 `current` 与旧 `shared/api.env`
 - 校验临时环境文件后原子替换 `shared/api.env`
 - 使用同一环境文件探测数据库、生成已验证备份，并在清空继承环境后执行 Prisma migration
 - 使用 `github.run_id` 与 `github.run_attempt` 隔离每次回滚状态，并通过同目录临时软链和 `mv -Tf` 原子切换 `current`
@@ -29,7 +30,7 @@ API workflow 在发布后执行：
 
 Admin 与 API production workflow 共用 `gaoge-production-deployment` 并发队列，避免同一次 push 并行打到同一台服务器。API PM2 默认 1 个实例；如确认服务器内存容量足够，可通过生产环境变量 `PM2_INSTANCES` 设置为正整数或 `max`。
 
-探测、备份、migration 或发布后验收失败时，workflow 自动恢复旧 release 和旧环境文件。若已经切换 release，回滚会先验证旧目录位于 API release 根目录且包含启动文件；恢复后再次运行完整的数据库、接口和 CORS 守卫，成功后才保存 PM2 状态。数据库 migration 不自动逆向回滚，数据库备份也不自动恢复。
+探测、备份、migration 或发布后验收失败时，workflow 自动恢复旧 release 和旧环境文件。若已经切换 release，回滚会先验证并原子切换旧 release，再恢复旧环境；PM2 始终在只保留 `HOME`、`PATH`、`PM2_HOME` 的清洁环境中启动，避免旧 release 的 ecosystem 继承错误数据库变量。恢复后再次运行完整的数据库、接口和 CORS 守卫，成功后才保存 PM2 状态。数据库 migration 不自动逆向回滚，数据库备份也不自动恢复。
 
 生产 dotenv 只按 dotenv 语义解析，绝不能由 Shell 执行。包含 `$`、空格、引号或命令替换样式文本的值必须保持字面含义。
 
