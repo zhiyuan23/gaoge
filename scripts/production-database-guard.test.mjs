@@ -243,6 +243,7 @@ test('backup fails when pg_restore cannot read the dump', () => {
   assert.equal(result.status, 1)
   assert.match(result.stderr, /backup verification failed/)
   assert.doesNotMatch(result.stderr, /secret|gaoge_user/)
+  assert.deepEqual(listDeploymentBackups(backupDirectory), [])
 })
 
 test('backup fails when the verified dump inventory is empty', () => {
@@ -253,4 +254,5 @@ test('backup fails when the verified dump inventory is empty', () => {
 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /backup verification failed/)
+  assert.deepEqual(listDeploymentBackups(backupDirectory), [])
 })

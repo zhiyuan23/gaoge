@@ -151,6 +151,7 @@ export const backupDatabase = (target, backupDirectory, retention = 14) => {
     encoding: 'utf8',
   })
   if (restoreResult.error || restoreResult.status !== 0 || !restoreResult.stdout.trim()) {
+    rmSync(backupFile, { force: true })
     throw new GuardError('backup verification failed')
   }
 
