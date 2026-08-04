@@ -19,6 +19,7 @@
 | -------------- | --------------------------------------- | --------------------------------------------------------- |
 | `apps/api`     | 统一后端服务，提供鉴权、RBAC 与领域 API | NestJS, Prisma, TypeScript, Swagger                       |
 | `apps/admin`   | 内部管理后台，承载运营与 CRUD 管理      | Vue 3, Vite, TypeScript, Element Plus, Pinia, UnoCSS      |
+| `apps/brand`   | 高歌品牌展示与多版本首页概念验证        | React 18, Vite, TypeScript, Tailwind CSS, Framer Motion   |
 | `apps/sports`  | 高歌体育官网前台                        | Vue 3, Vite, Tailwind CSS                                 |
 | `apps/uniapp`  | uni-app 小程序前台                      | uni-app, Vue 3, TypeScript, TDesign, Pinia, UnoCSS        |
 | `apps/desktop` | 桌面客户端，包含本地存储与 Electron 壳  | Electron, React, TypeScript, Tailwind CSS, better-sqlite3 |
@@ -143,6 +144,36 @@ shared -> configs
 | 构建               | `pnpm --filter @gaoge/app-sports build`   |
 | 预览构建产物       | `pnpm --filter @gaoge/app-sports preview` |
 | 运行测试           | `pnpm --filter @gaoge/app-sports test`    |
+
+### `apps/brand`
+
+高歌品牌展示前台。不同首页视觉方案放在独立的 `/concepts/*` 路径下并行开发，避免多个实验版本互相覆盖。
+
+**技术栈**
+
+- React 18
+- Vite
+- TypeScript
+- Tailwind CSS 3
+- Framer Motion
+- React Router
+- Vitest
+
+**当前页面**
+
+- `/concepts/jack-3d`：Jack 3D Creator 高动效概念首页
+- `/concepts/securify`：Securify 数据安全概念首屏
+
+**常用命令**
+
+| 操作               | 命令                                       |
+| ------------------ | ------------------------------------------ |
+| 启动开发模式       | `pnpm dev:brand`                           |
+| 在应用目录范围启动 | `pnpm --filter @gaoge/app-brand dev`       |
+| 构建               | `pnpm build:brand`                         |
+| 预览构建产物       | `pnpm --filter @gaoge/app-brand preview`   |
+| 运行测试           | `pnpm --filter @gaoge/app-brand test`      |
+| 类型检查           | `pnpm --filter @gaoge/app-brand typecheck` |
 
 ### `apps/uniapp`
 
@@ -296,10 +327,12 @@ pnpm install
 | `pnpm dev`            | 启动所有声明了 `dev` 脚本的工作区应用            |
 | `pnpm dev:api`        | 仅启动 API                                       |
 | `pnpm dev:admin`      | 启动管理后台；若 API 未运行会自动一并启动        |
+| `pnpm dev:brand`      | 启动高歌品牌展示前台                             |
 | `pnpm dev:sports`     | 启动高歌体育官网；若 API 未运行会自动一并启动    |
 | `pnpm dev:uniapp`     | 启动 uni-app 小程序；若 API 未运行会自动一并启动 |
 | `pnpm dev:desktop`    | 启动桌面端；若 API 未运行会自动一并启动          |
 | `pnpm build`          | 构建全部可构建的应用与共享包                     |
+| `pnpm build:brand`    | 仅构建高歌品牌展示前台                           |
 | `pnpm build:desktop`  | 仅构建桌面端                                     |
 | `pnpm build:uniapp`   | 仅构建 uni-app 小程序                            |
 | `pnpm lint`           | 执行 Prettier 检查、ESLint 与 Stylelint          |

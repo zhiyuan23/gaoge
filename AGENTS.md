@@ -8,15 +8,16 @@
 
 - 当前仓库已具备 monorepo 基础结构与工具链
 - `apps/api` 与 `apps/admin` 已完成首轮迁入，并保持球员信息 CRUD 可运行
+- `apps/brand` 已接入独立 React/Vite 品牌展示应用，当前支持按 `/concepts/*` 路径并行开发多版首页效果
 - `apps/sports` 已由原 `apps/web` 调整而来，当前为高歌体育官网 Vite/Vue 前台项目
 - `apps/uniapp` 已完成从平级 `gaoge-miniapp` 的首轮迁入，当前为真实 uni-app/Vue 前台项目
 - `apps/desktop` 已完成首轮接入，当前为真实 Electron/React 桌面项目
 - `apps/ios` 已完成首轮接入，当前为真实 iOS/SwiftUI 原生项目
 - `apps/miniapp` 已完成第一阶段接入，当前为微信原生 Skyline/glass-easel 小程序骨架
 - `packages/*` 目前仍以第一阶段共享层骨架为主
-- 根目录工作流已按应用拆分为独立部署入口，`api`、`sports`、`admin`、`uniapp`、`desktop`、`ios`、`miniapp` 应分别维护自己的发布流程
+- 根目录工作流已按应用拆分为独立部署入口，`api`、`brand`、`sports`、`admin`、`uniapp`、`desktop`、`ios`、`miniapp` 应分别维护自己的发布流程
 
-后续继续引入新的真实项目，或显著调整 `sports/admin/api/uniapp` 的目录职责时，必须同步更新本文件，确保 AI 协作规则与真实代码结构一致。
+后续继续引入新的真实项目，或显著调整 `brand/sports/admin/api/uniapp` 的目录职责时，必须同步更新本文件，确保 AI 协作规则与真实代码结构一致。
 
 ## 核心原则
 
@@ -41,6 +42,7 @@
 当前应用包括：
 
 - `apps/admin`
+- `apps/brand`
 - `apps/sports`
 - `apps/uniapp`
 - `apps/api`
@@ -153,6 +155,7 @@ AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 ## 常用命令
 
 - `pnpm dev:admin`
+- `pnpm dev:brand`
 - `pnpm dev:sports`
 - `pnpm dev:uniapp`
 - `pnpm build:uniapp`
@@ -164,6 +167,7 @@ AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 - `pnpm --filter @gaoge/app-api exec prisma migrate dev`
 - `pnpm --filter @gaoge/app-api db:generate`
 - `pnpm build:desktop`
+- `pnpm build:brand`
 - `pnpm build:ios`
 - `pnpm ci:miniapp:quality`
 - `pnpm ci:miniapp:preview`

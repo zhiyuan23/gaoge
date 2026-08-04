@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "turbo run dev --parallel",
     "dev:admin": "node scripts/dev-with-api.mjs admin",
+    "dev:brand": "turbo run dev --filter=@gaoge/app-brand",
     "dev:desktop": "node scripts/dev-with-api.mjs desktop",
     "dev:ios": "open apps/ios/GaogeIOS.xcodeproj",
     "dev:miniapp": "node scripts/dev-with-api.mjs miniapp",
@@ -19,6 +20,7 @@
     "db:migrate:api": "pnpm --filter @gaoge/app-api db:migrate",
     "db:migrate:prod:api": "pnpm --filter @gaoge/app-api db:migrate:prod",
     "build": "turbo run build",
+    "build:brand": "turbo run build --filter=@gaoge/app-brand",
     "build:desktop": "turbo run build --filter=@gaoge/app-desktop",
     "build:uniapp": "turbo run build --filter=@gaoge/app-uniapp",
     "build:ios": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' build",

@@ -78,6 +78,16 @@ Prisma 表结构变更的最低 smoke test：
 - `pnpm --filter @gaoge/app-sports typecheck`
 - `pnpm --filter @gaoge/app-sports test`
 
+### 改 `apps/brand`
+
+优先执行：
+
+- `pnpm --filter @gaoge/app-brand typecheck`
+- `pnpm --filter @gaoge/app-brand test`
+- `pnpm --filter @gaoge/app-brand build`
+
+涉及新概念页或响应式视觉调整时，还应启动 `pnpm dev:brand`，在对应 `/concepts/*` 路径检查桌面端、移动端、减少动态效果偏好、水平溢出和浏览器控制台错误。
+
 ### 改 `apps/uniapp`
 
 优先执行：

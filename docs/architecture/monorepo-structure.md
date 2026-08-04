@@ -18,6 +18,7 @@
 
 - `apps/api`：后端 API 服务边界
 - `apps/admin`：Vue 3 管理后台应用
+- `apps/brand`：React 品牌展示与多版本首页概念应用
 - `apps/sports`：高歌体育官网 Vue Web 应用
 - `apps/uniapp`：uni-app 小程序应用
 - `apps/miniapp`：微信原生 Skyline 小程序应用

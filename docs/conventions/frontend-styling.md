@@ -44,6 +44,14 @@
 - 新增页面与组件默认优先使用 `Tailwind CSS` 工具类内联写法
 - 独立样式文件优先留给复用语义块、复杂动画、主题皮肤和不适合直接堆叠在模板中的样式
 
+### `apps/brand`
+
+- 当前使用 `React + Tailwind CSS + Framer Motion`
+- 品牌首页不同视觉方案放在 `src/concepts/<concept-slug>` 内，组件和动效默认保持 concept 私有
+- 新增页面默认优先使用 Tailwind CSS 工具类；全局 reset、字体、复杂渐变文字和媒体偏好降级保留在应用样式入口
+- 连续滚动值和指针位移不得通过 React state 高频更新，应使用 MotionValue、直接 transform 或经过 `requestAnimationFrame` 合并的 DOM 更新
+- 正式形成跨 concept 的稳定复用前，不把实验性视觉组件提前抽入 `packages/*`
+
 ### `apps/uniapp`
 
 - 允许并优先使用当前已接入的 `UnoCSS`
