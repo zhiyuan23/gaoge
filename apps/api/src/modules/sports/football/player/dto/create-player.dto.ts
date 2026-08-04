@@ -53,6 +53,11 @@ export class CreatePlayerDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(50)
+  superheroName?: string | null
+
+  @IsOptional()
+  @IsString()
   subTeam?: string // real/inter/united，多选用逗号分隔
 
   @IsOptional()

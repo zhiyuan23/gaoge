@@ -195,6 +195,9 @@ watch(tableData, () => {
               {{ (row.nickname || '?').slice(0, 1) }}
             </ElAvatar>
           </template>
+          <template #superheroName="{ row }">
+            {{ row.superheroName || '-' }}
+          </template>
           <template #teams="{ row }">
             {{ formatTeamNames(row) }}
           </template>

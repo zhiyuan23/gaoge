@@ -60,6 +60,7 @@ export const FOOTBALL_POSITION_OPTIONS: Array<{
  * @property jerseySize 球衣尺码。
  * @property status 球员状态。
  * @property signature 签名或简介。
+ * @property superheroName 对应的漫威或 DC 超级英雄名称。
  * @property remark 备注。
  * @property createdAt 创建时间。
  * @property updatedAt 更新时间。
@@ -86,6 +87,7 @@ export interface Player {
   jerseySize: string | null
   status: PlayerStatus
   signature: string | null
+  superheroName: string | null
   remark: string | null
   createdAt: DateTimeString
   updatedAt: DateTimeString
@@ -111,6 +113,7 @@ export interface Player {
  * @property jerseySize 球衣尺码。
  * @property status 球员状态。
  * @property signature 签名或简介。
+ * @property superheroName 对应的漫威或 DC 超级英雄名称。
  * @property remark 备注。
  */
 export interface PlayerPayload {
@@ -131,6 +134,7 @@ export interface PlayerPayload {
   jerseySize?: string
   status?: PlayerStatus
   signature?: string
+  superheroName?: string | null
   remark?: string
 }
 

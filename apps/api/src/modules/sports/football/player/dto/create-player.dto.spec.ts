@@ -27,4 +27,28 @@ describe('CreatePlayerDto', () => {
 
     expect(errors.some((error) => error.property === 'playerNumber')).toBe(true)
   })
+
+  it.each([null, '蝙蝠侠'])('accepts an optional superhero name: %s', (superheroName) => {
+    const dto = plainToInstance(CreatePlayerDto, {
+      nickname: '高歌7号',
+      playerNumber: 7,
+      superheroName,
+    })
+
+    const errors = validateSync(dto)
+
+    expect(errors.some((error) => error.property === 'superheroName')).toBe(false)
+  })
+
+  it('rejects superhero names longer than 50 characters', () => {
+    const dto = plainToInstance(CreatePlayerDto, {
+      nickname: '高歌7号',
+      playerNumber: 7,
+      superheroName: 'A'.repeat(51),
+    })
+
+    const errors = validateSync(dto)
+
+    expect(errors.some((error) => error.property === 'superheroName')).toBe(true)
+  })
 })

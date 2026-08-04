@@ -17,6 +17,7 @@ export const PLAYER_TABLE_COLUMNS: TableColumn[] = [
   { label: '头像', prop: 'avatarUrl', width: 88, slot: 'avatar', align: 'center' },
   { label: '昵称', prop: 'nickname', width: 140 },
   { label: '真实姓名', prop: 'realName', width: 120 },
+  { label: '超级英雄', prop: 'superheroName', width: 140, slot: 'superheroName' },
   { label: '代表球队', prop: 'teams', width: 180, slot: 'teams' },
   { label: '主队', prop: 'primaryTeam', width: 120, slot: 'primaryTeam' },
   { label: '位置', prop: 'positions', width: 180, slot: 'positions' },

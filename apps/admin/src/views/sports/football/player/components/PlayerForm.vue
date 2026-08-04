@@ -101,6 +101,16 @@ defineExpose({
         </ElFormItem>
       </ElCol>
       <ElCol :span="12">
+        <ElFormItem label="超级英雄" prop="superheroName">
+          <ElInput
+            v-model="model.superheroName"
+            placeholder="请输入对应的漫威或 DC 超级英雄"
+            maxlength="50"
+            show-word-limit
+          />
+        </ElFormItem>
+      </ElCol>
+      <ElCol :span="12">
         <ElFormItem label="头像地址">
           <ElInput v-model="model.avatarUrl" placeholder="请输入头像 URL" />
         </ElFormItem>

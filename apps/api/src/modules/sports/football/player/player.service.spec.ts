@@ -4,6 +4,7 @@ describe('PlayerService', () => {
   const createService = () => {
     const playerWithRelations = {
       id: 1,
+      superheroName: '蝙蝠侠',
       primaryTeamId: 1,
       primaryTeam: null,
       positions: ['striker'],
@@ -190,5 +191,24 @@ describe('PlayerService', () => {
         },
       }),
     )
+  })
+
+  it('returns superhero names and persists explicit null clears', async () => {
+    const { prisma, service } = createService()
+
+    await expect(service.findOne(1)).resolves.toMatchObject({
+      superheroName: '蝙蝠侠',
+    })
+
+    await service.update(1, {
+      superheroName: null,
+    })
+
+    expect(prisma.player.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: expect.objectContaining({
+        superheroName: null,
+      }),
+    })
   })
 })

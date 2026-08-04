@@ -26,6 +26,7 @@ export interface PlayerFormModel {
   primaryPosition: FootballPosition | ''
   jerseySize: string
   status: string
+  superheroName: string
   signature: string
   remark: string
 }

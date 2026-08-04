@@ -24,6 +24,7 @@ export function createEmptyPlayerForm(): PlayerFormModel {
     primaryPosition: '',
     jerseySize: '',
     status: 'active',
+    superheroName: '',
     signature: '',
     remark: '',
   }

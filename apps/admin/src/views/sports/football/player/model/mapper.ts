@@ -23,6 +23,7 @@ export function createPlayerFormFromRow(row: Player): PlayerFormModel {
     primaryPosition: row.primaryPosition ?? '',
     jerseySize: row.jerseySize ?? '',
     status: row.status ?? 'active',
+    superheroName: row.superheroName ?? '',
     signature: row.signature ?? '',
     remark: row.remark ?? '',
   }
@@ -31,6 +32,11 @@ export function createPlayerFormFromRow(row: Player): PlayerFormModel {
 function normalizeText(value: string) {
   const trimmed = value.trim()
   return trimmed || undefined
+}
+
+function normalizeNullableText(value: string) {
+  const trimmed = value.trim()
+  return trimmed || null
 }
 
 export function buildPlayerPayload(model: PlayerFormModel): PlayerPayload {
@@ -49,6 +55,7 @@ export function buildPlayerPayload(model: PlayerFormModel): PlayerPayload {
     primaryPosition: model.primaryPosition === '' ? null : model.primaryPosition,
     jerseySize: normalizeText(model.jerseySize),
     status: normalizeText(model.status) ?? 'active',
+    superheroName: normalizeNullableText(model.superheroName),
     signature: normalizeText(model.signature),
     remark: normalizeText(model.remark),
   }

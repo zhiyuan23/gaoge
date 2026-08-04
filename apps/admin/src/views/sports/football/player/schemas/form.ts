@@ -61,5 +61,6 @@ export const PLAYER_FORM_RULES: FormRules<PlayerFormModel> = {
   ],
   teamIds: [{ required: true, message: '请选择代表球队', trigger: 'change' }],
   positions: [{ required: true, message: '请选择可踢位置', trigger: 'change' }],
+  superheroName: [{ max: 50, message: '超级英雄最多 50 个字符', trigger: 'blur' }],
   signature: [{ max: 15, message: '签名最多 15 个字', trigger: 'blur' }],
 }
