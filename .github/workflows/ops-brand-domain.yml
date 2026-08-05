@@ -1,0 +1,154 @@
+name: 运维 Brand 根域名
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: inspect 只读检查；apply 将 gaoge.cc 切换至 Brand 发布目录
+        required: true
+        default: inspect
+        type: choice
+        options:
+          - inspect
+          - apply
+
+permissions:
+  contents: read
+
+jobs:
+  brand-domain:
+    name: ${{ inputs.mode }} gaoge.cc Brand
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.BRAND_DEPLOY_HOST || secrets.WEB_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.BRAND_DEPLOY_USER || secrets.WEB_DEPLOY_USER }}
+      BRAND_DEPLOY_PATH: ${{ secrets.BRAND_DEPLOY_PATH }}
+
+    steps:
+      - name: 配置 SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: 写入服务器 known_hosts
+        run: |
+          : "${DEPLOY_HOST:?BRAND_DEPLOY_HOST or WEB_DEPLOY_HOST is required}"
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: 只读检查 Brand 发布与根域名配置
+        if: inputs.mode == 'inspect'
+        run: |
+          : "${DEPLOY_USER:?BRAND_DEPLOY_USER or WEB_DEPLOY_USER is required}"
+          : "${BRAND_DEPLOY_PATH:?BRAND_DEPLOY_PATH is required}"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "BRAND_DEPLOY_PATH='$BRAND_DEPLOY_PATH' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          echo "=== brand release ==="
+          test -d "$BRAND_DEPLOY_PATH/current" && echo "brand_current=yes" || echo "brand_current=no"
+          readlink -f "$BRAND_DEPLOY_PATH/current" 2>/dev/null || true
+
+          echo "=== permissions ==="
+          if sudo -n true 2>/dev/null; then
+            echo "sudo_nopasswd=yes"
+          else
+            echo "sudo_nopasswd=no"
+          fi
+
+          echo "=== gaoge.cc nginx ==="
+          sudo -n nginx -T 2>&1 | grep -nE "configuration file .*/gaoge-web|server_name (gaoge\\.cc|www\\.gaoge\\.cc)|root |try_files|return 301" | head -n 120
+          REMOTE
+
+      - name: 切换 gaoge.cc 到 Brand 发布目录
+        if: inputs.mode == 'apply'
+        run: |
+          : "${DEPLOY_USER:?BRAND_DEPLOY_USER or WEB_DEPLOY_USER is required}"
+          : "${BRAND_DEPLOY_PATH:?BRAND_DEPLOY_PATH is required}"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "BRAND_DEPLOY_PATH='$BRAND_DEPLOY_PATH' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          if ! sudo -n true 2>/dev/null; then
+            echo "deploy user does not have passwordless sudo"
+            exit 1
+          fi
+
+          if [ ! -d "$BRAND_DEPLOY_PATH/current" ]; then
+            echo "Brand release is missing: $BRAND_DEPLOY_PATH/current"
+            exit 1
+          fi
+
+          enabled_site=/etc/nginx/sites-enabled/gaoge-web
+          site_file="$(readlink -f "$enabled_site")"
+          if [ ! -f "$site_file" ]; then
+            echo "gaoge.cc Nginx site file is missing: $enabled_site"
+            exit 1
+          fi
+
+          timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          backup_file="${site_file}.before-brand-${timestamp}"
+          temp_file="$(mktemp)"
+
+          sudo cp -a "$site_file" "$backup_file"
+
+          cat > "$temp_file" <<NGINX
+          server {
+              listen 80;
+              server_name gaoge.cc;
+              return 301 https://gaoge.cc\$request_uri;
+          }
+
+          server {
+              listen 80;
+              server_name www.gaoge.cc;
+              return 301 https://gaoge.cc\$request_uri;
+          }
+
+          server {
+              listen 443 ssl http2;
+              server_name gaoge.cc;
+
+              ssl_certificate /etc/letsencrypt/live/gaoge.cc/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/gaoge.cc/privkey.pem;
+
+              root $BRAND_DEPLOY_PATH/current;
+              index index.html;
+
+              location / {
+                  try_files \$uri \$uri/ /index.html;
+              }
+          }
+
+          server {
+              listen 443 ssl http2;
+              server_name www.gaoge.cc;
+
+              ssl_certificate /etc/letsencrypt/live/gaoge.cc/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/gaoge.cc/privkey.pem;
+
+              return 301 https://gaoge.cc\$request_uri;
+          }
+          NGINX
+
+          rollback() {
+            sudo cp -a "$backup_file" "$site_file"
+            sudo nginx -t
+            sudo systemctl reload nginx
+          }
+
+          sudo install -m 0644 "$temp_file" "$site_file"
+          rm -f "$temp_file"
+
+          if ! sudo nginx -t; then
+            rollback
+            exit 1
+          fi
+
+          if ! sudo systemctl reload nginx; then
+            rollback
+            exit 1
+          fi
+
+          echo "gaoge.cc now serves $BRAND_DEPLOY_PATH/current"
+          echo "backup=$backup_file"
+          REMOTE
