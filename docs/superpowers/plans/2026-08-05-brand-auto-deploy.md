@@ -82,18 +82,18 @@
 - Consumes: existing `WEB_DEPLOY_HOST`, `WEB_DEPLOY_USER`, and `SSH_PRIVATE_KEY`; Brand deployment path and health secrets.
 - Produces: a one-time, manually invoked Nginx cutover that serves `gaoge.cc` and redirects `www.gaoge.cc` to the Brand release.
 
-- [ ] **Step 1: Make the Brand deploy connection backward compatible**
+- [x] **Step 1: Make the Brand deploy connection backward compatible**
 
   Resolve `DEPLOY_HOST` and `DEPLOY_USER` from the Brand-specific secret when present, otherwise from the established `WEB_*` connection secrets. Keep the release path and health URL Brand-specific.
 
-- [ ] **Step 2: Add the guarded Brand domain workflow**
+- [x] **Step 2: Add the guarded Brand domain workflow**
 
   Create `ops-brand-domain.yml` with `inspect` and `apply` modes. The `apply` mode must require `$BRAND_DEPLOY_PATH/current`, write a timestamped backup of the current `gaoge.cc` Nginx site file, replace only that site with the Brand configuration, validate Nginx before reload, and restore the backup if validation or reload fails.
 
-- [ ] **Step 3: Set the non-secret Brand runtime values in GitHub Actions**
+- [x] **Step 3: Set the non-secret Brand runtime values in GitHub Actions**
 
   Set `BRAND_DEPLOY_PATH` to `/var/www/gaoge/brand` and `BRAND_HEALTH_URL` to `https://gaoge.cc`. Do not reveal or recreate the existing Web connection secret values.
 
-- [ ] **Step 4: Publish, deploy, cut over, and verify**
+- [x] **Step 4: Publish, deploy, cut over, and verify**
 
   Commit and push the workflow changes, wait for the Brand deployment workflow to succeed, run the Brand domain workflow in `apply` mode, then confirm `https://gaoge.cc/` returns Brand HTML and `https://www.gaoge.cc/` returns a permanent redirect to it.
