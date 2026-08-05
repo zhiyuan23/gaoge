@@ -54,16 +54,10 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: 安装依赖
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --filter @gaoge/app-brand... --frozen-lockfile
 
       - name: 运行 Brand 测试
         run: pnpm --filter @gaoge/app-brand test
-
-      - name: 输出 Brand React 类型依赖
-        run: |
-          pnpm --filter @gaoge/app-brand why @types/react
-          node -p "require('./apps/brand/node_modules/@types/react/package.json').version"
-          readlink -f apps/brand/node_modules/@types/react
 
       - name: 校验 Brand
         run: pnpm --filter @gaoge/app-brand typecheck
@@ -126,7 +120,7 @@ jobs:
 
       - name: 安装依赖
         if: steps.deploy-config.outputs.ready == 'true'
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --filter @gaoge/app-brand... --frozen-lockfile
 
       - name: 构建 Brand
         if: steps.deploy-config.outputs.ready == 'true'
