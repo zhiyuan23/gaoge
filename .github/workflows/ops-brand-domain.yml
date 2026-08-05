@@ -89,7 +89,7 @@ jobs:
           backup_file="${site_file}.before-brand-${timestamp}"
           temp_file="$(mktemp)"
 
-          sudo cp -a "$site_file" "$backup_file"
+          sudo install -m 0644 "$site_file" "$backup_file"
 
           cat > "$temp_file" <<NGINX
           server {
@@ -131,7 +131,7 @@ jobs:
           NGINX
 
           rollback() {
-            sudo cp -a "$backup_file" "$site_file"
+            sudo install -m 0644 "$backup_file" "$site_file"
             sudo nginx -t
             sudo systemctl reload nginx
           }
