@@ -1,5 +1,9 @@
-import BrandNavigation from '@/brand/components/BrandNavigation'
+import { forwardRef } from 'react'
 
-export default function SkiingNavbar() {
-  return <BrandNavigation current="home" overlay />
-}
+import BrandNavigation, { type BrandNavigationHandle } from '@/brand/components/BrandNavigation'
+
+const SkiingNavbar = forwardRef<BrandNavigationHandle>(function SkiingNavbar(_, ref) {
+  return <BrandNavigation ref={ref} current="home" overlay />
+})
+
+export default SkiingNavbar

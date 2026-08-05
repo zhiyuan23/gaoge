@@ -55,7 +55,11 @@ describe('Skiing concept route', () => {
   it('renders the GAOGE brand hero at its dedicated path', async () => {
     const { container } = renderRoute('/concepts/skiing')
 
-    expect(await screen.findByRole('heading', { name: 'enjoy your passion' })).toBeInTheDocument()
+    const heroHeading = await screen.findByRole('heading', { name: 'enjoy your passion' })
+    const hero = heroHeading.closest('section')
+
+    expect(heroHeading).toBeInTheDocument()
+    expect(hero).not.toBeNull()
     expect(screen.getByRole('link', { name: '高歌首页' })).toHaveTextContent('GAOGE')
     expect(screen.getByText(/享受你的热爱/)).toBeInTheDocument()
     expect(
@@ -79,23 +83,40 @@ describe('Skiing concept route', () => {
       expect(button).toHaveClass('hover:text-white')
       expect(button).not.toHaveClass('hover:bg-white/10')
     })
-    expect(screen.getByRole('link', { name: '进入数字产品' })).toHaveAttribute('href', '/digital')
-    expect(screen.getByRole('link', { name: '进入内容创造' })).toHaveAttribute('href', '/content')
-    expect(screen.getByRole('link', { name: '进入高歌体育' })).toHaveAttribute(
-      'href',
-      'https://sports.gaoge.cc',
-    )
-    expect(screen.getByRole('button', { name: '开发者联系方式，敬请期待' })).toBeDisabled()
+    for (const oldLinkName of ['进入数字产品', '进入内容创造', '进入高歌体育']) {
+      expect(screen.queryByRole('link', { name: oldLinkName })).not.toBeInTheDocument()
+    }
+
+    expect(screen.queryAllByText('暂未开放')).toHaveLength(0)
+    expect(hero?.querySelector('[aria-disabled="true"]')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '打开高歌品牌能力说明' })).not.toBeInTheDocument()
+    for (const name of ['打开体育能力说明', '打开数字能力说明', '打开内容能力说明']) {
+      const button = screen.getByRole('button', { name })
+
+      expect(button).toHaveAttribute('aria-haspopup', 'dialog')
+      expect(button).toHaveClass('min-h-12')
+      expect(button).toHaveClass('touch-manipulation')
+      expect(button).toHaveClass('active:scale-[0.98]')
+      expect(button).not.toHaveClass('rounded-full', 'bg-black/35', 'backdrop-blur-md')
+    }
+    expect(
+      screen.queryByRole('button', { name: '开发者联系方式，敬请期待' }),
+    ).not.toBeInTheDocument()
     expect(screen.queryByText('securify')).not.toBeInTheDocument()
     expect(screen.queryByText('+65k')).not.toBeInTheDocument()
     expect(document.title).toBe('高歌 GAOGE - 享受你的热爱')
 
     const video = container.querySelector('video')
 
+    expect(screen.getByRole('img', { name: '滑雪运动员穿越雪地' })).toHaveAttribute(
+      'src',
+      '/assets/brand/skiing-poster.jpg',
+    )
     expect(video).toHaveAttribute(
       'src',
       'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_063509_7d167302-4fd4-480b-8260-18ab572333d4.mp4',
     )
+    expect(video).toHaveAttribute('poster', '/assets/brand/skiing-poster.jpg')
     expect(video).toHaveAttribute('autoplay')
     expect(video).toHaveAttribute('loop')
     expect(video).toHaveAttribute('playsinline')
@@ -109,7 +130,8 @@ describe('Skiing concept route', () => {
     fireEvent.click(digitalButton)
 
     expect(screen.getByTestId('location')).toHaveTextContent('/')
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toHaveAttribute('open')
+    expect(screen.getByRole('dialog').tagName).toBe('DIALOG')
     expect(screen.getByRole('heading', { name: '数字' })).toBeInTheDocument()
     expect(screen.getByText('产品矩阵')).toBeInTheDocument()
     expect(
@@ -117,6 +139,8 @@ describe('Skiing concept route', () => {
     ).toBeInTheDocument()
 
     const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveClass('brand-capability-dialog')
+    expect(within(dialog).getByTestId('capability-panel')).toHaveClass('brand-capability-panel')
     expect(within(dialog).queryByRole('link')).not.toBeInTheDocument()
 
     fireEvent.click(within(dialog).getByRole('button', { name: '内容' }))
@@ -141,6 +165,30 @@ describe('Skiing concept route', () => {
     expect(within(dialog).getByText('领域拓展中')).toBeInTheDocument()
   })
 
+  it.each([
+    ['打开体育能力说明', '体育'],
+    ['打开数字能力说明', '数字'],
+    ['打开内容能力说明', '内容'],
+  ] as const)('opens %s from the hero without changing route', async (buttonName, heading) => {
+    renderRoute('/')
+
+    const trigger = await screen.findByRole('button', { name: buttonName })
+
+    expect(trigger).toHaveClass('active:scale-[0.98]')
+    expect(trigger).toHaveClass('focus-visible:outline')
+
+    fireEvent.click(trigger)
+
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveAttribute('open')
+    expect(within(dialog).getByRole('heading', { name: heading })).toBeInTheDocument()
+    expect(screen.getByTestId('location')).toHaveTextContent('/')
+
+    fireEvent.click(within(dialog).getByRole('button', { name: '关闭能力说明' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(trigger).toHaveFocus())
+  })
+
   it('closes the capability dialog with Escape and restores focus', async () => {
     renderRoute('/')
 
@@ -150,8 +198,8 @@ describe('Skiing concept route', () => {
     const closeButton = screen.getByRole('button', { name: '关闭能力说明' })
     await waitFor(() => expect(closeButton).toHaveFocus())
 
-    fireEvent.keyDown(document, { key: 'Escape' })
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     await waitFor(() => expect(trigger).toHaveFocus())
   })
 
@@ -159,12 +207,38 @@ describe('Skiing concept route', () => {
     renderRoute('/')
 
     fireEvent.click(await screen.findByRole('button', { name: '数字' }))
+    const closeDialog = screen.getByRole('dialog')
     fireEvent.click(screen.getByRole('button', { name: '关闭能力说明' }))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(closeDialog).toHaveAttribute('data-closing')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: '内容' }))
     fireEvent.click(screen.getByRole('button', { name: '点击遮罩关闭能力说明' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('closes the capability dialog immediately when reduced motion is requested', async () => {
+    vi.mocked(window.matchMedia).mockImplementation(
+      (query) =>
+        ({
+          addEventListener: vi.fn(),
+          addListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+          matches: query === '(prefers-reduced-motion: reduce)',
+          media: query,
+          onchange: null,
+          removeEventListener: vi.fn(),
+          removeListener: vi.fn(),
+        }) as MediaQueryList,
+    )
+    renderRoute('/')
+
+    const trigger = await screen.findByRole('button', { name: '数字' })
+    fireEvent.click(trigger)
+    fireEvent.click(screen.getByRole('button', { name: '关闭能力说明' }))
+
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
   })
 
   it.each(['/', '/missing-page'])(

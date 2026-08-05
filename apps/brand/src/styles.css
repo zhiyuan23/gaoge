@@ -122,6 +122,208 @@ a:focus-visible {
   letter-spacing: -0.04em;
 }
 
+@media (height <= 500px) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+  .skiing-page .hero-title {
+    font-size: 15vh;
+  }
+
+  .skiing-page .hero-title--enjoy {
+    top: 24%;
+    left: 2.5rem;
+  }
+
+  .skiing-page .hero-title--your {
+    top: 39%;
+    right: 2.5rem;
+  }
+
+  .skiing-page .hero-title--passion {
+    top: 60%;
+    left: 28%;
+  }
+
+  .skiing-page .hero-copy {
+    top: 44%;
+    left: 2.5rem;
+    max-width: 280px;
+    font-size: 12px;
+  }
+
+  .skiing-page .hero-signal {
+    min-height: 3rem;
+    padding: 0.5rem 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .skiing-page .hero-signal--sports {
+    top: 6rem;
+    right: 1rem;
+  }
+
+  .skiing-page .hero-signal--digital {
+    bottom: max(1.5rem, env(safe-area-inset-bottom));
+    left: 1.25rem;
+  }
+
+  .skiing-page .hero-signal--content {
+    right: 1.25rem;
+    bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  .skiing-page .brand-signal-content {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .skiing-page .brand-signal-row {
+    display: block;
+  }
+
+  .skiing-page .brand-signal-divider--mobile {
+    display: block;
+    width: 3rem;
+  }
+
+  .skiing-page .brand-signal-divider--desktop {
+    display: none;
+  }
+
+  .skiing-page .brand-signal-value {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1rem;
+    color: rgb(255 255 255 / 90%);
+    letter-spacing: 0.2em;
+  }
+
+  .skiing-page .brand-signal-label {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 11px;
+    line-height: 1rem;
+    color: rgb(255 255 255 / 60%);
+    text-align: left;
+  }
+}
+
+.brand-capability-dialog::backdrop {
+  background: transparent;
+}
+
+.brand-capability-backdrop {
+  background: rgb(0 0 0 / 55%);
+  animation: brand-capability-backdrop-in 200ms ease-out both;
+}
+
+.brand-capability-panel {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 16% 0%, rgb(255 255 255 / 14%), transparent 34%),
+    linear-gradient(145deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 3%) 48%), rgb(10 10 12 / 64%);
+  border-color: rgb(255 255 255 / 18%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 22%),
+    inset 0 -1px 0 rgb(255 255 255 / 6%),
+    0 28px 90px rgb(0 0 0 / 48%);
+  isolation: isolate;
+  /* stylelint-disable-next-line property-no-vendor-prefix -- Safari compatibility */
+  -webkit-backdrop-filter: blur(24px) saturate(135%) contrast(1.04);
+  backdrop-filter: blur(24px) saturate(135%) contrast(1.04);
+  animation: brand-capability-panel-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.brand-capability-panel::before {
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: inherit;
+}
+
+.brand-capability-copy {
+  animation: brand-capability-copy-in 140ms ease-out both;
+}
+
+.brand-capability-dialog[data-closing] {
+  pointer-events: none;
+}
+
+.brand-capability-dialog[data-closing] .brand-capability-backdrop {
+  animation: brand-capability-backdrop-out 150ms ease-in both;
+}
+
+.brand-capability-dialog[data-closing] .brand-capability-panel {
+  animation: brand-capability-panel-out 170ms ease-in both;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .brand-capability-panel {
+    background: rgb(10 10 12 / 96%);
+  }
+}
+
+@keyframes brand-capability-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes brand-capability-backdrop-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes brand-capability-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes brand-capability-panel-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+}
+
+@keyframes brand-capability-copy-in {
+  from {
+    opacity: 0.72;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .prisma-page {
   min-width: 320px;
   font-family:
@@ -169,6 +371,17 @@ a:focus-visible {
     display: none;
   }
 
+  .brand-capability-backdrop,
+  .brand-capability-panel,
+  .brand-capability-copy,
+  .brand-capability-dialog[data-closing] .brand-capability-backdrop,
+  .brand-capability-dialog[data-closing] .brand-capability-panel {
+    transform: none !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
   .prisma-page *,
   .prisma-page *::before,
   .prisma-page *::after {
@@ -177,5 +390,4 @@ a:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
-
 }
