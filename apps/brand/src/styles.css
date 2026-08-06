@@ -105,6 +105,289 @@ a:focus-visible {
   --brand-muted: 185 171 169;
 }
 
+.brand-matrix-page[data-brand-area='group'] {
+  --brand-accent: 157 197 143;
+  --brand-surface: 18 22 20;
+  --brand-muted: 164 174 168;
+
+  background:
+    radial-gradient(circle at 72% 14%, rgb(157 197 143 / 7%), transparent 30%), #0c0f0d;
+}
+
+.group-orbit {
+  position: relative;
+  min-height: 35rem;
+  isolation: isolate;
+}
+
+.group-orbit-ring {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid rgb(240 245 241 / 14%);
+  border-radius: 999px;
+}
+
+.group-orbit-ring--outer {
+  inset: 4% 7%;
+  transform: rotate(-8deg);
+}
+
+.group-orbit-ring--inner {
+  inset: 22% 24%;
+  border-color: rgb(157 197 143 / 22%);
+  transform: rotate(18deg);
+}
+
+.group-orbit-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 11rem;
+  height: 11rem;
+  background: rgb(13 17 15 / 94%);
+  border: 1px solid rgb(var(--brand-accent) / 55%);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 28px 70px rgb(2 8 5 / 34%);
+  transform: translate(-50%, -50%);
+}
+
+.group-orbit-nodes {
+  display: contents;
+  list-style: none;
+}
+
+.group-orbit-nodes > li {
+  position: absolute;
+  width: 10.5rem;
+}
+
+.group-orbit-nodes > li[data-orbit-slot='digital'] {
+  top: 3%;
+  left: 10%;
+}
+
+.group-orbit-nodes > li[data-orbit-slot='content'] {
+  top: 8%;
+  right: 5%;
+}
+
+.group-orbit-nodes > li[data-orbit-slot='sports'] {
+  right: 8%;
+  bottom: 2%;
+}
+
+.group-orbit-nodes > li[data-orbit-slot='future'] {
+  bottom: 0;
+  left: 7%;
+}
+
+.group-orbit-node {
+  width: 100%;
+  background: rgb(18 22 20 / 88%);
+  border: 1px solid rgb(240 245 241 / 14%);
+  border-radius: 1.25rem;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%);
+  backdrop-filter: blur(18px);
+  transition:
+    border-color 220ms ease,
+    color 220ms ease,
+    transform 220ms ease;
+}
+
+a.group-orbit-node:is(:hover, :focus-visible) {
+  color: rgb(var(--brand-accent));
+  outline: none;
+  border-color: rgb(var(--brand-accent) / 62%);
+  transform: translateY(-3px);
+}
+
+.group-orbit-node--future {
+  background: rgb(18 22 20 / 58%);
+  border-style: dashed;
+}
+
+.group-orbit-link {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: 72%;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--brand-accent) / 36%),
+    transparent
+  );
+  transform-origin: center;
+}
+
+.group-orbit-link--horizontal {
+  transform: translate(-50%, -50%) rotate(-7deg);
+}
+
+.group-orbit-link--diagonal {
+  transform: translate(-50%, -50%) rotate(48deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .group-orbit-ring--outer {
+    animation: group-orbit-breathe 22s ease-in-out infinite alternate;
+  }
+
+  .group-orbit-ring--inner {
+    animation: group-orbit-breathe 18s ease-in-out 1.5s infinite alternate-reverse;
+  }
+}
+
+@keyframes group-orbit-breathe {
+  from {
+    opacity: 0.55;
+    scale: 0.985;
+  }
+
+  to {
+    opacity: 1;
+    scale: 1.015;
+  }
+}
+
+@media (width < 768px) {
+  .group-orbit {
+    min-height: 0;
+    padding-left: 1.75rem;
+  }
+
+  .group-orbit::before {
+    position: absolute;
+    top: 3rem;
+    bottom: 2rem;
+    left: 0.45rem;
+    width: 1px;
+    content: '';
+    background: linear-gradient(rgb(var(--brand-accent) / 52%), rgb(240 245 241 / 8%));
+  }
+
+  .group-orbit-ring,
+  .group-orbit-link {
+    display: none;
+  }
+
+  .group-orbit-core {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 8.75rem;
+    height: 8.75rem;
+    margin-bottom: 1rem;
+    transform: none;
+  }
+
+  .group-orbit-nodes {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .group-orbit-nodes > li,
+  .group-orbit-nodes > li[data-orbit-slot] {
+    position: relative;
+    inset: auto;
+    width: 100%;
+  }
+
+  .group-orbit-nodes > li::before {
+    position: absolute;
+    top: 2.25rem;
+    left: -1.55rem;
+    width: 0.7rem;
+    height: 0.7rem;
+    content: '';
+    background: #0c0f0d;
+    border: 1px solid rgb(var(--brand-accent) / 58%);
+    border-radius: 999px;
+  }
+}
+
+.group-sports-entity,
+.group-leader-card,
+.group-director-seat {
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 5%), transparent 55%),
+    rgb(var(--brand-surface) / 88%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%);
+}
+
+.group-sports-entity--league {
+  background:
+    radial-gradient(circle at 88% 5%, rgb(var(--brand-accent) / 18%), transparent 34%),
+    linear-gradient(145deg, rgb(255 255 255 / 6%), transparent 55%),
+    rgb(var(--brand-surface) / 92%);
+}
+
+.group-leader-card,
+.group-director-seat {
+  transition:
+    border-color 220ms ease,
+    transform 220ms ease;
+}
+
+.group-leader-card:hover,
+.group-director-seat:hover {
+  border-color: rgb(var(--brand-accent) / 38%);
+  transform: translateY(-2px);
+}
+
+.group-leader-card--subdued {
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 2%), transparent 58%),
+    rgb(var(--brand-surface) / 54%);
+  border-color: rgb(255 255 255 / 6%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+}
+
+.group-leader-card--subdued:hover {
+  border-color: rgb(var(--brand-accent) / 24%);
+}
+
+.group-leader-card--subdued [data-testid='default-avatar'] {
+  opacity: 0.72;
+}
+
+.group-director-seat:nth-child(5n + 1),
+.group-director-seat:nth-child(7n) {
+  background:
+    linear-gradient(145deg, rgb(var(--brand-accent) / 10%), transparent 58%),
+    rgb(var(--brand-surface) / 92%);
+}
+
+.group-future-orbit {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 80% 50%, rgb(var(--brand-accent) / 12%), transparent 28%),
+    rgb(var(--brand-surface) / 54%);
+}
+
+.group-future-orbit::after {
+  position: absolute;
+  top: 50%;
+  right: -6rem;
+  width: 20rem;
+  height: 20rem;
+  pointer-events: none;
+  content: '';
+  border: 1px solid rgb(var(--brand-accent) / 28%);
+  border-radius: 999px;
+  transform: translateY(-50%);
+}
+
 .skiing-page {
   min-width: 320px;
   font-family:

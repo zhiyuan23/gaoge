@@ -9,7 +9,7 @@ interface BrandPageShellProps {
     readonly label: string
     readonly to: '/content' | '/digital'
   }
-  readonly current: 'content' | 'digital'
+  readonly current: 'content' | 'digital' | 'group'
 }
 
 export default function BrandPageShell({ children, crossLink, current }: BrandPageShellProps) {

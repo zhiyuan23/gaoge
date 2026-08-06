@@ -2,7 +2,7 @@ import { X } from 'lucide-react'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
-export type BrandArea = 'home' | 'digital' | 'content'
+export type BrandArea = 'home' | 'digital' | 'content' | 'group'
 export type CapabilityArea = 'digital' | 'content' | 'sports' | 'future'
 
 export interface BrandNavigationHandle {
@@ -198,7 +198,7 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
               })}
             </div>
 
-            {current !== 'home' ? (
+            {current !== 'home' && current !== 'group' ? (
               <span
                 aria-label="当前品牌领域"
                 className="col-start-2 row-start-1 grid h-11 place-items-center rounded-full bg-neutral-900/90 px-4 text-xs text-white/75 backdrop-blur md:hidden"
@@ -207,10 +207,19 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
               </span>
             ) : null}
 
-            <span
-              aria-hidden="true"
-              className="col-start-3 row-start-1 h-10 w-10 justify-self-end"
-            />
+            {current !== 'home' ? (
+              <NavLink
+                aria-label="集团"
+                className={({ isActive }) =>
+                  `col-start-3 row-start-1 justify-self-end rounded-full bg-neutral-900/90 px-5 py-3 text-sm text-white/70 backdrop-blur transition-colors hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white/40 ${
+                    isActive ? 'text-white ring-1 ring-white/25' : ''
+                  }`
+                }
+                to="/group"
+              >
+                集团
+              </NavLink>
+            ) : null}
           </nav>
         </header>
 

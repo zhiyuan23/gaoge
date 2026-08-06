@@ -61,6 +61,7 @@ describe('Skiing concept route', () => {
     expect(heroHeading).toBeInTheDocument()
     expect(hero).not.toBeNull()
     expect(screen.getByRole('link', { name: '高歌首页' })).toHaveTextContent('GAOGE')
+    expect(screen.queryByRole('link', { name: '集团' })).not.toBeInTheDocument()
     expect(screen.getByText(/享受你的热爱/)).toBeInTheDocument()
     expect(
       screen.getByText(/以数字产品、内容运营与体育热爱，连接正在发生的未来/),
@@ -258,11 +259,52 @@ describe('formal brand routes', () => {
   it.each([
     ['/digital', 'GAOGE DIGITAL'],
     ['/content', 'GAOGE CONTENT'],
+    ['/group', 'GAOGE GROUP'],
   ])('keeps %s as a formal brand route', async (path, heading) => {
     renderRoute(path)
 
     expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent(path)
+  })
+})
+
+describe('group organization route', () => {
+  it('renders the public group structure and metadata', async () => {
+    renderRoute('/group')
+
+    expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '连接热爱，生长事业。' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '集团' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByTestId('location')).toHaveTextContent('/group')
+    expect(document.title).toBe('高歌集团 - 组织与产业版图')
+
+    const industryLinks = screen.getAllByRole('link')
+    const digitalIndustryLink = industryLinks.find((link) => link.dataset.industry === 'digital')
+    const contentIndustryLink = industryLinks.find((link) => link.dataset.industry === 'content')
+    const sportsIndustryLink = industryLinks.find((link) => link.dataset.industry === 'sports')
+
+    expect(digitalIndustryLink).toHaveAttribute('href', '/digital')
+    expect(contentIndustryLink).toHaveAttribute('href', '/content')
+    expect(screen.getByText('高歌小绿本')).toBeInTheDocument()
+    expect(sportsIndustryLink).toHaveAttribute('href', 'https://sports.gaoge.cc')
+    expect(sportsIndustryLink).toHaveAttribute('target', '_blank')
+    expect(document.querySelector('[data-industry="future"]')?.tagName).toBe('ARTICLE')
+
+    expect(screen.getByRole('heading', { name: '高歌体育' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '高歌 FC' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '高歌超级联赛' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '管理团队' })).toBeInTheDocument()
+    expect(screen.getAllByTestId('group-leader')).toHaveLength(6)
+    expect(document.querySelectorAll('[data-team-emphasis="subdued"]')).toHaveLength(2)
+    expect(
+      document.querySelectorAll('[data-testid="group-leader"] [data-testid="default-avatar"]'),
+    ).toHaveLength(6)
+    expect(screen.getByRole('heading', { name: '联赛董事会' })).toBeInTheDocument()
+    expect(screen.getAllByTestId('league-director')).toHaveLength(20)
+    expect(
+      document.querySelectorAll('[data-testid="league-director"] [data-testid="default-avatar"]'),
+    ).toHaveLength(20)
+    expect(screen.getAllByTestId('default-avatar')).toHaveLength(26)
   })
 })
 

@@ -12,6 +12,7 @@ import {
 
 const ContentPage = lazy(() => import('@/pages/content/ContentPage'))
 const DigitalPage = lazy(() => import('@/pages/digital/DigitalPage'))
+const GroupPage = lazy(() => import('@/pages/group/GroupPage'))
 
 function ConceptLoading() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
       <Route path="/" element={<LazyPageRoute component={HomepagePage} />} />
       <Route path="/digital" element={<LazyPageRoute component={DigitalPage} />} />
       <Route path="/content" element={<LazyPageRoute component={ContentPage} />} />
+      <Route path="/group" element={<LazyPageRoute component={GroupPage} />} />
       <Route path="/concepts" element={<ConceptIndexPage />} />
       {concepts.map(({ component: ConceptPage, slug }) => (
         <Route
