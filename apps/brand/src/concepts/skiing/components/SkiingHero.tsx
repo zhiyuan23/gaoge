@@ -1,5 +1,5 @@
 import { useReducedMotion } from 'framer-motion'
-import { useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 import type { BrandNavigationHandle } from '@/brand/components/BrandNavigation'
 import BrandSignal from '@/concepts/skiing/components/BrandSignal'
@@ -8,10 +8,43 @@ import SkiingNavbar from '@/concepts/skiing/components/SkiingNavbar'
 const backgroundVideo =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_063509_7d167302-4fd4-480b-8260-18ab572333d4.mp4'
 const backgroundPoster = '/assets/brand/skiing-poster.jpg'
+const inlinePlaybackAttributes = {
+  'webkit-playsinline': 'true',
+  'x5-playsinline': 'true',
+  'x5-video-player-type': 'h5-page',
+} as const
 
 export default function SkiingHero() {
   const reducedMotion = useReducedMotion()
   const navigationRef = useRef<BrandNavigationHandle>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const tryPlayVideo = useCallback(() => {
+    const video = videoRef.current
+
+    if (!video) return
+
+    video.muted = true
+    video.defaultMuted = true
+    const playResult = video.play() as Promise<void> | undefined
+
+    if (playResult) {
+      void playResult.catch(() => undefined)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (reducedMotion) return
+
+    document.addEventListener('WeixinJSBridgeReady', tryPlayVideo)
+    document.addEventListener('touchstart', tryPlayVideo, { once: true, passive: true })
+    tryPlayVideo()
+
+    return () => {
+      document.removeEventListener('WeixinJSBridgeReady', tryPlayVideo)
+      document.removeEventListener('touchstart', tryPlayVideo)
+    }
+  }, [reducedMotion, tryPlayVideo])
 
   return (
     <section id="top" className="relative min-h-[100dvh] w-full overflow-hidden bg-black">
@@ -25,15 +58,18 @@ export default function SkiingHero() {
       />
       {!reducedMotion ? (
         <video
+          ref={videoRef}
           aria-hidden="true"
           autoPlay
           className="absolute inset-0 h-full w-full object-cover"
           loop
           muted
+          onCanPlay={tryPlayVideo}
           playsInline
           poster={backgroundPoster}
-          preload="metadata"
+          preload="auto"
           src={backgroundVideo}
+          {...inlinePlaybackAttributes}
         />
       ) : null}
 

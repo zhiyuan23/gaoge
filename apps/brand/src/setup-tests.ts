@@ -18,6 +18,8 @@ beforeEach(() => {
     })),
     writable: true,
   })
+
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
 })
 
 afterEach(() => {

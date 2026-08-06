@@ -1,15 +1,25 @@
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import SkiingHero from '@/concepts/skiing/components/SkiingHero'
 
+let reducedMotion = true
+
 vi.mock('framer-motion', async (importOriginal) => ({
   ...(await importOriginal<typeof import('framer-motion')>()),
-  useReducedMotion: () => true,
+  useReducedMotion: () => reducedMotion,
 }))
 
 describe('SkiingHero', () => {
+  beforeEach(() => {
+    reducedMotion = true
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('uses the static skiing poster instead of video when reduced motion is requested', () => {
     const { container } = render(
       <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
@@ -50,5 +60,39 @@ describe('SkiingHero', () => {
     expect(screen.getByText('enjoy')).toHaveClass('left-[4vw]', 'top-[22%]')
     expect(screen.getByText('your')).toHaveClass('right-[4vw]', 'top-[38%]')
     expect(screen.getByText('passion')).toHaveClass('left-[10vw]', 'top-[61%]')
+  })
+
+  it('retries the online hero video through WeChat and the first touch', () => {
+    reducedMotion = false
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
+    const { container } = render(
+      <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+        <SkiingHero />
+      </MemoryRouter>,
+    )
+    const video = container.querySelector('video')
+
+    expect(video).not.toBeNull()
+    expect(video).toHaveAttribute('preload', 'auto')
+    expect(video).toHaveAttribute('webkit-playsinline', 'true')
+    expect(video).toHaveAttribute('x5-playsinline', 'true')
+    expect(video).toHaveAttribute('x5-video-player-type', 'h5-page')
+    expect(video).toHaveProperty('muted', true)
+    expect(video).toHaveProperty('defaultMuted', true)
+    expect(play).toHaveBeenCalledTimes(1)
+
+    act(() => {
+      document.dispatchEvent(new Event('WeixinJSBridgeReady'))
+    })
+    expect(play).toHaveBeenCalledTimes(2)
+
+    fireEvent.canPlay(video as HTMLVideoElement)
+    expect(play).toHaveBeenCalledTimes(3)
+
+    fireEvent.touchStart(document)
+    expect(play).toHaveBeenCalledTimes(4)
+
+    fireEvent.touchStart(document)
+    expect(play).toHaveBeenCalledTimes(4)
   })
 })
