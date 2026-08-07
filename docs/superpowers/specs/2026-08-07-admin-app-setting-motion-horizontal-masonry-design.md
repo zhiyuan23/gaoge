@@ -1,6 +1,6 @@
 # Admin App Setting Motion and Horizontal Masonry Design
 
-> **Status: Not implemented.** The fade-only plus `ResizeObserver` Masonry proposal is future work and is excluded from the current implemented baseline.
+> **Status: Not implemented.** The fade-only plus `ResizeObserver` Masonry proposal is not part of source revision `d9567ea0845965b08e36519129b2941dd23358d4` or the synchronized gaoge-club, gaoge-compass, and gaoge-crm worktrees.
 
 ## Context
 

@@ -11,6 +11,7 @@
 
 - [api-module.md](./api-module.md)：`apps/api` 的模块结构、路由、DTO、Prisma 与错误处理约定
 - [admin-page-patterns.md](./admin-page-patterns.md)：`apps/admin` 页面装配、权限、查询和弹窗模式
+- [Admin 工程底座同步](./admin-foundation-sync.md)：同类 Admin 项目的成员发现、基线判断、冲突合并与验证约定
 - [miniapp-architecture.md](./miniapp-architecture.md)：`apps/miniapp` 微信原生小程序目录、服务分组和导入路径约定
 - [frontend-styling.md](./frontend-styling.md)：前端样式方案的应用边界与使用原则
 - [admin-crud.md](./admin-crud.md)：`apps/admin` CRUD 页面结构与通用组件使用约定

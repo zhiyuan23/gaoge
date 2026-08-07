@@ -1,6 +1,6 @@
 # Admin App Setting Motion and Horizontal Masonry Implementation Plan
 
-> **Status: Not implemented.** Do not treat the steps below as behavior present in the current implemented baseline or synchronized target worktrees.
+> **Status: Not implemented.** Do not treat the steps below as behavior present in source revision `d9567ea0845965b08e36519129b2941dd23358d4` or the synchronized gaoge-club, gaoge-compass, and gaoge-crm worktrees.
 
 > **Execution prerequisite:** Recheck the current `AppSetting/index.vue` baseline before using this historical plan. File line numbers and Git-state instructions were written before the current implementation was committed; the durable requirements are the motion, ordering, lifecycle, and verification contracts below.
 

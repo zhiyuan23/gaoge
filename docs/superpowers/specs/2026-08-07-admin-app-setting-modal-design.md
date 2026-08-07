@@ -1,6 +1,6 @@
 # Admin 应用配置弹窗化设计
 
-> **状态：已确认设计。** 当前版本目标使用 CSS 双栏布局，不包含 `ResizeObserver` Masonry。
+> **状态：已实施并验证。** 实现提交为 `d9567ea`，当前版本使用 CSS 双栏布局，不包含 `ResizeObserver` Masonry。
 
 ## 背景
 
