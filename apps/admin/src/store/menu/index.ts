@@ -9,6 +9,8 @@ import useRouteStore from '../route'
 import useSettingsStore from '../settings'
 import useUserStore from '../user'
 
+import { resolveSidebarMenus } from './resolve-sidebar-menus'
+
 import type { Menu, Route } from '#/global'
 
 const useMenuStore = defineStore(
@@ -27,25 +29,15 @@ const useMenuStore = defineStore(
       const returnMenus: Menu.recordMainRaw[] = []
       routes.forEach((item) => {
         if (item.children.length > 0) {
-          if (settingsStore.settings.menu.mode === 'single') {
-            returnMenus.length === 0 &&
-              returnMenus.push({
-                meta: {},
-                children: [],
-              })
-            returnMenus[0].children.push(...convertRouteToMenuRecursive(item.children))
-          } else {
-            const menuItem: Menu.recordMainRaw = {
-              meta: {
-                title: item?.meta?.title,
-                icon: item?.meta?.icon,
-                auth: item?.meta?.auth,
-              },
-              children: [],
-            }
-            menuItem.children = convertRouteToMenuRecursive(item.children)
-            returnMenus.push(menuItem)
+          const menuItem: Menu.recordMainRaw = {
+            meta: {
+              title: item?.meta?.title,
+              icon: item?.meta?.icon,
+              auth: item?.meta?.auth,
+            },
+            children: convertRouteToMenuRecursive(item.children),
           }
+          returnMenus.push(menuItem)
         }
       })
       return returnMenus
@@ -77,7 +69,7 @@ const useMenuStore = defineStore(
 
     // 完整导航数据
     const allMenus = computed(() => {
-      let returnMenus: Menu.recordMainRaw[] = []
+      let returnMenus: Menu.recordMainRaw[]
       if (settingsStore.settings.app.routeBaseOn !== 'filesystem') {
         returnMenus = convertRouteToMenu(routeStore.routesRaw)
       } else {
@@ -85,18 +77,19 @@ const useMenuStore = defineStore(
       }
       // 如果权限功能开启，则需要对导航数据进行筛选过滤
       if (settingsStore.settings.app.enablePermission) {
-        returnMenus = filterAsyncMenus(returnMenus, userStore.permissions)
+        return filterAsyncMenus(returnMenus, userStore.permissions)
       }
       return returnMenus
     })
     // 次导航数据
-    const sidebarMenus = computed<Menu.recordMainRaw['children']>(() => {
-      return allMenus.value.length > 0
-        ? allMenus.value.length > 1
-          ? allMenus.value[actived.value].children
-          : allMenus.value[0].children
-        : []
-    })
+    const sidebarMenus = computed(() =>
+      resolveSidebarMenus(
+        allMenus.value,
+        settingsStore.settings.menu.mode,
+        actived.value,
+        settingsStore.settings.menu.singleMenuHideFirstLevel,
+      ),
+    )
     // 次导航第一层最深路径
     const sidebarMenusFirstDeepestPath = computed(() => {
       return sidebarMenus.value.length > 0

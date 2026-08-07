@@ -25,7 +25,7 @@ const { switchTo } = useMenu()
       class="main-sidebar-container"
     >
       <component :is="useSlots('main-sidebar-top')" />
-      <Logo :show-title="false" class="sidebar-logo" />
+      <Logo v-if="settingsStore.mode === 'mobile'" :show-title="false" class="sidebar-logo" />
       <component :is="useSlots('main-sidebar-after-logo')" />
       <FaScrollArea :scrollbar="false" mask gradient-color="var(--g-main-sidebar-bg)" class="menu">
         <!-- 侧边栏模式（含主导航） -->

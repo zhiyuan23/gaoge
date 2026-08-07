@@ -31,16 +31,20 @@ const menu = useMenu()
 
 // 头部当前实际高度
 const headerActualHeight = computed(() => {
-  let actualHeight = Number.parseInt(
+  if (settingsStore.mode === 'mobile') {
+    return 0
+  }
+  return Number.parseInt(
     getComputedStyle(document.documentElement).getPropertyValue('--g-header-height'),
   )
-  if (
-    ['single', 'side'].includes(settingsStore.settings.menu.mode) ||
-    settingsStore.mode === 'mobile'
-  ) {
-    actualHeight = 0
-  }
-  return actualHeight
+})
+
+const enableToolbar = computed(() => {
+  return (
+    settingsStore.mode === 'mobile' ||
+    (settingsStore.settings.toolbar.breadcrumb &&
+      settingsStore.settings.app.routeBaseOn !== 'filesystem')
+  )
 })
 
 // 侧边栏主导航当前实际宽度
@@ -81,10 +85,7 @@ const topbarActualHeight = computed(() => {
       getComputedStyle(document.documentElement).getPropertyValue('--g-tabbar-height'),
     )
   }
-  if (
-    !['head'].includes(settingsStore.settings.menu.mode) ||
-    settingsStore.settings.toolbar.breadcrumb
-  ) {
+  if (enableToolbar.value) {
     actualHeight += Number.parseInt(
       getComputedStyle(document.documentElement).getPropertyValue('--g-toolbar-height'),
     )
@@ -171,7 +172,7 @@ const enableAppSetting = import.meta.env.VITE_APP_SETTING
           @click="settingsStore.toggleSidebarCollapse()"
         />
         <div class="main-container pb-[var(--g-main-container-padding-bottom)]">
-          <Topbar />
+          <Topbar :enable-toolbar="enableToolbar" />
           <div class="main">
             <RouterView v-slot="{ Component, route }">
               <Transition name="slide-right" mode="out-in">

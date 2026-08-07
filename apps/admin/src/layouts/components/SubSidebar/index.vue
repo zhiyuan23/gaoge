@@ -6,6 +6,8 @@ import useSettingsStore from '@/store/settings'
 import Logo from '../Logo/index.vue'
 import Menu from '../Menu/index.vue'
 
+import { resolveSubSidebarTransitionName } from './transition'
+
 defineOptions({
   name: 'SubSidebar',
 })
@@ -25,21 +27,14 @@ const enableSidebar = computed(() => {
 
 const transitionName = ref('')
 watch(
-  () => menuStore.actived,
-  (val, oldVal) => {
-    if (settingsStore.mode === 'mobile' || settingsStore.settings.menu.mode === 'side') {
-      if (val > oldVal) {
-        transitionName.value = 'sub-sidebar-y-start'
-      } else {
-        transitionName.value = 'sub-sidebar-y-end'
-      }
-    } else if (settingsStore.settings.menu.mode === 'head') {
-      if (val > oldVal) {
-        transitionName.value = 'sub-sidebar-x-start'
-      } else {
-        transitionName.value = 'sub-sidebar-x-end'
-      }
-    }
+  [() => menuStore.actived, () => settingsStore.settings.menu.mode],
+  ([activeIndex, menuMode], [previousActiveIndex]) => {
+    transitionName.value = resolveSubSidebarTransitionName(
+      menuMode,
+      activeIndex,
+      previousActiveIndex,
+      settingsStore.mode === 'mobile',
+    )
   },
 )
 </script>
@@ -54,7 +49,10 @@ watch(
   >
     <component :is="useSlots('sub-sidebar-top')" />
     <Logo
-      v-if="['side', 'single'].includes(settingsStore.settings.menu.mode)"
+      v-if="
+        settingsStore.mode === 'mobile' &&
+        ['side', 'single'].includes(settingsStore.settings.menu.mode)
+      "
       :show-logo="settingsStore.settings.menu.mode === 'single'"
       class="sidebar-logo"
       :class="{
@@ -64,21 +62,18 @@ watch(
     <component :is="useSlots('sub-sidebar-after-logo')" />
     <FaScrollArea :scrollbar="false" mask gradient-color="var(--g-sub-sidebar-bg)" class="flex-1">
       <TransitionGroup :name="transitionName">
-        <template v-for="(mainItem, mainIndex) in menuStore.allMenus" :key="mainIndex">
-          <div v-show="mainIndex === menuStore.actived">
-            <Menu
-              :menu="mainItem.children"
-              :value="route.meta.activeMenu || route.path"
-              :default-openeds="menuStore.defaultOpenedPaths"
-              :accordion="settingsStore.settings.menu.subMenuUniqueOpened"
-              :collapse="settingsStore.mode === 'pc' && settingsStore.settings.menu.subMenuCollapse"
-              class="menu"
-              :class="{
-                '-mt-2': !['head', 'single'].includes(settingsStore.settings.menu.mode),
-              }"
-            />
-          </div>
-        </template>
+        <Menu
+          :key="`${settingsStore.settings.menu.mode}-${menuStore.actived}`"
+          :menu="menuStore.sidebarMenus"
+          :value="route.meta.activeMenu || route.path"
+          :default-openeds="menuStore.defaultOpenedPaths"
+          :accordion="settingsStore.settings.menu.subMenuUniqueOpened"
+          :collapse="settingsStore.mode === 'pc' && settingsStore.settings.menu.subMenuCollapse"
+          class="menu"
+          :class="{
+            '-mt-2': !['head', 'single'].includes(settingsStore.settings.menu.mode),
+          }"
+        />
       </TransitionGroup>
     </FaScrollArea>
     <div

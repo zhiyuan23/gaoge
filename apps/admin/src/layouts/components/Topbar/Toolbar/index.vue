@@ -17,10 +17,7 @@ const settingsStore = useSettingsStore()
       <LeftSide />
     </div>
     <div
-      v-if="
-        ['side', 'single'].includes(settingsStore.settings.menu.mode) ||
-        settingsStore.mode === 'mobile'
-      "
+      v-if="settingsStore.mode === 'mobile'"
       class="flex h-full flex-shrink-0 items-center justify-end px-2"
     >
       <RightSide />

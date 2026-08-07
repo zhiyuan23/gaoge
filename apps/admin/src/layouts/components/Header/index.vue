@@ -18,12 +18,13 @@ const { switchTo } = useMenu()
 
 <template>
   <Transition name="header">
-    <header v-if="settingsStore.mode === 'pc' && settingsStore.settings.menu.mode === 'head'">
+    <header v-if="settingsStore.mode === 'pc'">
       <component :is="useSlots('header-start')" />
       <div class="header-container">
         <Logo class="title" />
         <component :is="useSlots('header-after-logo')" />
         <FaScrollArea
+          v-if="settingsStore.settings.menu.mode === 'head'"
           :scrollbar="false"
           mask
           horizontal

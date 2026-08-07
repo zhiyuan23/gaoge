@@ -4,6 +4,7 @@ import useSettingsStore from '@/store/settings'
 
 import ColorScheme from './ColorScheme/index.vue'
 import Fullscreen from './Fullscreen/index.vue'
+import MenuModeSwitch from './MenuModeSwitch/index.vue'
 import NavSearch from './NavSearch/index.vue'
 import PageReload from './PageReload/index.vue'
 
@@ -18,6 +19,9 @@ const settingsStore = useSettingsStore()
   <div class="flex items-center">
     <NavSearch v-if="settingsStore.settings.toolbar.navSearch" />
     <Fullscreen v-if="settingsStore.settings.toolbar.fullscreen" />
+    <MenuModeSwitch
+      v-if="settingsStore.mode === 'pc' && settingsStore.settings.toolbar.menuModeSwitch"
+    />
     <PageReload v-if="settingsStore.settings.toolbar.pageReload" />
     <ColorScheme v-if="settingsStore.settings.toolbar.colorScheme" />
     <component :is="useSlots('toolbar-end')" />

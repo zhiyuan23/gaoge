@@ -94,6 +94,11 @@ declare namespace Settings {
      */
     mode?: 'side' | 'head' | 'single'
     /**
+     * single 模式下是否隐藏一级菜单；关闭时保留完整菜单层级
+     * @默认值 `false`
+     */
+    singleMenuHideFirstLevel?: boolean
+    /**
      * 主导航点击模式
      * @默认值 `'switch'` 切换
      * @可选值 `'jump'` 跳转
@@ -153,6 +158,11 @@ declare namespace Settings {
      * @默认值 `true`
      */
     breadcrumb?: boolean
+    /**
+     * 是否开启导航模式切换
+     * @默认值 `false`
+     */
+    menuModeSwitch?: boolean
     /**
      * 是否开启导航搜索
      * @默认值 `true`

@@ -8,15 +8,11 @@ defineOptions({
   name: 'Topbar',
 })
 
-const settingsStore = useSettingsStore()
+const props = defineProps<{
+  enableToolbar: boolean
+}>()
 
-const enableToolbar = computed(() => {
-  return !(
-    settingsStore.settings.menu.mode === 'head' &&
-    (!settingsStore.settings.toolbar.breadcrumb ||
-      settingsStore.settings.app.routeBaseOn === 'filesystem')
-  )
-})
+const settingsStore = useSettingsStore()
 
 const scrollTop = ref(0)
 const scrollOnHide = ref(false)
@@ -28,7 +24,7 @@ const topbarHeight = computed(() => {
         ),
       )
     : 0
-  const toolbarHeight = enableToolbar.value
+  const toolbarHeight = props.enableToolbar
     ? Number.parseInt(
         getComputedStyle(document.documentElement || document.body).getPropertyValue(
           '--g-toolbar-height',
@@ -66,7 +62,7 @@ watch(scrollTop, (val, oldVal) => {
       }"
     >
       <Tabbar v-if="settingsStore.settings.tabbar.enable" />
-      <Toolbar v-if="enableToolbar" />
+      <Toolbar v-if="props.enableToolbar" />
     </div>
   </FaSmartFixedBlock>
 </template>

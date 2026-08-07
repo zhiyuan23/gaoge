@@ -24,6 +24,7 @@ const globalSettingsDefault: RecursiveRequired<Settings.all> = {
   menu: {
     baseOn: 'frontend',
     mode: 'side',
+    singleMenuHideFirstLevel: true,
     mainMenuClickMode: 'switch',
     subMenuUniqueOpened: false,
     subMenuCollapse: false,
@@ -40,6 +41,7 @@ const globalSettingsDefault: RecursiveRequired<Settings.all> = {
   },
   toolbar: {
     breadcrumb: false,
+    menuModeSwitch: false,
     navSearch: true,
     fullscreen: false,
     pageReload: false,
