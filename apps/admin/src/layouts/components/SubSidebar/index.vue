@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSlots } from '@/slots'
 import useMenuStore from '@/store/menu'
+import { resolveSubSidebarPanels } from '@/store/menu/resolve-sidebar-menus'
 import useSettingsStore from '@/store/settings'
 
 import Logo from '../Logo/index.vue'
@@ -26,6 +27,15 @@ const enableSidebar = computed(() => {
 })
 
 const transitionName = ref('')
+const sidebarPanels = computed(() =>
+  resolveSubSidebarPanels(
+    menuStore.allMenus,
+    menuStore.sidebarMenus,
+    settingsStore.settings.menu.mode,
+    menuStore.actived,
+  ),
+)
+
 watch(
   [() => menuStore.actived, () => settingsStore.settings.menu.mode],
   ([activeIndex, menuMode], [previousActiveIndex]) => {
@@ -62,18 +72,30 @@ watch(
     <component :is="useSlots('sub-sidebar-after-logo')" />
     <FaScrollArea :scrollbar="false" mask gradient-color="var(--g-sub-sidebar-bg)" class="flex-1">
       <TransitionGroup :name="transitionName">
-        <Menu
-          :key="`${settingsStore.settings.menu.mode}-${menuStore.actived}`"
-          :menu="menuStore.sidebarMenus"
-          :value="route.meta.activeMenu || route.path"
-          :default-openeds="menuStore.defaultOpenedPaths"
-          :accordion="settingsStore.settings.menu.subMenuUniqueOpened"
-          :collapse="settingsStore.mode === 'pc' && settingsStore.settings.menu.subMenuCollapse"
-          class="menu"
-          :class="{
-            '-mt-2': !['head', 'single'].includes(settingsStore.settings.menu.mode),
-          }"
-        />
+        <div
+          v-for="panel in sidebarPanels"
+          v-show="panel.visible"
+          :key="panel.key"
+          :class="{ 'h-full': panel.key === 'projected' }"
+        >
+          <Menu
+            v-if="panel.render"
+            :key="
+              panel.key === 'projected'
+                ? `${settingsStore.settings.menu.mode}-${menuStore.actived}`
+                : panel.key
+            "
+            :menu="panel.menu"
+            :value="route.meta.activeMenu || route.path"
+            :default-openeds="menuStore.defaultOpenedPaths"
+            :accordion="settingsStore.settings.menu.subMenuUniqueOpened"
+            :collapse="settingsStore.mode === 'pc' && settingsStore.settings.menu.subMenuCollapse"
+            class="menu"
+            :class="{
+              '-mt-2': !['head', 'single'].includes(settingsStore.settings.menu.mode),
+            }"
+          />
+        </div>
       </TransitionGroup>
     </FaScrollArea>
     <div
