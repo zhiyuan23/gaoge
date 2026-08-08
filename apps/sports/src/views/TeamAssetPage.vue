@@ -142,7 +142,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-[#090a0d] text-white">
-    <PageHeaderBar back-to="/teams/football" />
+    <PageHeaderBar back-to="/" content-class="px-4 md:px-8" />
 
     <div class="mx-auto max-w-5xl px-4 pb-20 pt-20 md:px-8">
       <header class="mb-6">

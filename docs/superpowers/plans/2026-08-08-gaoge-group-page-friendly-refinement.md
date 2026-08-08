@@ -16,7 +16,7 @@
 - 不改变联赛董事会现有 20 人的昵称、顺序、席位编号和恰好 20 人的运行时约束。
 - 不修改首页能力弹窗现有四条品牌方向和品牌主张。
 - 公开 `/group` 页面不得出现“非营利”“商业”“企业服务能力”“集团协同交付”“独立采购”“集团统筹”“体育内部支持”。
-- 管理层只展示劳塔罗（集团主席）、齐达内（高歌 FC CEO）、劳塔罗（高歌超级联赛运营负责人）。
+- 管理层只展示劳塔罗（集团主席）、齐达内（高歌足球俱乐部 CEO）、劳塔罗（高歌超级联赛运营负责人）。
 - 不新增依赖、API、CMS、人物履历、真实头像或详情交互。
 - 遵循现有无分号、单引号、Prettier、ESLint 和 Tailwind 内联工具类风格。
 - 按仓库偏好完成整体实现后统一 verification，不采用严格 TDD。
@@ -126,7 +126,7 @@ export const sportsEntities: readonly SportsEntity[] = [
   {
     description: '一群因足球相聚的伙伴，一起训练、比赛，也一起享受每一次上场。',
     id: 'club',
-    name: '高歌 FC',
+    name: '高歌足球俱乐部',
   },
   {
     description: '为球友们持续组织的联赛，让熟悉的人和新的伙伴都能在球场相见。',
@@ -141,7 +141,7 @@ export const sportsEntities: readonly SportsEntity[] = [
 ```ts
 export const groupLeaders: readonly GroupLeader[] = [
   { id: 'group-chair', nickname: '劳塔罗', role: '集团主席', scope: 'group' },
-  { id: 'club-ceo', nickname: '齐达内', role: '高歌 FC CEO', scope: 'club' },
+  { id: 'club-ceo', nickname: '齐达内', role: '高歌足球俱乐部 CEO', scope: 'club' },
   {
     id: 'league-operator',
     nickname: '劳塔罗',
@@ -186,7 +186,7 @@ expect(groupIndustries.map(({ direction }) => direction)).toEqual([
 ])
 expect(groupLeaders.map(({ nickname, role }) => ({ nickname, role }))).toEqual([
   { nickname: '劳塔罗', role: '集团主席' },
-  { nickname: '齐达内', role: '高歌 FC CEO' },
+  { nickname: '齐达内', role: '高歌足球俱乐部 CEO' },
   { nickname: '劳塔罗', role: '高歌超级联赛运营负责人' },
 ])
 expect(groupVisionItems.map(({ id }) => id)).toEqual(['passion', 'action', 'together'])
@@ -229,7 +229,7 @@ expect(groupVisionItems.map(({ id }) => id)).toEqual(['passion', 'action', 'toge
 将引导语改为 `因热爱相聚`，说明改为：
 
 ```tsx
-从一支球队到每周相见的联赛，让踢球、比赛与相聚成为可以一直延续的共同体验。
+将体育浪漫主义坚决贯彻到底。
 ```
 
 继续从 `sportsEntities` 渲染两张外链卡片，不修改 URL、`target`、`rel`、hover 和键盘焦点样式。
@@ -239,7 +239,7 @@ expect(groupVisionItems.map(({ id }) => id)).toEqual(['passion', 'action', 'toge
 删除按 `scope` 拆分集团、事业部和体育负责人的派生逻辑，以及 `featured`、`subdued` 两套卡片布局。将标题改为 `集团管理层`，说明改为：
 
 ```tsx
-有人负责方向，也有人把每一次训练、比赛和联赛认真落到日常。
+从集团方向到球队与联赛，我们一起让热爱持续向前。
 ```
 
 人物列表使用：
@@ -252,7 +252,7 @@ expect(groupVisionItems.map(({ id }) => id)).toEqual(['passion', 'action', 'toge
 </div>
 ```
 
-每张卡片保持一个 `DefaultAvatar`、昵称和职务，移动端单列，桌面三列，不新增点击行为。
+每张卡片保持一个使用 `lets-icons:user-alt-duotone` 的 `DefaultAvatar`、昵称和职务，移动端单列，桌面三列，不新增点击行为。
 
 - [ ] **Step 4: 增加本届董事会说明**
 
@@ -265,7 +265,7 @@ expect(groupVisionItems.map(({ id }) => id)).toEqual(['passion', 'action', 'toge
 将原说明替换为：
 
 ```tsx
-以下为本届联赛董事会成员。董事会按联赛届次组成，成员将结合每届联赛的实际情况进行调整。
+20 位本届联赛董事会成员以热爱和投入，共同推动联赛持续向前。
 ```
 
 把说明宽度从 `max-w-sm` 明确放宽到 `max-w-lg`，保留右侧 `20 席` 和现有列表布局。
@@ -311,7 +311,7 @@ export default function GroupVision({ items }: GroupVisionProps) {
         集团愿景
       </h2>
       <p className="mt-6 max-w-3xl text-3xl leading-tight tracking-[-0.05em] text-white md:text-5xl">
-        让每一份热爱，都有生长成事业的可能。
+        让每一份热爱，都有持续生长的可能。
       </p>
 
       <div className="mt-12 grid gap-3 md:grid-cols-3">
@@ -400,20 +400,18 @@ expect(document.title).toBe('高歌集团 - 让热爱持续生长')
 
 expect(screen.getByRole('heading', { name: '集团管理层' })).toBeInTheDocument()
 expect(screen.getAllByTestId('group-leader')).toHaveLength(3)
-expect(screen.getByText('高歌 FC CEO')).toBeInTheDocument()
+expect(screen.getByText('高歌足球俱乐部 CEO')).toBeInTheDocument()
 expect(screen.getByText('高歌超级联赛运营负责人')).toBeInTheDocument()
 
 expect(screen.getByText('本届董事会成员')).toBeInTheDocument()
 expect(
-  screen.getByText(
-    '以下为本届联赛董事会成员。董事会按联赛届次组成，成员将结合每届联赛的实际情况进行调整。',
-  ),
+  screen.getByText('20 位本届联赛董事会成员以热爱和投入，共同推动联赛持续向前。'),
 ).toBeInTheDocument()
 expect(screen.getAllByTestId('league-director')).toHaveLength(20)
 expect(screen.getAllByTestId('default-avatar')).toHaveLength(23)
 
 expect(screen.getByRole('heading', { name: '集团愿景' })).toBeInTheDocument()
-expect(screen.getByText('让每一份热爱，都有生长成事业的可能。')).toBeInTheDocument()
+expect(screen.getByText('让每一份热爱，都有持续生长的可能。')).toBeInTheDocument()
 ;['因热爱出发', '让想法发生', '与伙伴同行'].forEach((title) => {
   expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
 })

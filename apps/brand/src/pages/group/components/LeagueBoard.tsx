@@ -18,14 +18,15 @@ export default function LeagueBoard({ directors }: LeagueBoardProps) {
     >
       <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
         <div>
+          <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">本届董事会成员</p>
           <h2
             className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl"
             id="league-board-title"
           >
             联赛董事会
           </h2>
-          <p className="mt-5 max-w-sm text-sm leading-7 text-[rgb(var(--brand-muted))] md:text-base">
-            20名成员共同参与高歌超级联赛的长期建设。
+          <p className="mt-5 max-w-lg text-sm leading-7 text-[rgb(var(--brand-muted))] md:text-base">
+            20 位本届联赛董事会成员以热爱和投入，共同推动联赛持续向前。
           </p>
         </div>
         <p className="text-7xl font-light tracking-[-0.08em] text-[rgb(var(--brand-accent))] lg:text-right lg:text-9xl">
@@ -41,7 +42,11 @@ export default function LeagueBoard({ directors }: LeagueBoardProps) {
             data-testid="league-director"
             key={director.id}
           >
-            <DefaultAvatar size="compact" variant="placeholder" />
+            <DefaultAvatar
+              label={director.nickname}
+              marker={String(director.seat).padStart(2, '0')}
+              variant="director"
+            />
             <span className="max-w-full break-all text-xs font-medium leading-4 tracking-[-0.02em] text-white/85 md:text-sm">
               {director.nickname}
             </span>

@@ -20,7 +20,7 @@ watch(
 
 <template>
   <RouterView v-slot="{ Component, route: currentRoute }">
-    <div :class="{ 'overflow-hidden': currentRoute.path === '/' }">
+    <div :class="{ 'overflow-hidden': currentRoute.path === '/hero' }">
       <transition name="slide-up" mode="out-in">
         <component :is="Component" />
       </transition>

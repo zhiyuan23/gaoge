@@ -234,6 +234,7 @@ const switchTeam = (team) => {
   currentSlide.value = 0
   scrollToTop()
   router.replace({
+    name: 'team',
     params: { team: team.type === 'basketball' ? 'basketball' : 'football' },
   })
 }
@@ -392,7 +393,7 @@ onMounted(initializeStandings)
 
 <template>
   <div class="min-h-screen bg-[#090a0d] text-white">
-    <PageHeaderBar back-to="/" />
+    <PageHeaderBar action-glyph="S" action-label="HERO" action-to="/hero" />
 
     <!-- Team Switcher -->
     <!-- PC: left side of content area, Mobile: bottom center -->
@@ -434,7 +435,7 @@ onMounted(initializeStandings)
     </div>
 
     <!-- Main Content - Centered -->
-    <main class="md:pb-15 relative mx-auto max-w-5xl px-4 pb-20 pt-20 md:px-16">
+    <main class="md:pb-15 relative mx-auto max-w-5xl px-4 pb-20 pt-16 sm:pt-20 md:px-16">
       <transition name="fade" mode="out-in">
         <div :key="activeTeam">
           <!-- Team Hero Image -->
@@ -520,7 +521,7 @@ onMounted(initializeStandings)
                 :accent-color="teamColors[activeTeam].primary"
                 :accent-text-color="teamColors[activeTeam].text"
                 label="查看明细"
-                to="/teams/football/assets"
+                to="/assets"
               />
             </div>
 

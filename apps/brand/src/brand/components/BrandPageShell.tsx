@@ -5,7 +5,7 @@ import BrandNavigation from '@/brand/components/BrandNavigation'
 
 interface BrandPageShellProps {
   readonly children: ReactNode
-  readonly crossLink: {
+  readonly crossLink?: {
     readonly label: string
     readonly to: '/content' | '/digital'
   }
@@ -25,9 +25,11 @@ export default function BrandPageShell({ children, crossLink, current }: BrandPa
         <Link className="rounded-full transition-colors hover:text-white" to="/">
           返回高歌首页
         </Link>
-        <Link className="rounded-full transition-colors hover:text-white" to={crossLink.to}>
-          {crossLink.label}
-        </Link>
+        {crossLink ? (
+          <Link className="rounded-full transition-colors hover:text-white" to={crossLink.to}>
+            {crossLink.label}
+          </Link>
+        ) : null}
       </footer>
     </main>
   )

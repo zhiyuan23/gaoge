@@ -6,17 +6,30 @@ import TeamsPage from '../views/TeamsPage.vue'
 
 const routes = [
   {
-    path: '/',
-    name: 'home',
+    path: '/hero',
+    name: 'hero',
     component: HomePage,
   },
   {
-    path: '/teams/football/assets',
+    path: '/assets',
     name: 'team-assets',
     component: TeamAssetPage,
   },
   {
-    path: '/teams/:team?',
+    path: '/teams/football/assets',
+    redirect: '/assets',
+  },
+  {
+    path: '/teams/:team',
+    name: 'team',
+    component: TeamsPage,
+  },
+  {
+    path: '/teams',
+    redirect: '/',
+  },
+  {
+    path: '/',
     name: 'teams',
     component: TeamsPage,
   },

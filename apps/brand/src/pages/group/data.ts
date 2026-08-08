@@ -1,53 +1,121 @@
-import type { GroupIndustry, GroupLeader, LeagueDirector, SportsEntity } from './types'
+import type {
+  BusinessCapability,
+  DeliveryModel,
+  GroupIndustry,
+  GroupLeader,
+  GroupVisionItem,
+  LeagueDirector,
+  SportsEntity,
+} from './types'
 
 export const groupIndustries: readonly GroupIndustry[] = [
   {
-    description: '以技术与产品连接真实业务。',
-    href: '/digital',
+    description: '以技术与产品思维，把想法转化为面向未来的数字能力。',
+    direction: '产品矩阵',
     id: 'digital',
     name: '高歌数字',
-    status: 'active',
   },
   {
-    alias: '高歌小绿本',
-    description: '让内容、品牌与热爱持续生长。',
-    href: '/content',
+    description: '以创意与内容思维，把热爱转化为持续生长的影响力。',
+    direction: '内容运营',
     id: 'content',
     name: '高歌内容',
-    status: 'active',
   },
   {
-    description: '连接球队、赛事与共同体验。',
-    href: 'https://sports.gaoge.cc',
+    description: '以影像与叙事思维，把想法转化为承载情感与表达的光影作品。',
+    direction: '影像创作',
+    id: 'film',
+    name: '高歌影视',
+  },
+  {
+    description: '以运动与连接的力量，把热爱转化为真实发生的共同体验。',
+    direction: '体育生态',
     id: 'sports',
     name: '高歌体育',
-    status: 'active',
-    target: '_blank',
+  },
+]
+
+export const businessCapabilities: readonly BusinessCapability[] = [
+  {
+    capabilities: ['软件产品', '定制开发', '系统集成', '部署与维护'],
+    description: '研发、销售和交付企业软件，并提供定制开发、系统集成及持续运维。',
+    id: 'digital',
+    name: '高歌数字',
+    positioning: '企业软件与数字化解决方案',
   },
   {
-    description: '为尚未抵达的事业保留空间。',
-    id: 'future',
-    name: '未来领域',
-    status: 'future',
+    capabilities: ['平台运营', '内容策划', '图文与日常视觉', '轻量短视频'],
+    description: '承接品牌定位确定后的多平台运营、内容生产与日常视觉执行。',
+    id: 'content',
+    name: '高歌内容',
+    positioning: '内容运营与视觉创作',
+  },
+  {
+    capabilities: ['创意与脚本', '专业拍摄', '剪辑与后期', '影视作品开发'],
+    description: '制作企业宣传片、品牌片及专业影像，同时持续开发自主影视作品。',
+    id: 'film',
+    name: '高歌影视',
+    positioning: '专业影像制作与影视作品开发',
+  },
+]
+
+export const deliveryModels: readonly DeliveryModel[] = [
+  {
+    description: '客户可直接向高歌数字、高歌内容或高歌影视采购，由对应事业群独立签约和交付。',
+    id: 'direct',
+    name: '独立采购',
+  },
+  {
+    description: '同时涉及系统、内容和影像时，由高歌集团统筹资源与联合交付。',
+    id: 'coordinated',
+    name: '集团统筹',
+  },
+  {
+    description: '高歌体育可以使用集团内部的技术、内容和影像能力，同时保持非营利属性。',
+    id: 'sports-support',
+    name: '体育内部支持',
   },
 ]
 
 export const sportsEntities: readonly SportsEntity[] = [
-  { description: '集团现有球队', id: 'club', name: '高歌 FC' },
-  { description: '集团运营的赛事品牌', id: 'league', name: '高歌超级联赛' },
+  {
+    description: '一群因足球相聚的伙伴，一起训练、比赛，也一起享受每一次上场。',
+    id: 'club',
+    name: '高歌足球俱乐部',
+  },
+  {
+    description: '为球友们持续组织的联赛，让熟悉的人和新的伙伴都能在球场相见。',
+    id: 'league',
+    name: '高歌超级联赛',
+  },
 ]
 
 export const groupLeaders: readonly GroupLeader[] = [
-  { id: 'group-lead', nickname: '劳塔罗', role: '集团主席', scope: 'group' },
-  { id: 'digital-lead', nickname: '劳塔罗', role: '高歌数字CEO', scope: 'digital' },
-  { id: 'content-lead', nickname: '劳塔罗', role: '高歌内容CEO', scope: 'content' },
-  { id: 'sports-lead', nickname: '齐达内', role: '高歌体育CEO', scope: 'sports' },
-  { id: 'club-lead', nickname: '齐达内', role: '高歌 FC 管理负责人', scope: 'club' },
+  { id: 'group-chair', nickname: '劳塔罗', role: '集团主席', scope: 'group' },
+  { id: 'club-ceo', nickname: '齐达内', role: '高歌足球俱乐部 CEO', scope: 'club' },
   {
-    id: 'league-lead',
+    id: 'league-operator',
     nickname: '劳塔罗',
     role: '高歌超级联赛运营负责人',
     scope: 'league',
+  },
+]
+
+export const groupVisionItems: readonly GroupVisionItem[] = [
+  {
+    description: '从真正喜欢的事情开始，保持好奇，也保持行动。',
+    id: 'passion',
+    title: '因热爱出发',
+  },
+  {
+    description: '用技术、内容、影像与体育，把想法带进真实生活。',
+    id: 'action',
+    title: '让想法发生',
+  },
+  {
+    description: '珍惜每一次相遇，在共同创造中走得更远。',
+    id: 'together',
+    title: '与伙伴同行',
   },
 ]
 

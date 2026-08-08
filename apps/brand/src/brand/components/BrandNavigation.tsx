@@ -3,7 +3,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Link, NavLink } from 'react-router-dom'
 
 export type BrandArea = 'home' | 'digital' | 'content' | 'group'
-export type CapabilityArea = 'digital' | 'content' | 'sports' | 'future'
+export type CapabilityArea = 'digital' | 'content' | 'film' | 'sports'
 
 export interface BrandNavigationHandle {
   openCapability(area: CapabilityArea, trigger: HTMLButtonElement): void
@@ -35,27 +35,33 @@ const brandAreas: readonly CapabilityAreaInfo[] = [
     status: '内容运营',
   },
   {
+    description: '以影像与叙事思维，把想法转化为承载情感与表达的光影作品。',
+    key: 'film',
+    label: '影视',
+    status: '影像创作',
+  },
+  {
     description: '以运动与连接的力量，把热爱转化为真实发生的共同体验。',
     key: 'sports',
     label: '体育',
     status: '体育生态',
   },
-  {
-    description: '以好奇与行动不断探索，把未知转化为值得期待的新可能。',
-    key: 'future',
-    label: '未来',
-    status: '领域拓展中',
-  },
 ]
 
-const mark = (
-  <span
-    aria-hidden="true"
-    className="grid h-6 w-6 place-items-center rounded-full border border-white/45 text-[11px] font-semibold leading-none text-white"
-  >
-    G
-  </span>
-)
+interface BrandMarkProps {
+  readonly home?: boolean
+}
+
+function BrandMark({ home = false }: BrandMarkProps) {
+  return (
+    <span
+      aria-hidden="true"
+      className="grid h-6 w-6 place-items-center rounded-full border border-white/45 font-semibold leading-none text-white"
+    >
+      <span className={home ? 'inline-block -rotate-[30deg] text-[14px]' : 'text-[11px]'}>G</span>
+    </span>
+  )
+}
 
 const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
   function BrandNavigation({ current, overlay = false }, ref) {
@@ -128,99 +134,149 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
     return (
       <>
         <header
-          className={`left-0 right-0 top-0 z-20 px-6 pt-6 md:px-10 ${
-            overlay ? 'absolute' : 'relative'
-          }`}
+          className={`left-0 right-0 top-0 z-20 ${
+            current === 'group' ? 'px-4 pt-4 md:px-10 md:pt-6' : 'px-6 pt-6 md:px-10'
+          } ${overlay ? 'absolute' : 'relative'}`}
         >
-          <nav
-            aria-label="高歌品牌导航"
-            className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4"
-          >
-            <Link
-              aria-label="高歌首页"
-              className="col-start-1 row-start-1 flex w-fit items-center gap-2 rounded-full bg-neutral-900/90 py-3 pl-4 pr-6 backdrop-blur max-[384px]:gap-0 max-[384px]:px-3"
-              to="/"
+          {current === 'group' ? (
+            <nav
+              aria-label="高歌品牌导航"
+              className="mx-auto flex h-14 max-w-[1440px] items-center rounded-full border border-white/10 bg-neutral-950/75 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl"
             >
-              {mark}
-              <span className="text-sm font-medium tracking-[0.08em] text-white max-[384px]:hidden">
-                GAOGE
-              </span>
-            </Link>
-
-            <div
-              aria-label="高歌品牌领域"
-              className="col-start-2 row-start-1 hidden items-center gap-1 rounded-full bg-neutral-900/90 px-3 py-2 backdrop-blur md:flex"
-              role="list"
-            >
-              {brandAreas.map((area) => {
-                const isCurrent = area.key === current
-                const className = `rounded-full px-5 py-2 text-sm text-neutral-300 transition-colors duration-200 hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/35 ${
-                  isCurrent ? 'bg-white/10 text-white' : ''
-                }`
-
-                return (
-                  <span key={area.key} role="listitem">
-                    {current === 'home' ? (
-                      <button
-                        aria-controls="brand-capability-dialog"
-                        aria-expanded={activeArea === area.key}
-                        aria-haspopup="dialog"
-                        className={className}
-                        onClick={(event) => openCapability(area.key, event.currentTarget)}
-                        type="button"
-                      >
-                        {area.label}
-                      </button>
-                    ) : area.key === 'digital' || area.key === 'content' ? (
-                      <NavLink className={className} to={`/${area.key}`}>
-                        {area.label}
-                      </NavLink>
-                    ) : area.key === 'sports' ? (
-                      <a
-                        className={className}
-                        href="https://sports.gaoge.cc"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        {area.label}
-                      </a>
-                    ) : (
-                      <span
-                        aria-label="未来，领域拓展中"
-                        className={`${className} cursor-default`}
-                        title="领域拓展中"
-                      >
-                        {area.label}
-                      </span>
-                    )}
-                  </span>
-                )
-              })}
-            </div>
-
-            {current !== 'home' && current !== 'group' ? (
-              <span
-                aria-label="当前品牌领域"
-                className="col-start-2 row-start-1 grid h-11 place-items-center rounded-full bg-neutral-900/90 px-4 text-xs text-white/75 backdrop-blur md:hidden"
+              <Link
+                aria-label="高歌首页"
+                className="flex h-11 items-center gap-2 rounded-full px-3 text-white transition-colors hover:bg-white/[0.06] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/40 md:px-4"
+                to="/"
               >
-                {current === 'digital' ? '数字' : '内容'}
-              </span>
-            ) : null}
+                <BrandMark home />
+                <span className="text-sm font-medium tracking-[0.08em] text-white">GAOGE</span>
+              </Link>
 
-            {current !== 'home' ? (
-              <NavLink
-                aria-label="集团"
-                className={({ isActive }) =>
-                  `col-start-3 row-start-1 justify-self-end rounded-full bg-neutral-900/90 px-5 py-3 text-sm text-white/70 backdrop-blur transition-colors hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white/40 ${
-                    isActive ? 'text-white ring-1 ring-white/25' : ''
-                  }`
-                }
-                to="/group"
+              <div
+                aria-label="高歌品牌领域"
+                className="ml-auto hidden items-center gap-1 md:flex"
+                role="list"
+              >
+                {brandAreas.map((area) => (
+                  <span
+                    className="rounded-full px-4 py-2 text-sm text-white/50"
+                    key={area.key}
+                    role="listitem"
+                  >
+                    {area.label}
+                  </span>
+                ))}
+              </div>
+
+              <span
+                aria-current="page"
+                className="ml-auto grid h-11 min-w-16 place-items-center rounded-full border border-white/10 bg-white/10 px-5 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] md:ml-1"
               >
                 集团
-              </NavLink>
-            ) : null}
-          </nav>
+              </span>
+            </nav>
+          ) : (
+            <nav
+              aria-label="高歌品牌导航"
+              className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4"
+            >
+              <Link
+                aria-label="高歌首页"
+                className="col-start-1 row-start-1 flex w-fit items-center gap-2 rounded-full bg-neutral-900/90 py-3 pl-4 pr-6 backdrop-blur max-[384px]:gap-0 max-[384px]:px-3"
+                to="/"
+              >
+                <BrandMark home={current === 'home'} />
+                <span className="text-sm font-medium tracking-[0.08em] text-white max-[384px]:hidden">
+                  GAOGE
+                </span>
+              </Link>
+
+              <div
+                aria-label="高歌品牌领域"
+                className="col-start-2 row-start-1 hidden items-center gap-1 rounded-full bg-neutral-900/90 px-3 py-2 backdrop-blur md:flex"
+                role="list"
+              >
+                {brandAreas.map((area) => {
+                  const isCurrent = area.key === current
+                  const className = `rounded-full px-5 py-2 text-sm text-neutral-300 transition-colors duration-200 hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/35 ${
+                    isCurrent ? 'bg-white/10 text-white' : ''
+                  }`
+
+                  return (
+                    <span key={area.key} role="listitem">
+                      {current === 'home' ? (
+                        <button
+                          aria-controls="brand-capability-dialog"
+                          aria-expanded={activeArea === area.key}
+                          aria-haspopup="dialog"
+                          className={className}
+                          onClick={(event) => openCapability(area.key, event.currentTarget)}
+                          type="button"
+                        >
+                          {area.label}
+                        </button>
+                      ) : area.key === 'digital' || area.key === 'content' ? (
+                        <NavLink className={className} to={`/${area.key}`}>
+                          {area.label}
+                        </NavLink>
+                      ) : area.key === 'sports' ? (
+                        <a
+                          className={className}
+                          href="https://sports.gaoge.cc"
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          {area.label}
+                        </a>
+                      ) : (
+                        <span
+                          aria-label="影视，独立页面筹备中"
+                          className={`${className} cursor-default`}
+                          title="独立页面筹备中"
+                        >
+                          {area.label}
+                        </span>
+                      )}
+                    </span>
+                  )
+                })}
+              </div>
+
+              {current !== 'home' ? (
+                <span
+                  aria-label="当前品牌领域"
+                  className="col-start-2 row-start-1 grid h-11 place-items-center rounded-full bg-neutral-900/90 px-4 text-xs text-white/75 backdrop-blur md:hidden"
+                >
+                  {current === 'digital' ? '数字' : '内容'}
+                </span>
+              ) : null}
+
+              {current === 'home' ? (
+                <Link
+                  aria-label="进入高歌集团"
+                  className="group col-start-3 row-start-1 inline-flex h-9 items-center justify-self-end rounded-full border border-white/10 bg-neutral-900/55 px-3 backdrop-blur transition-colors hover:border-white/25 hover:bg-neutral-900/80 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white/45"
+                  title="进入高歌集团"
+                  to="/group"
+                >
+                  <span className="text-[11px] font-medium tracking-[0.08em] text-white/55 transition-colors group-hover:text-white/70">
+                    集团
+                  </span>
+                </Link>
+              ) : (
+                <NavLink
+                  aria-label="集团"
+                  className={({ isActive }) =>
+                    `col-start-3 row-start-1 justify-self-end rounded-full bg-neutral-900/90 px-5 py-3 text-sm text-white/70 backdrop-blur transition-colors hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white/40 ${
+                      isActive ? 'text-white ring-1 ring-white/25' : ''
+                    }`
+                  }
+                  to="/group"
+                >
+                  集团
+                </NavLink>
+              )}
+            </nav>
+          )}
         </header>
 
         {current === 'home' && activeCapability ? (

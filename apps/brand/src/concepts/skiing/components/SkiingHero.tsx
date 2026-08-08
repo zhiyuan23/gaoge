@@ -93,7 +93,7 @@ export default function SkiingHero() {
         <p className="hero-copy absolute left-6 top-[49%] z-10 max-w-[280px] text-sm leading-relaxed text-white/90 md:left-10 md:top-[46%] md:text-[15px]">
           享受你的热爱。
           <br />
-          以数字产品、内容运营与体育热爱，连接正在发生的未来。
+          以数字产品、内容运营与影视制作创造价值，也让体育热爱持续发生。
         </p>
 
         <BrandSignal
@@ -101,7 +101,7 @@ export default function SkiingHero() {
           className="hero-signal--sports absolute right-4 top-24 z-10 md:right-24 md:top-[14%]"
           dividerClassName="rotate-[20deg]"
           dividerPosition="before"
-          label="体育热爱"
+          label="体育社区"
           onClick={(event) => navigationRef.current?.openCapability('sports', event.currentTarget)}
           value="SPORTS"
         />
@@ -115,11 +115,20 @@ export default function SkiingHero() {
           value="DIGITAL"
         />
         <BrandSignal
+          ariaLabel="打开影视能力说明"
+          className="hero-signal--film absolute left-4 top-24 z-10 md:left-auto md:right-[12%] md:top-[32%]"
+          dividerClassName="rotate-[-20deg]"
+          dividerPosition="after"
+          label="影视制作"
+          onClick={(event) => navigationRef.current?.openCapability('film', event.currentTarget)}
+          value="FILM"
+        />
+        <BrandSignal
           ariaLabel="打开内容能力说明"
           className="hero-signal--content absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-10 md:bottom-20 md:right-20"
           dividerClassName="rotate-[-20deg]"
           dividerPosition="before"
-          label="内容创造"
+          label="内容运营"
           onClick={(event) => navigationRef.current?.openCapability('content', event.currentTarget)}
           value="CONTENT"
         />

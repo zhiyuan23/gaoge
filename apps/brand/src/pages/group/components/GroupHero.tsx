@@ -33,15 +33,15 @@ export default function GroupHero({ industries }: GroupHeroProps) {
           GAOGE GROUP
         </h1>
         <h2
-          aria-label="连接热爱，生长事业。"
+          aria-label="连接热爱，奔赴所爱。"
           className="mt-5 max-w-lg text-5xl font-medium leading-[0.98] tracking-[-0.07em] text-white sm:text-6xl lg:text-7xl"
         >
           连接热爱，
           <br />
-          生长事业。
+          奔赴所爱。
         </h2>
         <p className="mt-7 max-w-sm text-sm leading-7 text-[rgb(var(--brand-muted))]">
-          让不同事业彼此连接，共同走向更远的地方。
+          让技术、内容、影像与体育从共同的热爱出发，彼此连接，也持续生长。
         </p>
       </motion.div>
 

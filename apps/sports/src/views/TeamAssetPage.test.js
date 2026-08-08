@@ -15,15 +15,15 @@ function createTestRouter() {
   return createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/teams/football/assets', name: 'team-assets', component: TeamAssetPage },
-      { path: '/teams/football', name: 'teams', component: { template: '<div>teams</div>' } },
+      { path: '/assets', name: 'team-assets', component: TeamAssetPage },
+      { path: '/', name: 'teams', component: { template: '<div>teams</div>' } },
     ],
   })
 }
 
 async function mountPage() {
   const router = createTestRouter()
-  await router.push('/teams/football/assets')
+  await router.push('/assets')
   await router.isReady()
 
   return mount(TeamAssetPage, {
@@ -126,6 +126,8 @@ describe('TeamAssetPage', () => {
     expect(wrapper.find('article > div').classes()).toContain('items-start')
     expect(wrapper.find('article > div').classes()).toContain('justify-between')
     expect(wrapper.find('article > div').classes()).not.toContain('flex-col')
+    expect(wrapper.get('header > div').classes()).toContain('md:px-8')
+    expect(wrapper.get('div.min-h-screen > div.mx-auto.max-w-5xl').classes()).toContain('md:px-8')
   })
 
   it('reloads the list with a direction filter when the user selects 支出', async () => {

@@ -62,16 +62,15 @@ describe('syncWechatShare', () => {
         signature: 'signature-value',
       })
 
-    await syncWechatShare({
-      path: '/teams/football',
-      fullPath: '/teams/football',
-    })
+    window.history.replaceState({}, '', '/')
+
+    await syncWechatShare({ path: '/', fullPath: '/' })
 
     expect(api.getJson).toHaveBeenNthCalledWith(1, '/wechat/share/public-config', {
-      path: '/teams/football',
+      path: '/teams',
     })
     expect(api.getJson).toHaveBeenNthCalledWith(2, '/wechat/share/jssdk-signature', {
-      url: 'http://localhost:3000/teams/football',
+      url: 'http://localhost:3000/',
     })
     expect(mockWx.config).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -86,20 +85,42 @@ describe('syncWechatShare', () => {
       expect.objectContaining({
         title: '球队标题',
         desc: '球队简介',
-        link: 'http://localhost:3000/teams/football',
+        link: 'http://localhost:3000/',
         imgUrl: 'https://cdn.gaoge.cc/teams.png',
       }),
     )
     expect(mockWx.updateTimelineShareData).toHaveBeenCalledWith(
       expect.objectContaining({
         title: '球队标题',
-        link: 'http://localhost:3000/teams/football',
+        link: 'http://localhost:3000/',
         imgUrl: 'https://cdn.gaoge.cc/teams.png',
       }),
     )
   })
 
-  it('uses the asset-page metadata for /teams/football/assets', async () => {
+  it('uses the former home metadata for the hero route', async () => {
+    api.getJson
+      .mockResolvedValueOnce({
+        title: '品牌标题',
+        desc: '品牌简介',
+        imgUrl: 'https://cdn.gaoge.cc/hero.png',
+      })
+      .mockResolvedValueOnce({
+        appId: 'wx-official',
+        timestamp: 1716530000,
+        nonceStr: 'nonce-value',
+        signature: 'signature-value',
+      })
+    window.history.replaceState({}, '', '/hero')
+
+    await syncWechatShare({ path: '/hero', fullPath: '/hero' })
+
+    expect(api.getJson).toHaveBeenNthCalledWith(1, '/wechat/share/public-config', {
+      path: '/',
+    })
+  })
+
+  it('uses the asset-page metadata for /assets', async () => {
     api.getJson
       .mockResolvedValueOnce({
         title: '资产标题',
@@ -112,11 +133,15 @@ describe('syncWechatShare', () => {
         nonceStr: 'nonce-value',
         signature: 'signature-value',
       })
-    window.history.replaceState({}, '', '/teams/football/assets')
+    window.history.replaceState({}, '', '/assets')
 
     await syncWechatShare({
+      path: '/assets',
+      fullPath: '/assets',
+    })
+
+    expect(api.getJson).toHaveBeenNthCalledWith(1, '/wechat/share/public-config', {
       path: '/teams/football/assets',
-      fullPath: '/teams/football/assets',
     })
 
     expect(mockWx.updateAppMessageShareData).toHaveBeenCalledWith(

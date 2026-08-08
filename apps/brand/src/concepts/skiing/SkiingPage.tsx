@@ -5,7 +5,7 @@ import SkiingHero from '@/concepts/skiing/components/SkiingHero'
 
 export default function SkiingPage() {
   useBrandMetadata({
-    description: '高歌以数字产品、内容运营与体育热爱，连接正在发生的未来。',
+    description: '高歌提供数字产品、内容运营与影视制作能力，并以非营利体育社区连接长期热爱。',
     title: '高歌 GAOGE - 享受你的热爱',
   })
 

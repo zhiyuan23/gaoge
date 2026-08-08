@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 import type { GroupIndustry } from '@/pages/group/types'
 
 interface IndustryOrbitProps {
@@ -12,44 +10,20 @@ function IndustryNode({ industry }: { readonly industry: GroupIndustry }) {
       <span className="text-lg font-medium tracking-[-0.03em] text-white md:text-base lg:text-lg">
         {industry.name}
       </span>
-      {industry.alias ? (
-        <span className="mt-1 text-xs text-[rgb(var(--brand-accent))]">{industry.alias}</span>
-      ) : null}
+      <span className="mt-2 text-[10px] tracking-[0.14em] text-[rgb(var(--brand-accent))]">
+        {industry.direction}
+      </span>
       <span className="mt-4 text-xs leading-5 text-[rgb(var(--brand-muted))]">
         {industry.description}
       </span>
     </>
   )
-  const className = `group-orbit-node flex min-h-36 flex-col p-5 md:min-h-0 md:p-4 lg:p-5 ${
-    industry.status === 'future' ? 'group-orbit-node--future' : ''
-  }`
-
-  if (!industry.href) {
-    return (
-      <article className={className} data-industry={industry.id}>
-        {content}
-      </article>
-    )
-  }
-
-  if (industry.target === '_blank') {
-    return (
-      <a
-        className={className}
-        data-industry={industry.id}
-        href={industry.href}
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        {content}
-      </a>
-    )
-  }
+  const className = 'group-orbit-node flex min-h-36 flex-col p-5 md:min-h-0 md:p-4 lg:p-5'
 
   return (
-    <Link className={className} data-industry={industry.id} to={industry.href}>
+    <article className={className} data-industry={industry.id}>
       {content}
-    </Link>
+    </article>
   )
 }
 

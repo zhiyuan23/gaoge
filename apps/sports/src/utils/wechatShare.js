@@ -16,6 +16,14 @@ function toAbsoluteUrl(value) {
   return new URL(value, window.location.origin).toString()
 }
 
+function resolveShareConfigPath(path) {
+  if (path === '/') return '/teams'
+  if (path === '/hero') return '/'
+  if (path === '/assets') return '/teams/football/assets'
+
+  return path
+}
+
 async function ensureWechatSdk() {
   if (window.wx) {
     return window.wx
@@ -50,7 +58,7 @@ export async function syncWechatShare(route) {
     const wx = await ensureWechatSdk()
     const link = normalizeCurrentUrl()
     const shareConfig = await getJson('/wechat/share/public-config', {
-      path: route.path,
+      path: resolveShareConfigPath(route.path),
     })
     const imgUrl = toAbsoluteUrl(shareConfig.imgUrl)
     const signature = await getJson('/wechat/share/jssdk-signature', {

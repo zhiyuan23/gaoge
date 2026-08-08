@@ -33,7 +33,7 @@ const onProgress = (swiper) => {
   ) {
     isTransitioning.value = true
     transitionName.value = 'slide-up'
-    router.replace('/teams')
+    router.replace('/')
   }
 }
 
@@ -46,7 +46,7 @@ const onTouchMove = (swiper) => {
       // 向下滑动
       isTransitioning.value = true
       transitionName.value = 'slide-up'
-      router.replace('/teams')
+      router.replace('/')
     }
   }
 }
@@ -61,7 +61,7 @@ const navigateTo = (sectionId, event) => {
 
 const goToTeams = () => {
   transitionName.value = 'slide-up'
-  router.push('/teams')
+  router.push('/')
 }
 </script>
 

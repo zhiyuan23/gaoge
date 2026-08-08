@@ -1,11 +1,22 @@
 export interface GroupIndustry {
-  readonly alias?: string
   readonly description: string
-  readonly href?: string
-  readonly id: 'digital' | 'content' | 'sports' | 'future'
+  readonly direction: '产品矩阵' | '内容运营' | '影像创作' | '体育生态'
+  readonly id: 'digital' | 'content' | 'film' | 'sports'
   readonly name: string
-  readonly status: 'active' | 'future'
-  readonly target?: '_blank'
+}
+
+export interface BusinessCapability {
+  readonly capabilities: readonly string[]
+  readonly description: string
+  readonly id: 'digital' | 'content' | 'film'
+  readonly name: string
+  readonly positioning: string
+}
+
+export interface DeliveryModel {
+  readonly description: string
+  readonly id: 'direct' | 'coordinated' | 'sports-support'
+  readonly name: string
 }
 
 export interface GroupLeader {
@@ -17,6 +28,12 @@ export interface GroupLeader {
   readonly nickname: string
   readonly role: string
   readonly scope: 'group' | 'digital' | 'content' | 'sports' | 'club' | 'league'
+}
+
+export interface GroupVisionItem {
+  readonly description: string
+  readonly id: 'passion' | 'action' | 'together'
+  readonly title: string
 }
 
 export interface LeagueDirector {

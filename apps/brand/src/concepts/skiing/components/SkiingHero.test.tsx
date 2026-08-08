@@ -41,7 +41,12 @@ describe('SkiingHero', () => {
       </MemoryRouter>,
     )
 
-    for (const name of ['打开体育能力说明', '打开数字能力说明', '打开内容能力说明']) {
+    for (const name of [
+      '打开体育能力说明',
+      '打开数字能力说明',
+      '打开影视能力说明',
+      '打开内容能力说明',
+    ]) {
       const signal = screen.getByRole('button', { name })
 
       expect(signal).toHaveClass('hero-signal', 'min-h-12', 'touch-manipulation')
@@ -49,14 +54,21 @@ describe('SkiingHero', () => {
       expect(signal).not.toHaveClass('rounded-full', 'bg-black/35', 'backdrop-blur-md')
     }
 
-    expect(container.querySelectorAll('.brand-signal-divider--mobile')).toHaveLength(3)
-    expect(container.querySelectorAll('.brand-signal-divider--desktop')).toHaveLength(3)
+    expect(container.querySelectorAll('.brand-signal-divider--mobile')).toHaveLength(4)
+    expect(container.querySelectorAll('.brand-signal-divider--desktop')).toHaveLength(4)
     expect(
       container.querySelector('.hero-signal--digital .brand-signal-divider--mobile'),
     ).toHaveClass('rotate-[20deg]')
     expect(
       container.querySelector('.hero-signal--digital .brand-signal-divider--desktop'),
     ).toHaveClass('rotate-[20deg]')
+    expect(screen.getByRole('button', { name: '打开影视能力说明' })).toHaveClass(
+      'left-4',
+      'top-24',
+      'md:left-auto',
+      'md:right-[12%]',
+      'md:top-[32%]',
+    )
     expect(screen.getByText('enjoy')).toHaveClass('left-[4vw]', 'top-[22%]')
     expect(screen.getByText('your')).toHaveClass('right-[4vw]', 'top-[38%]')
     expect(screen.getByText('passion')).toHaveClass('left-[10vw]', 'top-[61%]')

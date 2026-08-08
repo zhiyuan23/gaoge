@@ -60,27 +60,40 @@ describe('Skiing concept route', () => {
 
     expect(heroHeading).toBeInTheDocument()
     expect(hero).not.toBeNull()
-    expect(screen.getByRole('link', { name: '高歌首页' })).toHaveTextContent('GAOGE')
+    const homeLink = screen.getByRole('link', { name: '高歌首页' })
+    const groupLink = screen.getByRole('link', { name: '进入高歌集团' })
+
+    expect(homeLink).toHaveTextContent('GAOGE')
+    expect(within(homeLink).getByText('G')).toHaveClass('text-[14px]', '-rotate-[30deg]')
     expect(screen.queryByRole('link', { name: '集团' })).not.toBeInTheDocument()
+    expect(groupLink).toHaveAttribute('href', '/group')
+    expect(groupLink).toHaveTextContent('集团')
     expect(screen.getByText(/享受你的热爱/)).toBeInTheDocument()
     expect(
-      screen.getByText(/以数字产品、内容运营与体育热爱，连接正在发生的未来/),
+      screen.getByText(/以数字产品、内容运营与影视制作创造价值，也让体育热爱持续发生/),
     ).toBeInTheDocument()
-    ;['SPORTS', 'DIGITAL', 'CONTENT', '体育热爱', '数字产品', '内容创造'].forEach((label) => {
-      expect(screen.getByText(label)).toBeInTheDocument()
-    })
+    ;[
+      'DIGITAL',
+      'CONTENT',
+      'FILM',
+      'SPORTS',
+      '数字产品',
+      '内容运营',
+      '影视制作',
+      '体育社区',
+    ].forEach((label) => expect(screen.getByText(label)).toBeInTheDocument())
 
     const digitalButton = screen.getByRole('button', { name: '数字' })
     const contentButton = screen.getByRole('button', { name: '内容' })
+    const filmButton = screen.getByRole('button', { name: '影视' })
     const sportsButton = screen.getByRole('button', { name: '体育' })
-    const futureButton = screen.getByRole('button', { name: '未来' })
 
     expect(digitalButton).toHaveAttribute('aria-haspopup', 'dialog')
     expect(contentButton).toHaveAttribute('aria-haspopup', 'dialog')
+    expect(filmButton).toHaveAttribute('aria-haspopup', 'dialog')
     expect(sportsButton).toHaveAttribute('aria-haspopup', 'dialog')
-    expect(futureButton).toHaveAttribute('aria-haspopup', 'dialog')
-    expect(futureButton).not.toHaveClass('text-neutral-500')
-    ;[digitalButton, contentButton, sportsButton, futureButton].forEach((button) => {
+    expect(screen.queryByRole('button', { name: '未来' })).not.toBeInTheDocument()
+    ;[digitalButton, contentButton, filmButton, sportsButton].forEach((button) => {
       expect(button).toHaveClass('hover:text-white')
       expect(button).not.toHaveClass('hover:bg-white/10')
     })
@@ -91,7 +104,12 @@ describe('Skiing concept route', () => {
     expect(screen.queryAllByText('暂未开放')).toHaveLength(0)
     expect(hero?.querySelector('[aria-disabled="true"]')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '打开高歌品牌能力说明' })).not.toBeInTheDocument()
-    for (const name of ['打开体育能力说明', '打开数字能力说明', '打开内容能力说明']) {
+    for (const name of [
+      '打开体育能力说明',
+      '打开数字能力说明',
+      '打开影视能力说明',
+      '打开内容能力说明',
+    ]) {
       const button = screen.getByRole('button', { name })
 
       expect(button).toHaveAttribute('aria-haspopup', 'dialog')
@@ -151,24 +169,25 @@ describe('Skiing concept route', () => {
       within(dialog).getByText('以创意与内容思维，把热爱转化为持续生长的影响力。'),
     ).toBeInTheDocument()
 
+    fireEvent.click(within(dialog).getByRole('button', { name: '影视' }))
+    expect(within(dialog).getByRole('heading', { name: '影视' })).toBeInTheDocument()
+    expect(within(dialog).getByText('影像创作')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('以影像与叙事思维，把想法转化为承载情感与表达的光影作品。'),
+    ).toBeInTheDocument()
+
     fireEvent.click(within(dialog).getByRole('button', { name: '体育' }))
     expect(within(dialog).getByRole('heading', { name: '体育' })).toBeInTheDocument()
     expect(within(dialog).getByText('体育生态')).toBeInTheDocument()
     expect(
       within(dialog).getByText('以运动与连接的力量，把热爱转化为真实发生的共同体验。'),
     ).toBeInTheDocument()
-
-    fireEvent.click(within(dialog).getByRole('button', { name: '未来' }))
-    expect(within(dialog).getByRole('heading', { name: '未来' })).toBeInTheDocument()
-    expect(
-      within(dialog).getByText('以好奇与行动不断探索，把未知转化为值得期待的新可能。'),
-    ).toBeInTheDocument()
-    expect(within(dialog).getByText('领域拓展中')).toBeInTheDocument()
   })
 
   it.each([
     ['打开体育能力说明', '体育'],
     ['打开数字能力说明', '数字'],
+    ['打开影视能力说明', '影视'],
     ['打开内容能力说明', '内容'],
   ] as const)('opens %s from the hero without changing route', async (buttonName, heading) => {
     renderRoute('/')
@@ -273,38 +292,89 @@ describe('group organization route', () => {
     renderRoute('/group')
 
     expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '连接热爱，生长事业。' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '集团' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('heading', { name: '连接热爱，奔赴所爱。' })).toBeInTheDocument()
+    const groupNavigation = screen.getByRole('navigation', { name: '高歌品牌导航' })
+    const groupHomeLink = within(groupNavigation).getByRole('link', { name: '高歌首页' })
+    const groupMark = within(groupHomeLink).getByText('G')
+
+    expect(groupNavigation).toHaveClass('max-w-[1440px]')
+    expect(groupMark).toHaveClass('text-[14px]', '-rotate-[30deg]')
+    expect(within(groupNavigation).queryByRole('link', { name: '集团' })).not.toBeInTheDocument()
+    expect(groupNavigation.querySelector('[aria-current="page"]')).toHaveTextContent('集团')
     expect(screen.getByTestId('location')).toHaveTextContent('/group')
-    expect(document.title).toBe('高歌集团 - 组织与产业版图')
+    expect(document.title).toBe('高歌集团 - 让热爱持续生长')
+    ;['数字', '内容', '影视', '体育'].forEach((area) => {
+      expect(within(groupNavigation).queryByRole('link', { name: area })).not.toBeInTheDocument()
+    })
+    ;['digital', 'content', 'film', 'sports'].forEach((industry) => {
+      expect(document.querySelector(`[data-industry="${industry}"]`)?.tagName).toBe('ARTICLE')
+    })
+    expect(screen.getAllByText('高歌影视').length).toBeGreaterThan(0)
+    ;['产品矩阵', '内容运营', '影像创作', '体育生态'].forEach((direction) => {
+      expect(screen.getByText(direction)).toBeInTheDocument()
+    })
+    ;[
+      '以技术与产品思维，把想法转化为面向未来的数字能力。',
+      '以创意与内容思维，把热爱转化为持续生长的影响力。',
+      '以影像与叙事思维，把想法转化为承载情感与表达的光影作品。',
+      '以运动与连接的力量，把热爱转化为真实发生的共同体验。',
+    ].forEach((statement) => {
+      expect(screen.getByText(statement)).toBeInTheDocument()
+    })
+    expect(screen.queryByText('高歌小绿本')).not.toBeInTheDocument()
+    expect(screen.queryByText('未来领域')).not.toBeInTheDocument()
 
-    const industryLinks = screen.getAllByRole('link')
-    const digitalIndustryLink = industryLinks.find((link) => link.dataset.industry === 'digital')
-    const contentIndustryLink = industryLinks.find((link) => link.dataset.industry === 'content')
-    const sportsIndustryLink = industryLinks.find((link) => link.dataset.industry === 'sports')
-
-    expect(digitalIndustryLink).toHaveAttribute('href', '/digital')
-    expect(contentIndustryLink).toHaveAttribute('href', '/content')
-    expect(screen.getByText('高歌小绿本')).toBeInTheDocument()
-    expect(sportsIndustryLink).toHaveAttribute('href', 'https://sports.gaoge.cc')
-    expect(sportsIndustryLink).toHaveAttribute('target', '_blank')
-    expect(document.querySelector('[data-industry="future"]')?.tagName).toBe('ARTICLE')
-
+    expect(screen.getByText('因热爱相聚')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '高歌体育' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '高歌 FC' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '高歌足球俱乐部' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '高歌超级联赛' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '管理团队' })).toBeInTheDocument()
-    expect(screen.getAllByTestId('group-leader')).toHaveLength(6)
-    expect(document.querySelectorAll('[data-team-emphasis="subdued"]')).toHaveLength(2)
-    expect(
-      document.querySelectorAll('[data-testid="group-leader"] [data-testid="default-avatar"]'),
-    ).toHaveLength(6)
+    ;['高歌足球俱乐部', '高歌超级联赛'].forEach((entity) => {
+      const link = screen.getByRole('link', { name: `${entity}，进入高歌体育` })
+      expect(link).toHaveAttribute('href', 'https://sports.gaoge.cc')
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    })
+    expect(screen.getByRole('heading', { name: '集团管理层' })).toBeInTheDocument()
+    expect(screen.getByText('从集团方向到球队与联赛，我们一起让热爱持续向前。')).toBeInTheDocument()
+    expect(screen.getAllByTestId('group-leader')).toHaveLength(3)
+    expect(screen.getByText('集团主席')).toBeInTheDocument()
+    expect(screen.getByText('高歌足球俱乐部 CEO')).toBeInTheDocument()
+    expect(screen.getByText('高歌超级联赛运营负责人')).toBeInTheDocument()
+
     expect(screen.getByRole('heading', { name: '联赛董事会' })).toBeInTheDocument()
+    expect(screen.getByText('本届董事会成员')).toBeInTheDocument()
+    expect(
+      screen.getByText('20 位本届联赛董事会成员以热爱和投入，共同推动联赛持续向前。'),
+    ).toBeInTheDocument()
     expect(screen.getAllByTestId('league-director')).toHaveLength(20)
     expect(
       document.querySelectorAll('[data-testid="league-director"] [data-testid="default-avatar"]'),
     ).toHaveLength(20)
-    expect(screen.getAllByTestId('default-avatar')).toHaveLength(26)
+    expect(screen.getAllByTestId('default-avatar')).toHaveLength(23)
+
+    expect(screen.getByRole('heading', { name: '集团愿景' })).toBeInTheDocument()
+    expect(screen.getByText('让每一份热爱，都有持续生长的可能。')).toBeInTheDocument()
+    ;['因热爱出发', '让想法发生', '与伙伴同行'].forEach((title) => {
+      expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
+    })
+
+    const pageCopy = document.body.textContent ?? ''
+
+    ;[
+      '非营利',
+      '商业',
+      '企业服务能力',
+      '集团协同交付',
+      '独立采购',
+      '集团统筹',
+      '体育内部支持',
+    ].forEach((term) => {
+      expect(pageCopy).not.toContain(term)
+    })
+
+    expect(screen.queryByRole('heading', { name: '持续生长中的新领域' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '返回高歌首页' })).toHaveAttribute('href', '/')
+    expect(screen.queryByRole('link', { name: '进入高歌数字' })).not.toBeInTheDocument()
   })
 })
 

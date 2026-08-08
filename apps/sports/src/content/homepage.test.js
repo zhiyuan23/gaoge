@@ -19,5 +19,6 @@ describe('homepageSections', () => {
     ])
     expect(homepageSections.every((section) => section.image)).toBe(true)
     expect(homepageSections.every((section) => section.description.length > 0)).toBe(true)
+    expect(homepageSections.at(-1)?.ctaLink).toBe('/')
   })
 })

@@ -3,7 +3,7 @@ const shareImageUrl = '/gaoge_logo_wechat_share.jpg'
 export const wechatShareConfigs = {
   home: {
     title: '高歌体育',
-    desc: '将体育浪漫主义坚决贯彻到底。',
+    desc: '将体育浪漫主义坚决贯彻到底。。',
     imgUrl: shareImageUrl,
   },
   teams: {
@@ -19,11 +19,11 @@ export const wechatShareConfigs = {
 }
 
 export function resolveWechatShareConfig(path) {
-  if (path === '/teams/football/assets') {
+  if (path === '/assets' || path === '/teams/football/assets') {
     return wechatShareConfigs.footballAssets
   }
 
-  if (path.startsWith('/teams')) {
+  if (path === '/' || path.startsWith('/teams')) {
     return wechatShareConfigs.teams
   }
 

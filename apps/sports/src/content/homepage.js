@@ -60,7 +60,7 @@ export const homepageSections = [
     description: '将运动浪漫主义坚决贯彻到底。',
     image: 'https://pic1.imgdb.cn/item/69da11a2c55d9aecca817a17.jpg',
     ctaLabel: '了解更多',
-    ctaLink: '/teams',
+    ctaLink: '/',
     contentPosition: 'center',
     mobileImageOffset: 0,
   },

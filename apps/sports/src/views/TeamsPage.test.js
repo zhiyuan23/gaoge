@@ -16,8 +16,9 @@ function createTestRouter() {
   return createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/teams/:team?', name: 'teams', component: TeamsPage },
-      { path: '/teams/football/assets', name: 'team-assets', component: TeamAssetPage },
+      { path: '/', name: 'teams', component: TeamsPage },
+      { path: '/teams/:team', name: 'team', component: TeamsPage },
+      { path: '/assets', name: 'team-assets', component: TeamAssetPage },
     ],
   })
 }
@@ -55,6 +56,11 @@ describe('TeamsPage', () => {
 
     await flushPromises()
 
+    expect(wrapper.text()).not.toContain('返回')
+    expect(wrapper.get('header button').text()).toBe('S')
+    expect(wrapper.get('header button').attributes('aria-label')).toBe('HERO 页面')
+    expect(wrapper.get('main').classes()).toContain('pt-16')
+    expect(wrapper.get('main').classes()).toContain('sm:pt-20')
     expect(wrapper.text()).toContain('球队资产')
     expect(wrapper.text()).toContain('查看明细')
     expect(wrapper.text()).toContain('¥1,260.00')
