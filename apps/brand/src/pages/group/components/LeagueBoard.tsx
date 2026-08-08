@@ -14,7 +14,7 @@ export default function LeagueBoard({ directors }: LeagueBoardProps) {
   return (
     <section
       aria-labelledby="league-board-title"
-      className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32"
+      className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24"
     >
       <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
         <div>

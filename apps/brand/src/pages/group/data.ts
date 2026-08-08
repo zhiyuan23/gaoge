@@ -1,6 +1,7 @@
 import type {
   BusinessCapability,
   DeliveryModel,
+  GroupDigitalProduct,
   GroupIndustry,
   GroupLeader,
   GroupVisionItem,
@@ -32,6 +33,33 @@ export const groupIndustries: readonly GroupIndustry[] = [
     direction: '体育生态',
     id: 'sports',
     name: '高歌体育',
+  },
+]
+
+export const groupDigitalProducts: readonly GroupDigitalProduct[] = [
+  {
+    description: '连接订单、商品、库存、履约、财务与经营分析，让跨境电商经营在一套系统中清晰协同。',
+    emphasis: 'primary',
+    englishName: 'GAOGE COMPASS',
+    href: 'https://compass.gaoge.cc?demo',
+    id: 'compass',
+    name: '高歌跨境 ERP',
+  },
+  {
+    description: '统一记录线索、客户、商机与跟进过程。',
+    emphasis: 'secondary',
+    englishName: 'GAOGE CRM',
+    href: 'https://crm.gaoge.cc?demo',
+    id: 'crm',
+    name: '高歌客户 CRM',
+  },
+  {
+    description: '连接会员、活动、社群与俱乐部日常运营。',
+    emphasis: 'secondary',
+    englishName: 'GAOGE CLUB',
+    href: 'https://club.gaoge.cc?demo',
+    id: 'club',
+    name: '高歌 Club',
   },
 ]
 

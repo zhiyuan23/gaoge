@@ -61,13 +61,13 @@ describe('Skiing concept route', () => {
     expect(heroHeading).toBeInTheDocument()
     expect(hero).not.toBeNull()
     const homeLink = screen.getByRole('link', { name: '高歌首页' })
-    const groupLink = screen.getByRole('link', { name: '进入高歌集团' })
+    const groupLink = screen.getByRole('link', { name: '高歌集团' })
 
     expect(homeLink).toHaveTextContent('GAOGE')
     expect(within(homeLink).getByText('G')).toHaveClass('text-[14px]', '-rotate-[30deg]')
     expect(screen.queryByRole('link', { name: '集团' })).not.toBeInTheDocument()
     expect(groupLink).toHaveAttribute('href', '/group')
-    expect(groupLink).toHaveTextContent('集团')
+    expect(groupLink).toHaveTextContent('高歌集团')
     expect(screen.getByText(/享受你的热爱/)).toBeInTheDocument()
     expect(
       screen.getByText(/以数字产品、内容运营与影视制作创造价值，也让体育热爱持续发生/),
@@ -140,6 +140,8 @@ describe('Skiing concept route', () => {
     expect(video).toHaveAttribute('loop')
     expect(video).toHaveAttribute('playsinline')
     expect(video).toHaveProperty('muted', true)
+    expect(screen.queryByRole('button', { name: '暂停背景视频' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '播放背景视频' })).not.toBeInTheDocument()
   })
 
   it('opens homepage capability details without changing route', async () => {
@@ -160,6 +162,11 @@ describe('Skiing concept route', () => {
     const dialog = screen.getByRole('dialog')
     expect(dialog).toHaveClass('brand-capability-dialog')
     expect(within(dialog).getByTestId('capability-panel')).toHaveClass('brand-capability-panel')
+    expect(within(dialog).getByTestId('capability-dismiss-area')).toHaveClass(
+      'items-center',
+      'justify-center',
+    )
+    expect(within(dialog).getByTestId('capability-dismiss-area')).not.toHaveClass('items-end')
     expect(within(dialog).queryByRole('link')).not.toBeInTheDocument()
 
     fireEvent.click(within(dialog).getByRole('button', { name: '内容' }))
@@ -223,42 +230,39 @@ describe('Skiing concept route', () => {
     await waitFor(() => expect(trigger).toHaveFocus())
   })
 
-  it('closes the capability dialog from its close button and backdrop', async () => {
+  it('closes from the close button or outside area but stays open for panel clicks', async () => {
     renderRoute('/')
 
     fireEvent.click(await screen.findByRole('button', { name: '数字' }))
-    const closeDialog = screen.getByRole('dialog')
     fireEvent.click(screen.getByRole('button', { name: '关闭能力说明' }))
-    expect(closeDialog).toHaveAttribute('data-closing')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
     fireEvent.click(screen.getByRole('button', { name: '内容' }))
-    fireEvent.click(screen.getByRole('button', { name: '点击遮罩关闭能力说明' }))
+    const dialog = screen.getByRole('dialog')
+    fireEvent.click(within(dialog).getByTestId('capability-panel'))
+    expect(dialog).toHaveAttribute('open')
+
+    fireEvent.click(within(dialog).getByTestId('capability-dismiss-area'))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
-  it('closes the capability dialog immediately when reduced motion is requested', async () => {
-    vi.mocked(window.matchMedia).mockImplementation(
-      (query) =>
-        ({
-          addEventListener: vi.fn(),
-          addListener: vi.fn(),
-          dispatchEvent: vi.fn(),
-          matches: query === '(prefers-reduced-motion: reduce)',
-          media: query,
-          onchange: null,
-          removeEventListener: vi.fn(),
-          removeListener: vi.fn(),
-        }) as MediaQueryList,
-    )
+  it('can retarget the capability dialog while it is closing', async () => {
     renderRoute('/')
 
     const trigger = await screen.findByRole('button', { name: '数字' })
     fireEvent.click(trigger)
     fireEvent.click(screen.getByRole('button', { name: '关闭能力说明' }))
 
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(trigger).toHaveFocus()
+    const dialog = screen.getByRole('dialog')
+    const contentButton = within(dialog).getByRole('button', { name: '内容' })
+
+    expect(contentButton).not.toBeDisabled()
+    fireEvent.click(contentButton)
+    expect(within(dialog).getByRole('heading', { name: '内容' })).toBeInTheDocument()
+    expect(dialog).toHaveAttribute('open')
+
+    fireEvent.click(within(dialog).getByRole('button', { name: '关闭能力说明' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it.each(['/', '/missing-page'])(
@@ -297,13 +301,25 @@ describe('group organization route', () => {
     const groupHomeLink = within(groupNavigation).getByRole('link', { name: '高歌首页' })
     const groupMark = within(groupHomeLink).getByText('G')
 
-    expect(groupNavigation).toHaveClass('max-w-[1440px]')
+    expect(groupNavigation).toHaveClass(
+      'h-[52px]',
+      'max-w-7xl',
+      'brand-group-navigation',
+      'md:h-14',
+    )
+    expect(groupNavigation.closest('header')).toHaveClass('sticky')
+    expect(groupNavigation.closest('main')).toHaveClass('overflow-x-clip')
     expect(groupMark).toHaveClass('text-[14px]', '-rotate-[30deg]')
     expect(within(groupNavigation).queryByRole('link', { name: '集团' })).not.toBeInTheDocument()
     expect(groupNavigation.querySelector('[aria-current="page"]')).toHaveTextContent('集团')
     expect(screen.getByTestId('location')).toHaveTextContent('/group')
     expect(document.title).toBe('高歌集团 - 让热爱持续生长')
     ;['数字', '内容', '影视', '体育'].forEach((area) => {
+      const button = within(groupNavigation).getByRole('button', { name: area })
+
+      expect(button).toHaveAttribute('aria-controls', 'brand-capability-dialog')
+      expect(button).toHaveAttribute('aria-expanded', 'false')
+      expect(button).toHaveAttribute('aria-haspopup', 'dialog')
       expect(within(groupNavigation).queryByRole('link', { name: area })).not.toBeInTheDocument()
     })
     ;['digital', 'content', 'film', 'sports'].forEach((industry) => {
@@ -324,12 +340,56 @@ describe('group organization route', () => {
     expect(screen.queryByText('高歌小绿本')).not.toBeInTheDocument()
     expect(screen.queryByText('未来领域')).not.toBeInTheDocument()
 
+    expect(screen.getByText('以数字连接业务')).toBeInTheDocument()
+    const digitalHeading = screen.getByRole('heading', { name: '高歌数字' })
+    const sportsHeading = screen.getByRole('heading', { name: '高歌体育' })
+    expect(digitalHeading.compareDocumentPosition(sportsHeading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+    expect(
+      screen.getByText('从真实业务出发，把复杂流程变成清晰、可持续使用的数字产品。'),
+    ).toBeInTheDocument()
+
+    const digitalProductCards = screen.getAllByTestId('group-digital-product')
+    expect(digitalProductCards).toHaveLength(3)
+    expect(digitalProductCards.map((card) => card.getAttribute('data-product'))).toEqual([
+      'compass',
+      'crm',
+      'club',
+    ])
+    expect(digitalProductCards[0]).toHaveAttribute('data-emphasis', 'primary')
+    expect(digitalProductCards[0]).toHaveClass('h-72', 'lg:row-span-2', 'lg:h-full')
+    expect(
+      digitalProductCards.slice(1).every((card) => card.dataset.emphasis === 'secondary'),
+    ).toBe(true)
+    digitalProductCards.slice(1).forEach((card) => {
+      expect(card).toHaveClass('h-36', 'lg:col-span-5', 'lg:h-full')
+    })
+    ;[
+      ['高歌跨境 ERP', 'https://compass.gaoge.cc?demo'],
+      ['高歌客户 CRM', 'https://crm.gaoge.cc?demo'],
+      ['高歌 Club', 'https://club.gaoge.cc?demo'],
+    ].forEach(([name, href]) => {
+      const link = screen.getByRole('link', {
+        name: `${name}，进入演示系统，将在新窗口打开`,
+      })
+      expect(link).toHaveAttribute('href', href)
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    })
+
+    expect(screen.getAllByText('演示系统')).toHaveLength(3)
+    expect(screen.queryByText('我们可以提供')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('group-digital-capability')).not.toBeInTheDocument()
+
     expect(screen.getByText('因热爱相聚')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '高歌体育' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '高歌足球俱乐部' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '高歌超级联赛' })).toBeInTheDocument()
     ;['高歌足球俱乐部', '高歌超级联赛'].forEach((entity) => {
-      const link = screen.getByRole('link', { name: `${entity}，进入高歌体育` })
+      const link = screen.getByRole('link', {
+        name: `${entity}，进入高歌体育，将在新窗口打开`,
+      })
       expect(link).toHaveAttribute('href', 'https://sports.gaoge.cc')
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', 'noopener noreferrer')
@@ -376,6 +436,28 @@ describe('group organization route', () => {
     expect(screen.getByRole('link', { name: '返回高歌首页' })).toHaveAttribute('href', '/')
     expect(screen.queryByRole('link', { name: '进入高歌数字' })).not.toBeInTheDocument()
   })
+
+  it.each([
+    ['数字', '产品矩阵'],
+    ['内容', '内容运营'],
+    ['影视', '影像创作'],
+    ['体育', '体育生态'],
+  ] as const)('opens the %s capability dialog from Group navigation', async (area, status) => {
+    renderRoute('/group')
+
+    const navigation = await screen.findByRole('navigation', { name: '高歌品牌导航' })
+    const trigger = within(navigation).getByRole('button', { name: area })
+    fireEvent.click(trigger)
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { name: area })).toBeInTheDocument()
+    expect(within(dialog).getByText(status)).toBeInTheDocument()
+    expect(trigger).toHaveAttribute('aria-expanded', 'true')
+
+    fireEvent.click(within(dialog).getByRole('button', { name: '关闭能力说明' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(trigger).toHaveFocus())
+  })
 })
 
 describe('digital matrix route', () => {
@@ -400,7 +482,7 @@ describe('digital matrix route', () => {
     expect(screen.getByRole('link', { name: '进入高歌内容' })).toHaveAttribute('href', '/content')
     expect(screen.getByRole('link', { name: '数字' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: '内容' })).toHaveAttribute('href', '/content')
-    expect(screen.getByRole('link', { name: '体育' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '体育，将在新窗口打开' })).toHaveAttribute(
       'href',
       'https://sports.gaoge.cc',
     )

@@ -27,26 +27,27 @@
 - Modify: `apps/brand/src/concepts/skiing/components/SkiingHero.tsx`
 - Modify: `apps/brand/src/concepts/skiing/components/SkiingNavbar.tsx`
 - Modify: `apps/brand/src/brand/components/BrandNavigation.tsx`
+- Modify: `apps/brand/src/brand/components/BrandPageShell.tsx`
 
 **Interfaces:**
 
 - Produces: `BrandMediaControl { isPlaying: boolean; onToggle(): void }`
-- Produces: `SkiingNavbarProps { isVideoPlaying: boolean; onToggleVideo(): void }`
+- Produces: `SkiingNavbarProps { isVideoPlaying: boolean; onToggleVideo(): void; showVideoControl: boolean }`
 - Consumes: existing `BrandNavigationHandle.openCapability(area, trigger)`
 
-- [ ] **Step 1: Add controlled video playback state to `SkiingHero`**
+- [x] **Step 1: Add controlled video playback state to `SkiingHero`**
 
   Keep `videoRef` as the source of truth for browser playback, mirror successful `play`, `pause`, `onPlay`, and `onPause` events into `isVideoPlaying`, and expose a toggle that calls `video.pause()` or the existing guarded `video.play()` path. When `useReducedMotion()` is true, render only the poster and omit the control.
 
-- [ ] **Step 2: Pass the media control through `SkiingNavbar`**
+- [x] **Step 2: Pass the media control through `SkiingNavbar`**
 
   Define exact props `isVideoPlaying` and `onToggleVideo`, then pass `{ isPlaying: isVideoPlaying, onToggle: onToggleVideo }` to `BrandNavigation` as `mediaControl`.
 
-- [ ] **Step 3: Upgrade the home navigation control cluster**
+- [x] **Step 3: Upgrade the home navigation control cluster**
 
   Render a 44×44 pause/play button using `Pause` and `Play` from `lucide-react`, with accessible names `暂停背景视频` and `播放背景视频`. Change the group link accessible name and desktop label to `认识高歌集团`, while keeping compact visible text `集团` at widths up to 384px.
 
-- [ ] **Step 4: Stabilize hero text contrast**
+- [x] **Step 4: Stabilize hero text contrast**
 
   Add one pointer-events-none local dark gradient over the video, concentrating contrast around the top navigation and left-center Chinese copy. Keep the existing composition and avoid adding a copy card.
 
@@ -62,23 +63,23 @@
 - Consumes: `BrandNavigationHandle.openCapability(area, trigger)`
 - Produces: independent `activeArea: CapabilityArea | null` and `isPresented: boolean`
 
-- [ ] **Step 1: Replace timer-driven close state**
+- [x] **Step 1: Replace timer-driven close state**
 
   Remove `isClosing`, `closeTimerRef`, `window.setTimeout`, `data-closing`, disabled tab buttons, and dialog-wide input locking. `requestClose()` only targets `isPresented=false`; `openCapability()` and in-dialog tab switching always retarget `isPresented=true`.
 
-- [ ] **Step 2: Keep native dialog lifecycle and focus behavior**
+- [x] **Step 2: Keep native dialog lifecycle and focus behavior**
 
   On first active area, call `showModal()`, lock body scrolling, and focus the close button. On exit completion, close and clear only when `isPresented` is still false. Cleanup restores body overflow and returns focus to the last trigger.
 
-- [ ] **Step 3: Implement interruptible Motion targets**
+- [x] **Step 3: Implement interruptible Motion targets**
 
   Replace CSS keyframes with `motion.button` for the 0.18-second backdrop opacity and `motion.section` for panel opacity/full transform strings. Desktop targets `translateY(10px) scale(0.985)` ↔ `translateY(0) scale(1)` with `{ type: 'spring', bounce: 0, duration: 0.36 }`; reduced motion uses no transform and an immediate or short opacity change.
 
-- [ ] **Step 4: Anchor desktop and bottom-align mobile**
+- [x] **Step 4: Anchor desktop and bottom-align mobile**
 
   After `showModal()`, measure the last trigger and panel rectangles and set CSS custom properties for panel transform origin. Below 768px, override origin to bottom-center, align the panel at the safe-area bottom, cap its height, allow internal scrolling, and use `translateY(10%)` ↔ `translateY(0)` symmetrically.
 
-- [ ] **Step 5: Keep content switching subtle**
+- [x] **Step 5: Keep content switching subtle**
 
   Key only the copy block by active area and retain a short opacity/maximum 4px entrance; do not reanimate the panel. Switching while closing must immediately retarget the existing panel to presented state.
 
@@ -98,19 +99,21 @@
 - Produces: Group desktop nav mapping `/digital`, `/content`, noninteractive film status, external sports link, current group state
 - Preserves: compact mobile home + group navigation and existing group component props/data
 
-- [ ] **Step 1: Make Group navigation sticky and semantically consistent**
+- [x] **Step 1: Make Group navigation sticky and semantically consistent**
 
   Use the existing translucent pill as sticky top chrome. On desktop render Digital and Content as internal links, Film as `影视，独立页面筹备中`, Sports as an external link labelled `体育，将在新窗口打开`, and Group with `aria-current="page"`. Keep mobile limited to the home link and current Group state.
 
-- [ ] **Step 2: Tighten downstream section spacing**
+  Ensure the Group page shell uses `overflow-x-clip` instead of `overflow-hidden`, so it clips horizontal decoration without becoming the sticky header's scroll container.
+
+- [x] **Step 2: Tighten downstream section spacing**
 
   Change Leadership, LeagueBoard, and GroupVision containers from `py-24 md:py-32` to `py-16 md:py-24`. Keep SportsStructure at `py-16 md:py-24`.
 
-- [ ] **Step 3: Remove false affordances and ambient loops**
+- [x] **Step 3: Remove false affordances and ambient loops**
 
   Delete hover lift/border enhancement from `.group-leader-card` and `.group-director-seat`. Remove the 18–22 second `group-orbit-breathe` animations and keyframes while preserving the existing one-time Framer Motion entry.
 
-- [ ] **Step 4: Clarify sports external-link names**
+- [x] **Step 4: Clarify sports external-link names**
 
   Change both sports entity card labels to `${entity.name}，进入高歌体育，将在新窗口打开` without changing destinations or visual external-link icons.
 
@@ -126,15 +129,15 @@
 - Consumes: shared classes `brand-navigation-surface`, `brand-capability-panel`, `brand-capability-backdrop`
 - Produces: media-query-only visual fallbacks; no JavaScript API
 
-- [ ] **Step 1: Mark translucent navigation surfaces**
+- [x] **Step 1: Mark translucent navigation surfaces**
 
   Apply `brand-navigation-surface` to both Group and standard navigation materials so system preference rules can target them without changing component structure.
 
-- [ ] **Step 2: Add reduced-transparency fallback**
+- [x] **Step 2: Add reduced-transparency fallback**
 
   Under `@media (prefers-reduced-transparency: reduce)`, remove both standard and WebKit backdrop filters, use near-solid dark navigation/panel backgrounds, and retain visible borders.
 
-- [ ] **Step 3: Add increased-contrast fallback**
+- [x] **Step 3: Add increased-contrast fallback**
 
   Under `@media (prefers-contrast: more)`, use near-solid surfaces, border contrast of at least `rgb(255 255 255 / 30%)`, stronger key navigation text, and 2px focus-visible outlines.
 
@@ -150,11 +153,11 @@
 - Verifies: all public behavior introduced by Tasks 1–4
 - Preserves: existing Brand route, capability data, management, board, and group content assertions
 
-- [ ] **Step 1: Update interaction coverage after implementation**
+- [x] **Step 1: Update interaction coverage after implementation**
 
   Add assertions for Group nav targets/current state, explicit home group CTA, play/pause calls and labels, reduced-motion control omission, external sports labels, dialog open/switch/Escape/focus restore, and close-then-reopen retargeting without fake-timer dependency.
 
-- [ ] **Step 2: Run Brand tests and static verification**
+- [x] **Step 2: Run Brand tests and static verification**
 
   Run:
 
@@ -169,10 +172,10 @@
 
   Expected: every command exits 0 with no new warnings.
 
-- [ ] **Step 3: Review the final diff**
+- [x] **Step 3: Review the final diff**
 
   Inspect `git diff --check`, scan for stale `isClosing`, timer, `data-closing`, `pointer-events: none`, orbit animation, accidental route/dependency/data changes, and confirm every changed file maps to this plan.
 
-- [ ] **Step 4: Perform browser checks**
+- [x] **Step 4: Perform browser checks**
 
   Check `/` and `/group` at 1440×900, 390×844, and 320×800; exercise mouse and keyboard controls, dialog interruption/focus return, sticky navigation, bottom sheet, video toggle, and horizontal overflow. Also inspect reduced-motion, reduced-transparency, and increased-contrast fallbacks where browser emulation supports them.

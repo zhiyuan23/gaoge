@@ -34,7 +34,7 @@
 - Removes: `BrandMediaControl`, `SkiingNavbarProps`, `isVideoPlaying`, `toggleVideo`
 - Produces: `SkiingNavbar` as `forwardRef<BrandNavigationHandle>` with no props
 
-- [ ] **Step 1: Remove navigation media-control state and props**
+- [x] **Step 1: Remove navigation media-control state and props**
 
   In `SkiingHero`, remove `useState`, playback state synchronization, `toggleVideo`, `onPlay`, and `onPause`. Keep the guarded autoplay path:
 
@@ -62,7 +62,7 @@
   })
   ```
 
-- [ ] **Step 2: Remove the pause/play control and update the group CTA**
+- [x] **Step 2: Remove the pause/play control and update the group CTA**
 
   Delete `Pause`, `Play`, `BrandMediaControl`, the `mediaControl` prop, and the home control cluster. Render one link:
 
@@ -87,11 +87,11 @@
 - Preserves: native `dialog`, `requestClose()`, `finishClose()`, focus restoration
 - Removes: `isMobile`, `panelRef`, `syncPanelOrigin()`, origin CSS custom properties
 
-- [ ] **Step 1: Remove responsive Sheet and trigger-origin state**
+- [x] **Step 1: Remove responsive Sheet and trigger-origin state**
 
   Delete viewport width state, resize listeners, trigger/panel rectangle measurement, `requestAnimationFrame(syncPanelOrigin)`, and mobile transform branches. Keep `triggerRef` only for focus restoration.
 
-- [ ] **Step 2: Center the panel on every viewport**
+- [x] **Step 2: Center the panel on every viewport**
 
   Use a single outer container:
 
@@ -109,11 +109,11 @@
 
   The panel uses `max-height: min(42rem, calc(100dvh - 2rem))` and `overflow-y: auto`; mobile keeps 16px side spacing through dialog padding.
 
-- [ ] **Step 3: Make the backdrop visual-only and keep all close paths**
+- [x] **Step 3: Make the backdrop visual-only and keep all close paths**
 
   Replace the backdrop button with an `aria-hidden` `motion.div`. Escape and the close button still call `requestClose`; clicking the outer dismiss area closes, while clicking the panel or its controls does not.
 
-- [ ] **Step 4: Replace directional spring motion with centered modal motion**
+- [x] **Step 4: Replace directional spring motion with centered modal motion**
 
   Animate the panel between these exact targets:
 
@@ -145,11 +145,11 @@
 - Preserves: mobile home + current Group navigation and `aria-current="page"`
 - Reuses: `openCapability(area, event.currentTarget)`
 
-- [ ] **Step 1: Align Group navigation to theme content width**
+- [x] **Step 1: Align Group navigation to theme content width**
 
   Change `max-w-[1440px]` to `max-w-7xl`; preserve sticky header positioning and `BrandPageShell`'s `overflow-x-clip`.
 
-- [ ] **Step 2: Convert Group desktop fields to dialog buttons**
+- [x] **Step 2: Convert Group desktop fields to dialog buttons**
 
   Render every area as:
 
@@ -167,7 +167,7 @@
 
   Remove Group desktop `NavLink`, external sports anchor, and film preparation state. Change dialog rendering from home-only to `current === 'home' || current === 'group'`.
 
-- [ ] **Step 3: Apply balanced Group glass material**
+- [x] **Step 3: Apply balanced Group glass material**
 
   Add `brand-group-navigation` and style it with:
 
@@ -194,7 +194,7 @@
 - Verifies: public behavior from Tasks 1–3
 - Preserves: route, Group data, management, board, and capability-copy assertions
 
-- [ ] **Step 1: Update tests after implementation**
+- [x] **Step 1: Update tests after implementation**
 
   Update exact assertions to cover:
 
@@ -207,7 +207,7 @@
 
   Add Group button tests for all four capability areas, verify there are no Group area links, open and close one Group capability dialog with focus restoration, click `capability-dismiss-area` to close, and click `capability-panel` to prove internal clicks do not close.
 
-- [ ] **Step 2: Run the complete Brand verification suite**
+- [x] **Step 2: Run the complete Brand verification suite**
 
   Run:
 
@@ -223,10 +223,10 @@
 
   Expected: every command exits 0, Brand reports zero failing tests, and no formatting or lint warnings are introduced.
 
-- [ ] **Step 3: Review implementation scope**
+- [x] **Step 3: Review implementation scope**
 
   Search for stale `BrandMediaControl`, `isVideoPlaying`, `toggleVideo`, `isMobile`, `syncPanelOrigin`, `brand-capability-origin`, bottom-alignment classes, Group area links, and pause/play icons. Confirm no route, dependency, data, API, sports app, or unrelated source changes.
 
-- [ ] **Step 4: Perform browser checks**
+- [x] **Step 4: Perform browser checks**
 
   Verify `/` and `/group` at 1440×900, 390×844, and 320×800. Check centered dialog geometry, all outside regions closing, internal clicks staying open, Group navigation/content width alignment, sticky behavior after scrolling, glass legibility, single-line “高歌集团”, horizontal overflow, focus restoration, and console warnings/errors.

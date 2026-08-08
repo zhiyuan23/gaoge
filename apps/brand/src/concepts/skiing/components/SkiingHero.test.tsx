@@ -32,6 +32,8 @@ describe('SkiingHero', () => {
       '/assets/brand/skiing-poster.jpg',
     )
     expect(container.querySelector('video')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '暂停背景视频' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '播放背景视频' })).not.toBeInTheDocument()
   })
 
   it('uses linear mobile signals and the refined mobile title rhythm', () => {
@@ -74,7 +76,7 @@ describe('SkiingHero', () => {
     expect(screen.getByText('passion')).toHaveClass('left-[10vw]', 'top-[61%]')
   })
 
-  it('retries the online hero video through WeChat and the first touch', () => {
+  it('retries the online hero video without exposing playback controls', () => {
     reducedMotion = false
     const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
     const { container } = render(
@@ -106,5 +108,7 @@ describe('SkiingHero', () => {
 
     fireEvent.touchStart(document)
     expect(play).toHaveBeenCalledTimes(4)
+    expect(screen.queryByRole('button', { name: '暂停背景视频' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '播放背景视频' })).not.toBeInTheDocument()
   })
 })

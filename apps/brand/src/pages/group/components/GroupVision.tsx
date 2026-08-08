@@ -8,7 +8,7 @@ export default function GroupVision({ items }: GroupVisionProps) {
   return (
     <section
       aria-labelledby="group-vision-title"
-      className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32"
+      className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24"
     >
       <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">GROUP VISION</p>
       <h2

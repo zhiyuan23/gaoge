@@ -5,6 +5,15 @@ export interface GroupIndustry {
   readonly name: string
 }
 
+export interface GroupDigitalProduct {
+  readonly description: string
+  readonly emphasis: 'primary' | 'secondary'
+  readonly englishName: string
+  readonly href: string
+  readonly id: 'compass' | 'crm' | 'club'
+  readonly name: string
+}
+
 export interface BusinessCapability {
   readonly capabilities: readonly string[]
   readonly description: string

@@ -1,11 +1,13 @@
 import BrandPageShell from '@/brand/components/BrandPageShell'
 import { useBrandMetadata } from '@/brand/metadata'
+import DigitalStructure from '@/pages/group/components/DigitalStructure'
 import GroupHero from '@/pages/group/components/GroupHero'
 import GroupVision from '@/pages/group/components/GroupVision'
 import LeadershipStructure from '@/pages/group/components/LeadershipStructure'
 import LeagueBoard from '@/pages/group/components/LeagueBoard'
 import SportsStructure from '@/pages/group/components/SportsStructure'
 import {
+  groupDigitalProducts,
   groupIndustries,
   groupLeaders,
   groupVisionItems,
@@ -23,6 +25,7 @@ export default function GroupPage() {
   return (
     <BrandPageShell current="group">
       <GroupHero industries={groupIndustries} />
+      <DigitalStructure products={groupDigitalProducts} />
       <SportsStructure entities={sportsEntities} />
       <LeadershipStructure leaders={groupLeaders} />
       <LeagueBoard directors={leagueDirectors} />

@@ -72,12 +72,7 @@ watch(
     <component :is="useSlots('sub-sidebar-after-logo')" />
     <FaScrollArea :scrollbar="false" mask gradient-color="var(--g-sub-sidebar-bg)" class="flex-1">
       <TransitionGroup :name="transitionName">
-        <div
-          v-for="panel in sidebarPanels"
-          v-show="panel.visible"
-          :key="panel.key"
-          :class="{ 'h-full': panel.key === 'projected' }"
-        >
+        <div v-for="panel in sidebarPanels" v-show="panel.visible" :key="panel.key">
           <Menu
             v-if="panel.render"
             :key="

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  groupDigitalProducts,
   groupIndustries,
   groupLeaders,
   groupVisionItems,
@@ -37,6 +38,36 @@ describe('group organization data', () => {
       },
     ])
     expect(groupIndustries.some(({ name }) => name.includes('小绿本'))).toBe(false)
+  })
+
+  it('defines one primary and two secondary digital demo products', () => {
+    expect(groupDigitalProducts).toEqual([
+      {
+        description:
+          '连接订单、商品、库存、履约、财务与经营分析，让跨境电商经营在一套系统中清晰协同。',
+        emphasis: 'primary',
+        englishName: 'GAOGE COMPASS',
+        href: 'https://compass.gaoge.cc?demo',
+        id: 'compass',
+        name: '高歌跨境 ERP',
+      },
+      {
+        description: '统一记录线索、客户、商机与跟进过程。',
+        emphasis: 'secondary',
+        englishName: 'GAOGE CRM',
+        href: 'https://crm.gaoge.cc?demo',
+        id: 'crm',
+        name: '高歌客户 CRM',
+      },
+      {
+        description: '连接会员、活动、社群与俱乐部日常运营。',
+        emphasis: 'secondary',
+        englishName: 'GAOGE CLUB',
+        href: 'https://club.gaoge.cc?demo',
+        id: 'club',
+        name: '高歌 Club',
+      },
+    ])
   })
 
   it('keeps sports descriptions focused on people and shared experience', () => {

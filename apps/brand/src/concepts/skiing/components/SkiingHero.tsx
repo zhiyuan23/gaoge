@@ -19,17 +19,17 @@ export default function SkiingHero() {
   const navigationRef = useRef<BrandNavigationHandle>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const tryPlayVideo = useCallback(() => {
+  const tryPlayVideo = useCallback(async () => {
     const video = videoRef.current
 
     if (!video) return
 
     video.muted = true
     video.defaultMuted = true
-    const playResult = video.play() as Promise<void> | undefined
-
-    if (playResult) {
-      void playResult.catch(() => undefined)
+    try {
+      await video.play()
+    } catch {
+      // Autoplay failures remain silent; touch and WeChat retries stay active.
     }
   }, [])
 
@@ -38,7 +38,7 @@ export default function SkiingHero() {
 
     document.addEventListener('WeixinJSBridgeReady', tryPlayVideo)
     document.addEventListener('touchstart', tryPlayVideo, { once: true, passive: true })
-    tryPlayVideo()
+    void tryPlayVideo()
 
     return () => {
       document.removeEventListener('WeixinJSBridgeReady', tryPlayVideo)
@@ -64,7 +64,7 @@ export default function SkiingHero() {
           className="absolute inset-0 h-full w-full object-cover"
           loop
           muted
-          onCanPlay={tryPlayVideo}
+          onCanPlay={() => void tryPlayVideo()}
           playsInline
           poster={backgroundPoster}
           preload="auto"
@@ -72,6 +72,11 @@ export default function SkiingHero() {
           {...inlinePlaybackAttributes}
         />
       ) : null}
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_18%_46%,rgba(0,0,0,0.48),transparent_34%),linear-gradient(to_bottom,rgba(0,0,0,0.36),transparent_28%,transparent_72%,rgba(0,0,0,0.3))]"
+      />
 
       <SkiingNavbar ref={navigationRef} />
 
@@ -90,7 +95,7 @@ export default function SkiingHero() {
           </span>
         </h1>
 
-        <p className="hero-copy absolute left-6 top-[49%] z-10 max-w-[280px] text-sm leading-relaxed text-white/90 md:left-10 md:top-[46%] md:text-[15px]">
+        <p className="hero-copy absolute left-6 top-[49%] z-10 max-w-[280px] text-sm font-medium leading-relaxed text-white/95 [text-shadow:0_1px_18px_rgba(0,0,0,0.55)] md:left-10 md:top-[46%] md:text-[15px]">
           享受你的热爱。
           <br />
           以数字产品、内容运营与影视制作创造价值，也让体育热爱持续发生。

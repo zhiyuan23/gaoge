@@ -26,7 +26,7 @@ function LeaderCard({ leader }: { readonly leader: GroupLeader }) {
 export default function LeadershipStructure({ leaders }: LeadershipStructureProps) {
   if (!leaders.length) {
     return (
-      <section className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32">
+      <section className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24">
         <h2 className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl">
           集团管理层
         </h2>
@@ -38,7 +38,7 @@ export default function LeadershipStructure({ leaders }: LeadershipStructureProp
   return (
     <section
       aria-labelledby="leadership-title"
-      className="mx-auto max-w-7xl px-6 py-24 md:px-10 md:py-32"
+      className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24"
     >
       <h2
         className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl"

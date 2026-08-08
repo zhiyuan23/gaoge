@@ -15,7 +15,9 @@ interface BrandPageShellProps {
 export default function BrandPageShell({ children, crossLink, current }: BrandPageShellProps) {
   return (
     <main
-      className="brand-matrix-page min-h-full overflow-hidden"
+      className={`brand-matrix-page min-h-full ${
+        current === 'group' ? 'overflow-x-clip' : 'overflow-hidden'
+      }`}
       data-brand-area={current}
       lang="zh-CN"
     >

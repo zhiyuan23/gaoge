@@ -28,7 +28,7 @@ export default function SportsStructure({ entities }: SportsStructureProps) {
       <div className="mt-10 grid gap-4 md:mt-12 md:grid-cols-[0.88fr_1.12fr]">
         {entities.map((entity) => (
           <a
-            aria-label={`${entity.name}，进入高歌体育`}
+            aria-label={`${entity.name}，进入高歌体育，将在新窗口打开`}
             className={`group-sports-entity group flex flex-col justify-between rounded-[24px] border border-white/10 p-6 transition-[border-color,transform] duration-300 hover:-translate-y-1 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[rgb(var(--brand-accent))] active:translate-y-0 md:p-7 ${
               entity.id === 'league'
                 ? 'group-sports-entity--league min-h-60 md:min-h-72'
