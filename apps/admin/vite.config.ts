@@ -25,6 +25,7 @@ export default defineConfig(({ mode, command }) => {
       open: true,
       host: true,
       port: 9000,
+      strictPort: true,
       proxy: proxyPrefix
         ? {
             [proxyPrefix]: {

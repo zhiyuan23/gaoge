@@ -5,7 +5,7 @@ describe('healthService', () => {
     const service = new HealthService({} as never)
 
     expect(service.checkApp()).toEqual({
-      app: '@gaoge/app-api',
+      app: '@gaoge/core-api',
       status: 'ok',
     })
   })

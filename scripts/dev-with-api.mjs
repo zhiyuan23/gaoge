@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
 const API_FILTER = '@gaoge/app-api'
-const EXPECTED_API_APP = API_FILTER
+const EXPECTED_API_APP = '@gaoge/core-api'
 const DEFAULT_HEALTH_URL = process.env.GAOGE_API_HEALTH_URL ?? 'http://127.0.0.1:3000/health'
 const ENTRY_FILE_PATH = fileURLToPath(import.meta.url)
 

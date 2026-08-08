@@ -81,7 +81,7 @@ test('probeApiHealth returns true when health payload matches this api', async (
     json: async () => ({
       code: 0,
       data: {
-        app: '@gaoge/app-api',
+        app: '@gaoge/core-api',
         status: 'ok',
       },
     }),
