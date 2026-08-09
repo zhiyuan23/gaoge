@@ -4,7 +4,7 @@
 
 **Goal:** Restore automatic Sports production deployment by reusing the configured Web deployment Secrets while preserving optional Sports-specific overrides.
 
-**Architecture:** Keep the current release-directory and symlink deployment flow unchanged. Resolve each deployment value from `SPORTS_*` first and `WEB_*` second, then fail at the configuration gate if the resolved value is empty so a skipped deployment cannot report success.
+**Architecture:** Keep the current release-directory and symlink deployment flow unchanged. Resolve each deployment value from `SPORTS_*` first and `WEB_*` second, then fail at the configuration gate if the resolved value is empty so a skipped deployment cannot report success. Store Vite's hashed build resources under `static/` so the physical build directory does not shadow the Vue route `/assets` in Nginx.
 
 **Tech Stack:** GitHub Actions YAML, Bash, pnpm, Vite/Vue, GitHub CLI
 
@@ -13,6 +13,7 @@
 - Do not change Sports application or Vue Router behavior.
 - Do not migrate server directories, modify Nginx, or issue certificates.
 - Preserve `SPORTS_*` as the preferred future configuration and use `WEB_*` only as fallback.
+- Vite build resources must not use the physical directory name `assets` because `/assets` is a Sports page route.
 - Do not touch the unrelated untracked `.workbuddy/` directory.
 
 ---
@@ -114,3 +115,56 @@ curl -fsS -o /dev/null -w '%{http_code}\n' https://sports.gaoge.cc/assets
 ```
 
 Expected: all three requests return `200`. Inspect the served hashed JavaScript bundle and confirm it contains the `/hero`, `/assets`, and `/teams` compatibility route definitions from the current source.
+
+### Task 3: Remove the build-directory collision with `/assets`
+
+**Files:**
+
+- Modify: `apps/sports/vite.config.js`
+- Verify: `apps/sports/dist/**`
+
+**Interfaces:**
+
+- Consumes: Vite's `build.assetsDir` configuration and the existing Nginx SPA fallback.
+- Produces: hashed JavaScript and CSS under `/static/`, leaving `/assets` available for Vue Router.
+
+- [ ] **Step 1: Configure a non-conflicting build resource directory**
+
+```js
+build: {
+  assetsDir: 'static',
+},
+```
+
+- [ ] **Step 2: Re-run Sports verification and inspect the build layout**
+
+```bash
+pnpm --filter @gaoge/app-sports test
+pnpm --filter @gaoge/app-sports typecheck
+pnpm --filter @gaoge/app-sports build
+test -d apps/sports/dist/static
+test ! -e apps/sports/dist/assets
+```
+
+Expected: all checks pass, and `dist/index.html` references `/static/` resources.
+
+- [ ] **Step 3: Commit, push, and monitor the automatic Sports deployment**
+
+```bash
+git add apps/sports/vite.config.js docs/superpowers/specs/2026-08-09-sports-deployment-configuration-fallback-design.md docs/superpowers/plans/2026-08-09-sports-deployment-configuration-fallback.md
+git commit -m "fix(sports): avoid assets route build collision"
+git push origin main
+gh run watch <run-id> --exit-status
+```
+
+Expected: the workflow succeeds and `rsync --delete` publishes a release containing `static/` instead of `assets/`.
+
+- [ ] **Step 4: Re-run the three production route checks**
+
+```bash
+curl -fsS -o /dev/null -w '%{http_code}\n' https://sports.gaoge.cc/
+curl -fsS -o /dev/null -w '%{http_code}\n' https://sports.gaoge.cc/hero
+curl -fsS -o /dev/null -w '%{http_code}\n' https://sports.gaoge.cc/assets
+```
+
+Expected: `/`, `/hero`, and `/assets` all return `200`, with no redirect from `/assets` to `/assets/`.

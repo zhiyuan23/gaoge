@@ -10,6 +10,9 @@ export default defineConfig(({ mode, command }) => {
   return {
     plugins: [vue(), tailwindcss()],
     base: '/',
+    build: {
+      assetsDir: 'static',
+    },
     server: {
       open: true,
       proxy: proxyPrefix
