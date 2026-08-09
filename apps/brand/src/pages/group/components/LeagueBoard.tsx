@@ -14,9 +14,10 @@ export default function LeagueBoard({ directors }: LeagueBoardProps) {
   return (
     <section
       aria-labelledby="league-board-title"
-      className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24"
+      className="group-page-section mx-auto max-w-[1440px] scroll-mt-32 px-6 py-16 md:px-10 md:py-24"
+      id="group-board"
     >
-      <div className="grid gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:items-end">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
           <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">本届董事会成员</p>
           <h2
@@ -25,7 +26,7 @@ export default function LeagueBoard({ directors }: LeagueBoardProps) {
           >
             联赛董事会
           </h2>
-          <p className="mt-5 max-w-lg text-sm leading-7 text-[rgb(var(--brand-muted))] md:text-base">
+          <p className="mt-5 max-w-lg text-sm leading-7 text-[rgb(var(--brand-muted))] md:text-base lg:max-w-none lg:whitespace-nowrap">
             20 位本届联赛董事会成员以热爱和投入，共同推动联赛持续向前。
           </p>
         </div>

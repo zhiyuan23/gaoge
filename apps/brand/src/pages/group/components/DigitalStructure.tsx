@@ -15,7 +15,7 @@ function DigitalProductCard({ product }: { readonly product: GroupDigitalProduct
   return (
     <a
       aria-label={`${product.name}，进入演示系统，将在新窗口打开`}
-      className={`group relative flex flex-col justify-between overflow-hidden rounded-[24px] border border-white/10 bg-[rgb(var(--brand-surface)/0.72)] transition-[border-color,transform] duration-300 hover:-translate-y-1 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[rgb(var(--brand-accent))] active:translate-y-0 ${sizeClassName}`}
+      className={`group relative flex flex-col justify-between overflow-hidden rounded-[24px] border border-white/10 bg-[rgb(var(--brand-surface)/0.72)] transition-[border-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-1 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[rgb(var(--brand-accent))] active:translate-y-0 active:scale-[0.985] ${sizeClassName}`}
       data-emphasis={product.emphasis}
       data-product={product.id}
       data-testid="group-digital-product"
@@ -39,7 +39,7 @@ function DigitalProductCard({ product }: { readonly product: GroupDigitalProduct
           </span>
         </div>
         <span
-          className={`grid shrink-0 place-items-center rounded-full border border-white/10 text-white/45 transition-colors group-hover:border-white/20 group-hover:bg-white/[0.06] group-hover:text-white ${
+          className={`grid shrink-0 place-items-center rounded-full border border-white/10 text-white/45 transition-[background-color,border-color,color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:border-white/20 group-hover:bg-white/[0.06] group-hover:text-white ${
             isPrimary ? 'h-9 w-9' : 'h-8 w-8'
           }`}
         >
@@ -72,7 +72,8 @@ export default function DigitalStructure({ products }: DigitalStructureProps) {
   return (
     <section
       aria-labelledby="digital-structure-title"
-      className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24"
+      className="group-page-section mx-auto max-w-[1440px] scroll-mt-32 px-6 py-16 md:px-10 md:py-24"
+      id="group-digital"
     >
       <div className="max-w-2xl">
         <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">以数字连接业务</p>

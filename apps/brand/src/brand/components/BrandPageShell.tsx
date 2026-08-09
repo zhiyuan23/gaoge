@@ -31,9 +31,10 @@ export default function BrandPageShell({
       <BrandNavigation
         className={current === 'group' ? 'group-entry-navigation' : undefined}
         current={current}
+        groupSectionNavigationActive={entryPresentation !== 'staged'}
       />
       {children}
-      <footer className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-12 text-sm text-white/60 md:px-10">
+      <footer className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-x-6 gap-y-3 px-6 py-12 text-sm text-white/60 md:px-10">
         <Link className="rounded-full transition-colors hover:text-white" to="/">
           返回高歌首页
         </Link>

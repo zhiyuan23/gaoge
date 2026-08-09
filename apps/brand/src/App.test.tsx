@@ -93,7 +93,8 @@ describe('Skiing concept route', () => {
     expect(within(homeLink).getByText('G')).toHaveClass('text-[14px]', '-rotate-[30deg]')
     expect(screen.queryByRole('link', { name: '集团' })).not.toBeInTheDocument()
     expect(groupLink).toHaveAttribute('href', '/group')
-    expect(groupLink).toHaveTextContent('高歌集团')
+    expect(groupLink).toHaveClass('home-group-link')
+    expect(groupLink).toHaveTextContent('集团')
     expect(screen.getByText(/享受你的热爱/)).toBeInTheDocument()
     expect(
       screen.getByText(/以数字产品、内容运营与影视制作创造价值，也让体育热爱持续发生/),
@@ -414,6 +415,17 @@ describe('group organization route', () => {
   })
 
   it('renders the public group structure and metadata', async () => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      addEventListener: vi.fn(),
+      addListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      matches: query === '(min-width: 768px)',
+      media: query,
+      onchange: null,
+      removeEventListener: vi.fn(),
+      removeListener: vi.fn(),
+    }))
+
     renderRoute('/group')
 
     expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
@@ -424,7 +436,7 @@ describe('group organization route', () => {
 
     expect(groupNavigation).toHaveClass(
       'h-[52px]',
-      'max-w-7xl',
+      'max-w-[1440px]',
       'brand-group-navigation',
       'md:h-14',
     )
@@ -432,17 +444,37 @@ describe('group organization route', () => {
     expect(groupNavigation.closest('main')).toHaveClass('overflow-x-clip')
     expect(groupMark).toHaveClass('text-[14px]', '-rotate-[30deg]')
     expect(within(groupNavigation).queryByRole('link', { name: '集团' })).not.toBeInTheDocument()
-    expect(groupNavigation.querySelector('[aria-current="page"]')).toHaveTextContent('集团')
+    expect(within(groupNavigation).getByText('集团')).toBeInTheDocument()
+    const sectionNavigation =
+      groupNavigation.querySelector<HTMLElement>('[aria-label="集团页面章节"]')
+
+    expect(sectionNavigation).toBeInTheDocument()
+
+    const activeSectionLink = within(sectionNavigation!).getByRole('link', { name: '概览' })
+
+    expect(activeSectionLink).toHaveAttribute('aria-current', 'location')
+    expect(activeSectionLink).toHaveClass('group-section-navigation-link--active')
+    ;['数字', '体育', '管理层', '董事会', '愿景'].forEach((section) => {
+      expect(within(sectionNavigation!).getByRole('link', { name: section })).toHaveAttribute(
+        'href',
+        expect.stringMatching(/^#group-/),
+      )
+    })
+    ;[
+      'group-overview',
+      'group-digital',
+      'group-sports',
+      'group-leadership',
+      'group-board',
+      'group-vision',
+    ].forEach((id) => {
+      expect(document.getElementById(id)).toHaveClass('group-page-section')
+    })
     expect(screen.getByTestId('location')).toHaveTextContent('/group')
     expect(document.title).toBe('高歌集团 - 让热爱持续生长')
-    ;['数字', '内容', '影视', '体育'].forEach((area) => {
-      const button = within(groupNavigation).getByRole('button', { name: area })
-
-      expect(button).toHaveAttribute('aria-controls', 'brand-capability-dialog')
-      expect(button).toHaveAttribute('aria-expanded', 'false')
-      expect(button).toHaveAttribute('aria-haspopup', 'dialog')
-      expect(within(groupNavigation).queryByRole('link', { name: area })).not.toBeInTheDocument()
-    })
+    expect(within(groupNavigation).queryByRole('button')).not.toBeInTheDocument()
+    expect(within(groupNavigation).queryByText('内容')).not.toBeInTheDocument()
+    expect(within(groupNavigation).queryByText('影视')).not.toBeInTheDocument()
     ;['digital', 'content', 'film', 'sports'].forEach((industry) => {
       expect(document.querySelector(`[data-industry="${industry}"]`)?.tagName).toBe('ARTICLE')
     })
@@ -558,26 +590,21 @@ describe('group organization route', () => {
     expect(screen.queryByRole('link', { name: '进入高歌数字' })).not.toBeInTheDocument()
   })
 
-  it.each([
-    ['数字', '产品矩阵'],
-    ['内容', '内容运营'],
-    ['影视', '影像创作'],
-    ['体育', '体育生态'],
-  ] as const)('opens the %s capability dialog from Group navigation', async (area, status) => {
+  it('condenses the group section navigation on mobile', async () => {
     renderRoute('/group')
 
-    const navigation = await screen.findByRole('navigation', { name: '高歌品牌导航' })
-    const trigger = within(navigation).getByRole('button', { name: area })
-    fireEvent.click(trigger)
+    expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
+    const sectionNavigation = screen.getByLabelText('集团页面章节')
 
-    const dialog = screen.getByRole('dialog')
-    expect(within(dialog).getByRole('heading', { name: area })).toBeInTheDocument()
-    expect(within(dialog).getByText(status)).toBeInTheDocument()
-    expect(trigger).toHaveAttribute('aria-expanded', 'true')
-
-    fireEvent.click(within(dialog).getByRole('button', { name: '关闭能力说明' }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await waitFor(() => expect(trigger).toHaveFocus())
+    expect(
+      within(sectionNavigation)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['概览', '数字', '体育', '集团'])
+    expect(within(sectionNavigation).getByRole('link', { name: '集团' })).toHaveAttribute(
+      'href',
+      '#group-leadership',
+    )
   })
 })
 

@@ -113,10 +113,12 @@ describe('GroupSwipeEntry', () => {
   it('uses a compact chevron while preserving the accessible button and click action', async () => {
     const { onComplete } = renderEntry()
     const entry = screen.getByRole('button', { name: '上滑了解高歌集团' })
+    const chevron = screen.getByTestId('group-swipe-chevron')
 
-    expect(screen.getByTestId('group-swipe-chevron')).toBeInTheDocument()
+    expect(chevron).toBeInTheDocument()
+    expect(chevron.querySelectorAll('svg')).toHaveLength(2)
     expect(entry).not.toHaveTextContent('上滑了解高歌集团')
-    expect(entry).toHaveClass('min-h-11', 'min-w-11')
+    expect(entry).toHaveClass('min-h-11', 'min-w-11', 'text-white/70')
 
     fireEvent.click(entry)
 

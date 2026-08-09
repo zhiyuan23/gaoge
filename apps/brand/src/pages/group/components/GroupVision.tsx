@@ -8,7 +8,8 @@ export default function GroupVision({ items }: GroupVisionProps) {
   return (
     <section
       aria-labelledby="group-vision-title"
-      className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24"
+      className="group-page-section mx-auto max-w-[1440px] scroll-mt-32 px-6 py-16 md:px-10 md:py-24"
+      id="group-vision"
     >
       <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">GROUP VISION</p>
       <h2
@@ -17,7 +18,7 @@ export default function GroupVision({ items }: GroupVisionProps) {
       >
         集团愿景
       </h2>
-      <p className="mt-6 max-w-3xl text-3xl leading-tight tracking-[-0.05em] text-white md:text-5xl">
+      <p className="mt-6 max-w-3xl text-3xl leading-tight tracking-[-0.05em] text-white md:text-5xl lg:max-w-none lg:whitespace-nowrap">
         让每一份热爱，都有持续生长的可能。
       </p>
 

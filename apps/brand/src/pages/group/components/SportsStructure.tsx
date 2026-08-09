@@ -10,7 +10,8 @@ export default function SportsStructure({ entities }: SportsStructureProps) {
   return (
     <section
       aria-labelledby="sports-structure-title"
-      className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24"
+      className="group-page-section mx-auto max-w-[1440px] scroll-mt-32 px-6 py-16 md:px-10 md:py-24"
+      id="group-sports"
     >
       <div className="max-w-2xl">
         <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">因热爱相聚</p>
@@ -29,7 +30,7 @@ export default function SportsStructure({ entities }: SportsStructureProps) {
         {entities.map((entity) => (
           <a
             aria-label={`${entity.name}，进入高歌体育，将在新窗口打开`}
-            className={`group-sports-entity group flex flex-col justify-between rounded-[24px] border border-white/10 p-6 transition-[border-color,transform] duration-300 hover:-translate-y-1 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[rgb(var(--brand-accent))] active:translate-y-0 md:p-7 ${
+            className={`group-sports-entity group flex flex-col justify-between rounded-[24px] border border-white/10 p-6 transition-[border-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:-translate-y-1 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[rgb(var(--brand-accent))] active:translate-y-0 active:scale-[0.985] md:p-7 ${
               entity.id === 'league'
                 ? 'group-sports-entity--league min-h-60 md:min-h-72'
                 : 'min-h-52 md:mt-8 md:min-h-60'
@@ -46,7 +47,7 @@ export default function SportsStructure({ entities }: SportsStructureProps) {
               >
                 {entity.id === 'club' ? 'FC' : 'GSL'}
               </span>
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-white/45 transition-colors group-hover:border-white/20 group-hover:bg-white/[0.06] group-hover:text-white">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 text-white/45 transition-[background-color,border-color,color,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:border-white/20 group-hover:bg-white/[0.06] group-hover:text-white">
                 <ArrowUpRight aria-hidden="true" size={16} strokeWidth={1.5} />
               </span>
             </div>

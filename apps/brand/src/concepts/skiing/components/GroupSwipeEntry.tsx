@@ -1,4 +1,5 @@
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'framer-motion'
+import { ChevronUp } from 'lucide-react'
 import {
   forwardRef,
   type PointerEvent as ReactPointerEvent,
@@ -386,15 +387,15 @@ const GroupSwipeEntry = forwardRef<GroupSwipeEntryHandle, GroupSwipeEntryProps>(
     const entryControl = (
       <button
         aria-label="上滑了解高歌集团"
-        className="group-swipe-entry absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[15] flex min-h-11 min-w-11 -translate-x-1/2 touch-none items-center justify-center text-white/55"
+        className="group-swipe-entry absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[15] flex min-h-11 min-w-11 -translate-x-1/2 touch-none items-center justify-center text-white/70"
         data-group-swipe-control
         disabled={disabled}
         onClick={handleClick}
         type="button"
       >
         <span aria-hidden="true" className="group-swipe-chevron" data-testid="group-swipe-chevron">
-          <span />
-          <span />
+          <ChevronUp className="group-swipe-chevron-line group-swipe-chevron-line--leading" />
+          <ChevronUp className="group-swipe-chevron-line group-swipe-chevron-line--trailing" />
         </span>
       </button>
     )

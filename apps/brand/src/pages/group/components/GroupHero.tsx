@@ -31,7 +31,10 @@ export default function GroupHero({ industries, skipEntranceAnimation = false }:
       }
 
   return (
-    <section className="relative isolate mx-auto grid min-h-[calc(100dvh-5rem)] max-w-[1600px] items-center overflow-hidden px-6 pb-16 pt-12 md:px-10 md:pb-20 lg:grid-cols-[0.82fr_1.18fr] lg:gap-8 lg:pt-8">
+    <section
+      className="group-page-section relative isolate mx-auto grid min-h-[calc(100dvh-4.25rem)] max-w-[1600px] items-center overflow-hidden px-6 pb-16 pt-12 md:min-h-[calc(100dvh-5rem)] md:px-10 md:pb-20 lg:grid-cols-[0.82fr_1.18fr] lg:gap-8 lg:pt-8"
+      id="group-overview"
+    >
       <img
         alt="深色金属与绿玻璃构成的弧形建筑结构"
         className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-45 lg:object-right"

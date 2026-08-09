@@ -1,7 +1,9 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { X } from 'lucide-react'
+import { ArrowRight, X } from 'lucide-react'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+
+import GroupSectionNavigation from '@/pages/group/components/GroupSectionNavigation'
 
 export type BrandArea = 'home' | 'digital' | 'content' | 'group'
 export type CapabilityArea = 'digital' | 'content' | 'film' | 'sports'
@@ -13,6 +15,7 @@ export interface BrandNavigationHandle {
 interface BrandNavigationProps {
   readonly className?: string | undefined
   readonly current: BrandArea
+  readonly groupSectionNavigationActive?: boolean | undefined
   readonly onCapabilityOpenChange?: ((open: boolean) => void) | undefined
   readonly onGroupNavigate?: (() => void) | undefined
   readonly overlay?: boolean
@@ -69,7 +72,14 @@ function BrandMark({ home = false }: BrandMarkProps) {
 
 const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
   function BrandNavigation(
-    { className, current, onCapabilityOpenChange, onGroupNavigate, overlay = false },
+    {
+      className,
+      current,
+      groupSectionNavigationActive = true,
+      onCapabilityOpenChange,
+      onGroupNavigate,
+      overlay = false,
+    },
     ref,
   ) {
     const [activeArea, setActiveArea] = useState<CapabilityArea | null>(null)
@@ -137,49 +147,21 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
           {current === 'group' ? (
             <nav
               aria-label="高歌品牌导航"
-              className="brand-group-navigation brand-navigation-surface mx-auto flex h-[52px] max-w-7xl items-center rounded-full border p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.22)] md:h-14 md:p-1.5"
+              className="brand-group-navigation brand-navigation-surface mx-auto flex h-[52px] max-w-[1440px] items-center overflow-hidden rounded-full border p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.22)] md:h-14 md:p-1.5"
             >
               <Link
                 aria-label="高歌首页"
-                className="flex h-11 items-center gap-2 rounded-full px-3 text-white transition-colors hover:bg-white/[0.06] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/40 md:px-4"
+                className="flex h-11 shrink-0 items-center gap-2 rounded-full px-3 text-white transition-colors hover:bg-white/[0.06] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/40 md:px-4"
                 to="/"
               >
                 <BrandMark home />
                 <span className="text-sm font-medium tracking-[0.08em] text-white">GAOGE</span>
               </Link>
 
-              <div
-                aria-label="高歌品牌领域"
-                className="ml-auto hidden items-center gap-1 md:flex"
-                role="list"
-              >
-                {brandAreas.map((area) => {
-                  const className =
-                    'rounded-full px-4 py-2 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-white'
-
-                  return (
-                    <span key={area.key} role="listitem">
-                      <button
-                        aria-controls="brand-capability-dialog"
-                        aria-expanded={activeArea === area.key}
-                        aria-haspopup="dialog"
-                        className={className}
-                        onClick={(event) => openCapability(area.key, event.currentTarget)}
-                        type="button"
-                      >
-                        {area.label}
-                      </button>
-                    </span>
-                  )
-                })}
-              </div>
-
-              <span
-                aria-current="page"
-                className="ml-auto grid h-11 min-w-16 place-items-center rounded-full border border-white/10 bg-white/10 px-5 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] md:ml-1"
-              >
+              <span className="hidden shrink-0 border-l border-white/10 pl-3 text-xs text-white/45 md:inline">
                 集团
               </span>
+              <GroupSectionNavigation active={groupSectionNavigationActive} />
             </nav>
           ) : (
             <nav
@@ -261,7 +243,7 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
               {current === 'home' ? (
                 <Link
                   aria-label="高歌集团"
-                  className="brand-navigation-surface group col-start-3 row-start-1 inline-flex h-11 items-center justify-self-end rounded-full border border-white/15 bg-neutral-900/60 px-4 backdrop-blur transition-[background-color,border-color,transform] duration-150 hover:border-white/30 hover:bg-neutral-900/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.97]"
+                  className="home-group-link group col-start-3 row-start-1 inline-flex h-11 items-center gap-1.5 justify-self-end rounded-full px-2.5 text-white/50 transition-[color,transform] duration-150 hover:text-white/85 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-white/60 active:scale-[0.97] md:px-3"
                   title="高歌集团"
                   to="/group"
                   onClick={(event) => {
@@ -280,9 +262,14 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
                     onGroupNavigate()
                   }}
                 >
-                  <span className="whitespace-nowrap text-xs font-medium tracking-[0.06em] text-white/75 transition-colors group-hover:text-white">
-                    高歌集团
+                  <span className="whitespace-nowrap text-xs font-medium tracking-[0.08em]">
+                    集团
                   </span>
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 text-white/30 transition-[color,transform] duration-150 group-hover:translate-x-0.5 group-hover:text-white/65"
+                    strokeWidth={1.5}
+                  />
                 </Link>
               ) : (
                 <NavLink
