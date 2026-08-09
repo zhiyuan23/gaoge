@@ -14,7 +14,12 @@ const inlinePlaybackAttributes = {
   'x5-video-player-type': 'h5-page',
 } as const
 
-export default function SkiingHero() {
+interface SkiingHeroProps {
+  readonly onCapabilityOpenChange?: ((open: boolean) => void) | undefined
+  readonly onGroupNavigate?: (() => void) | undefined
+}
+
+export default function SkiingHero({ onCapabilityOpenChange, onGroupNavigate }: SkiingHeroProps) {
   const reducedMotion = useReducedMotion()
   const navigationRef = useRef<BrandNavigationHandle>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -78,7 +83,11 @@ export default function SkiingHero() {
         className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(circle_at_18%_46%,rgba(0,0,0,0.48),transparent_34%),linear-gradient(to_bottom,rgba(0,0,0,0.36),transparent_28%,transparent_72%,rgba(0,0,0,0.3))]"
       />
 
-      <SkiingNavbar ref={navigationRef} />
+      <SkiingNavbar
+        ref={navigationRef}
+        onCapabilityOpenChange={onCapabilityOpenChange}
+        onGroupNavigate={onGroupNavigate}
+      />
 
       <div className="relative z-10 min-h-[100dvh] w-full">
         <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-0 h-48 bg-gradient-to-b from-transparent to-black" />

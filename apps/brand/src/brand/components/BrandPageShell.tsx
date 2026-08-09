@@ -10,18 +10,28 @@ interface BrandPageShellProps {
     readonly to: '/content' | '/digital'
   }
   readonly current: 'content' | 'digital' | 'group'
+  readonly entryPresentation?: 'active' | 'direct' | 'staged'
 }
 
-export default function BrandPageShell({ children, crossLink, current }: BrandPageShellProps) {
+export default function BrandPageShell({
+  children,
+  crossLink,
+  current,
+  entryPresentation,
+}: BrandPageShellProps) {
   return (
     <main
       className={`brand-matrix-page min-h-full ${
         current === 'group' ? 'overflow-x-clip' : 'overflow-hidden'
       }`}
       data-brand-area={current}
+      data-entry-presentation={current === 'group' ? entryPresentation : undefined}
       lang="zh-CN"
     >
-      <BrandNavigation current={current} />
+      <BrandNavigation
+        className={current === 'group' ? 'group-entry-navigation' : undefined}
+        current={current}
+      />
       {children}
       <footer className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-12 text-sm text-white/60 md:px-10">
         <Link className="rounded-full transition-colors hover:text-white" to="/">

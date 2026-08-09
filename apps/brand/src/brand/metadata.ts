@@ -2,11 +2,14 @@ import { useEffect } from 'react'
 
 interface BrandMetadata {
   readonly description: string
+  readonly enabled?: boolean
   readonly title: string
 }
 
-export function useBrandMetadata({ description, title }: BrandMetadata): void {
+export function useBrandMetadata({ description, enabled = true, title }: BrandMetadata): void {
   useEffect(() => {
+    if (!enabled) return
+
     const previousTitle = document.title
     const existingDescription = document.head.querySelector<HTMLMetaElement>(
       'meta[name="description"]',
@@ -32,5 +35,5 @@ export function useBrandMetadata({ description, title }: BrandMetadata): void {
         descriptionElement.content = previousDescription
       }
     }
-  }, [description, title])
+  }, [description, enabled, title])
 }

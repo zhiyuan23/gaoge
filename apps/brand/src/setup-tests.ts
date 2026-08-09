@@ -76,6 +76,11 @@ Object.defineProperty(Element.prototype, 'scrollIntoView', {
   value: vi.fn(),
 })
 
+Object.defineProperty(window, 'scrollTo', {
+  configurable: true,
+  value: vi.fn(),
+})
+
 Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
   configurable: true,
   value(this: HTMLDialogElement) {

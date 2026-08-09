@@ -34,6 +34,27 @@ describe('SkiingHero', () => {
     expect(container.querySelector('video')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '暂停背景视频' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '播放背景视频' })).not.toBeInTheDocument()
+    expect(screen.queryByTestId('group-swipe-viewport')).not.toBeInTheDocument()
+  })
+
+  it('delegates group navigation and capability state to its parent', () => {
+    const onCapabilityOpenChange = vi.fn()
+    const onGroupNavigate = vi.fn()
+
+    render(
+      <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+        <SkiingHero
+          onCapabilityOpenChange={onCapabilityOpenChange}
+          onGroupNavigate={onGroupNavigate}
+        />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('link', { name: '高歌集团' }))
+    expect(onGroupNavigate).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole('button', { name: '数字' }))
+    expect(onCapabilityOpenChange).toHaveBeenCalledWith(true)
   })
 
   it('uses linear mobile signals and the refined mobile title rhythm', () => {

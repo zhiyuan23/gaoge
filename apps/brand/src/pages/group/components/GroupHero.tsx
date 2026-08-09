@@ -1,14 +1,34 @@
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion, type MotionProps, useReducedMotion } from 'framer-motion'
 
 import IndustryOrbit from '@/pages/group/components/IndustryOrbit'
 import type { GroupIndustry } from '@/pages/group/types'
 
 interface GroupHeroProps {
   readonly industries: readonly GroupIndustry[]
+  readonly skipEntranceAnimation?: boolean
 }
 
-export default function GroupHero({ industries }: GroupHeroProps) {
+export default function GroupHero({ industries, skipEntranceAnimation = false }: GroupHeroProps) {
   const reducedMotion = useReducedMotion()
+  const skipEntrance = reducedMotion || skipEntranceAnimation
+  const copyMotion: MotionProps = skipEntrance
+    ? {}
+    : {
+        animate: { opacity: 1, y: 0 },
+        initial: { opacity: 0, y: 18 },
+        transition: { duration: 0.62, ease: [0.16, 1, 0.3, 1] },
+      }
+  const orbitMotion: MotionProps = skipEntrance
+    ? {}
+    : {
+        animate: { opacity: 1, scale: 1 },
+        initial: { opacity: 0, scale: 0.98 },
+        transition: {
+          delay: reducedMotion ? 0 : 0.12,
+          duration: 0.7,
+          ease: [0.16, 1, 0.3, 1],
+        },
+      }
 
   return (
     <section className="relative isolate mx-auto grid min-h-[calc(100dvh-5rem)] max-w-[1600px] items-center overflow-hidden px-6 pb-16 pt-12 md:px-10 md:pb-20 lg:grid-cols-[0.82fr_1.18fr] lg:gap-8 lg:pt-8">
@@ -24,10 +44,8 @@ export default function GroupHero({ industries }: GroupHeroProps) {
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(12_15_13_/_0.98)_0%,rgb(12_15_13_/_0.9)_38%,rgb(12_15_13_/_0.42)_72%,rgb(12_15_13_/_0.76)_100%)]" />
 
       <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 max-w-xl pb-10 pt-8 lg:pb-0"
-        initial={reducedMotion ? false : { opacity: 0, y: 18 }}
-        transition={{ duration: 0.62, ease: [0.16, 1, 0.3, 1] }}
+        className="group-entry-copy relative z-10 max-w-xl pb-10 pt-8 lg:pb-0"
+        {...copyMotion}
       >
         <h1 className="text-xs font-medium tracking-[0.2em] text-[rgb(var(--brand-accent))]">
           GAOGE GROUP
@@ -45,12 +63,7 @@ export default function GroupHero({ industries }: GroupHeroProps) {
         </p>
       </motion.div>
 
-      <motion.div
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 min-w-0"
-        initial={reducedMotion ? false : { opacity: 0, scale: 0.98 }}
-        transition={{ delay: reducedMotion ? 0 : 0.12, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      >
+      <motion.div className="group-entry-orbit relative z-10 min-w-0" {...orbitMotion}>
         <IndustryOrbit industries={industries} />
       </motion.div>
     </section>

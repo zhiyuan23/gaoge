@@ -15,16 +15,25 @@ import {
   sportsEntities,
 } from '@/pages/group/data'
 
-export default function GroupPage() {
+export type GroupEntryPresentation = 'active' | 'direct' | 'staged'
+
+interface GroupPageProps {
+  readonly entryPresentation?: GroupEntryPresentation
+}
+
+export default function GroupPage({ entryPresentation = 'direct' }: GroupPageProps) {
+  const isPersistedEntry = entryPresentation !== 'direct'
+
   useBrandMetadata({
     description:
       '认识高歌集团和数字、内容、影视、体育四个事业部，看见我们如何从热爱出发，让想法持续生长。',
+    enabled: entryPresentation !== 'staged',
     title: '高歌集团 - 让热爱持续生长',
   })
 
   return (
-    <BrandPageShell current="group">
-      <GroupHero industries={groupIndustries} />
+    <BrandPageShell current="group" entryPresentation={entryPresentation}>
+      <GroupHero industries={groupIndustries} skipEntranceAnimation={isPersistedEntry} />
       <DigitalStructure products={groupDigitalProducts} />
       <SportsStructure entities={sportsEntities} />
       <LeadershipStructure leaders={groupLeaders} />

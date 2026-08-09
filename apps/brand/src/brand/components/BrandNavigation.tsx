@@ -11,7 +11,10 @@ export interface BrandNavigationHandle {
 }
 
 interface BrandNavigationProps {
+  readonly className?: string | undefined
   readonly current: BrandArea
+  readonly onCapabilityOpenChange?: ((open: boolean) => void) | undefined
+  readonly onGroupNavigate?: (() => void) | undefined
   readonly overlay?: boolean
 }
 
@@ -65,7 +68,10 @@ function BrandMark({ home = false }: BrandMarkProps) {
 }
 
 const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
-  function BrandNavigation({ current, overlay = false }, ref) {
+  function BrandNavigation(
+    { className, current, onCapabilityOpenChange, onGroupNavigate, overlay = false },
+    ref,
+  ) {
     const [activeArea, setActiveArea] = useState<CapabilityArea | null>(null)
     const [isPresented, setIsPresented] = useState(false)
     const closeButtonRef = useRef<HTMLButtonElement | null>(null)
@@ -113,12 +119,20 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
       }
     }, [isDialogOpen])
 
+    useEffect(() => {
+      onCapabilityOpenChange?.(isDialogOpen)
+
+      return () => {
+        if (isDialogOpen) onCapabilityOpenChange?.(false)
+      }
+    }, [isDialogOpen, onCapabilityOpenChange])
+
     return (
       <>
         <header
           className={`left-0 right-0 top-0 z-20 ${
             current === 'group' ? 'px-4 pt-4 md:px-10 md:pt-6' : 'px-6 pt-6 md:px-10'
-          } ${overlay ? 'absolute' : current === 'group' ? 'sticky' : 'relative'}`}
+          } ${overlay ? 'absolute' : current === 'group' ? 'sticky' : 'relative'} ${className ?? ''}`}
         >
           {current === 'group' ? (
             <nav
@@ -250,6 +264,21 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
                   className="brand-navigation-surface group col-start-3 row-start-1 inline-flex h-11 items-center justify-self-end rounded-full border border-white/15 bg-neutral-900/60 px-4 backdrop-blur transition-[background-color,border-color,transform] duration-150 hover:border-white/30 hover:bg-neutral-900/85 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.97]"
                   title="高歌集团"
                   to="/group"
+                  onClick={(event) => {
+                    if (
+                      !onGroupNavigate ||
+                      event.button !== 0 ||
+                      event.metaKey ||
+                      event.ctrlKey ||
+                      event.shiftKey ||
+                      event.altKey
+                    ) {
+                      return
+                    }
+
+                    event.preventDefault()
+                    onGroupNavigate()
+                  }}
                 >
                   <span className="whitespace-nowrap text-xs font-medium tracking-[0.06em] text-white/75 transition-colors group-hover:text-white">
                     高歌集团

@@ -1,24 +1,50 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { MemoryRouter, useLocation } from 'react-router-dom'
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
 import App from '@/App'
 import { navigationItems } from '@/concepts/creator/data'
 
+class PointerEventMock extends MouseEvent {
+  readonly pointerId: number
+  readonly pointerType: string
+
+  constructor(type: string, init: PointerEventInit = {}) {
+    super(type, init)
+    this.pointerId = init.pointerId ?? 0
+    this.pointerType = init.pointerType ?? 'mouse'
+  }
+}
+
 function LocationDisplay() {
   const location = useLocation()
 
-  return <output data-testid="location">{location.pathname}</output>
+  return (
+    <output data-state={JSON.stringify(location.state)} data-testid="location">
+      {location.pathname}
+    </output>
+  )
 }
 
-function renderRoute(pathname: string) {
+function HistoryControls() {
+  const navigate = useNavigate()
+
+  return (
+    <button onClick={() => navigate(-1)} type="button">
+      测试返回
+    </button>
+  )
+}
+
+function renderRoute(entry: string | { pathname: string; state?: unknown }) {
   return render(
     <MemoryRouter
       future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
-      initialEntries={[pathname]}
+      initialEntries={[entry]}
     >
       <App />
       <LocationDisplay />
+      <HistoryControls />
     </MemoryRouter>,
   )
 }
@@ -169,6 +195,9 @@ describe('Skiing concept route', () => {
     expect(within(dialog).getByTestId('capability-dismiss-area')).not.toHaveClass('items-end')
     expect(within(dialog).queryByRole('link')).not.toBeInTheDocument()
 
+    fireEvent.wheel(screen.getByTestId('group-swipe-viewport'), { deltaY: 240 })
+    expect(screen.getByTestId('location')).toHaveTextContent('/')
+
     fireEvent.click(within(dialog).getByRole('button', { name: '内容' }))
     expect(within(dialog).getByRole('heading', { name: '内容' })).toBeInTheDocument()
     expect(within(dialog).getByText('内容运营')).toBeInTheDocument()
@@ -189,6 +218,65 @@ describe('Skiing concept route', () => {
     expect(
       within(dialog).getByText('以运动与连接的力量，把热爱转化为真实发生的共同体验。'),
     ).toBeInTheDocument()
+  })
+
+  it.each([
+    ['button', '上滑了解高歌集团'],
+    ['link', '高歌集团'],
+  ] as const)('enters the group route from the homepage %s entry', async (role, name) => {
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        addEventListener: vi.fn(),
+        addListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        matches: query.includes('prefers-reduced-motion'),
+        media: query,
+        onchange: null,
+        removeEventListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    })
+    renderRoute('/')
+
+    fireEvent.click(await screen.findByRole(role, { name }))
+
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/group'))
+    expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
+    expect(document.querySelector('video')).not.toBeInTheDocument()
+    expect(screen.getByTestId('group-swipe-group-layer')).not.toHaveAttribute('aria-hidden')
+    expect(screen.getByTestId('group-swipe-group-layer')).not.toHaveAttribute('inert')
+  })
+
+  it('enters the group route from a mobile swipe on noninteractive homepage content', async () => {
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 844 })
+    Object.defineProperty(window, 'PointerEvent', {
+      configurable: true,
+      value: PointerEventMock,
+    })
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        addEventListener: vi.fn(),
+        addListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        matches: query === '(pointer: coarse)',
+        media: query,
+        onchange: null,
+        removeEventListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    })
+    renderRoute('/')
+    const heading = await screen.findByRole('heading', { name: 'enjoy your passion' })
+
+    fireEvent.pointerDown(heading, { clientY: 700, pointerId: 1, pointerType: 'touch' })
+    fireEvent.pointerMove(heading, { clientY: 548, pointerId: 1, pointerType: 'touch' })
+    fireEvent.pointerUp(heading, { clientY: 548, pointerId: 1, pointerType: 'touch' })
+
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/group'))
+    expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
+    expect(screen.getByTestId('group-swipe-group-layer')).not.toHaveAttribute('aria-hidden')
   })
 
   it.each([
@@ -292,6 +380,39 @@ describe('formal brand routes', () => {
 })
 
 describe('group organization route', () => {
+  it('restores the homepage at the top without a handoff overlay', async () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined)
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        addEventListener: vi.fn(),
+        addListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        matches: query.includes('prefers-reduced-motion'),
+        media: query,
+        onchange: null,
+        removeEventListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    })
+    renderRoute('/')
+
+    fireEvent.click(await screen.findByRole('button', { name: '上滑了解高歌集团' }))
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/group'))
+
+    fireEvent.click(screen.getByRole('button', { name: '测试返回' }))
+    expect(await screen.findByRole('heading', { name: 'enjoy your passion' })).toBeInTheDocument()
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: 0, top: 0 })
+    expect(screen.queryByTestId('group-route-handoff')).not.toBeInTheDocument()
+  })
+
+  it('does not add a transition handoff to direct group visits', async () => {
+    renderRoute('/group')
+
+    expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
+    expect(screen.queryByTestId('group-route-handoff')).not.toBeInTheDocument()
+  })
+
   it('renders the public group structure and metadata', async () => {
     renderRoute('/group')
 

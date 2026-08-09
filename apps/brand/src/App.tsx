@@ -1,29 +1,18 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
+import ConceptLoading from '@/brand/components/ConceptLoading'
+import HomeGroupRouteShell from '@/brand/components/HomeGroupRouteShell'
 import ConceptIndexPage from '@/concepts/ConceptIndexPage'
 import {
   type BrandConcept,
   concepts,
   getConceptPath,
-  homepageConceptSlug,
   legacyConceptRoutes,
 } from '@/concepts/registry'
 
 const ContentPage = lazy(() => import('@/pages/content/ContentPage'))
 const DigitalPage = lazy(() => import('@/pages/digital/DigitalPage'))
-const GroupPage = lazy(() => import('@/pages/group/GroupPage'))
-
-function ConceptLoading() {
-  return (
-    <main
-      aria-live="polite"
-      className="grid min-h-[100dvh] place-items-center bg-[#0c0c0c] text-sm tracking-[0.18em] text-white/50"
-    >
-      LOADING GAOGE
-    </main>
-  )
-}
 
 function LazyPageRoute({ component: Page }: Pick<BrandConcept, 'component'>) {
   return (
@@ -33,21 +22,15 @@ function LazyPageRoute({ component: Page }: Pick<BrandConcept, 'component'>) {
   )
 }
 
-const homepageConcept = concepts.find(({ slug }) => slug === homepageConceptSlug)
-
-if (!homepageConcept) {
-  throw new Error(`Homepage concept "${homepageConceptSlug}" is not registered`)
-}
-
-const HomepagePage = homepageConcept.component
-
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<LazyPageRoute component={HomepagePage} />} />
+      <Route element={<HomeGroupRouteShell />}>
+        <Route index element={null} />
+        <Route path="group" element={null} />
+      </Route>
       <Route path="/digital" element={<LazyPageRoute component={DigitalPage} />} />
       <Route path="/content" element={<LazyPageRoute component={ContentPage} />} />
-      <Route path="/group" element={<LazyPageRoute component={GroupPage} />} />
       <Route path="/concepts" element={<ConceptIndexPage />} />
       {concepts.map(({ component: ConceptPage, slug }) => (
         <Route
