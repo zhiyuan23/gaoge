@@ -6,6 +6,14 @@ import SkiingHero from '@/concepts/skiing/components/SkiingHero'
 
 let reducedMotion = true
 
+interface WeixinJSBridgeWindow extends Window {
+  WeixinJSBridge?: {
+    invoke: (method: string, params: Record<string, never>, callback: () => void) => void
+  }
+}
+
+const weixinWindow = window as WeixinJSBridgeWindow
+
 vi.mock('framer-motion', async (importOriginal) => ({
   ...(await importOriginal<typeof import('framer-motion')>()),
   useReducedMotion: () => reducedMotion,
@@ -17,6 +25,7 @@ describe('SkiingHero', () => {
   })
 
   afterEach(() => {
+    delete weixinWindow.WeixinJSBridge
     vi.restoreAllMocks()
   })
 
@@ -131,5 +140,32 @@ describe('SkiingHero', () => {
     expect(play).toHaveBeenCalledTimes(4)
     expect(screen.queryByRole('button', { name: '暂停背景视频' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '播放背景视频' })).not.toBeInTheDocument()
+  })
+
+  it('retries through an already initialized WeChat bridge before the first touch', () => {
+    reducedMotion = false
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
+    let bridgeCallback: (() => void) | undefined
+    const invoke = vi.fn(
+      (_method: string, _params: Record<string, never>, callback: () => void) => {
+        bridgeCallback = callback
+      },
+    )
+
+    weixinWindow.WeixinJSBridge = { invoke }
+
+    render(
+      <MemoryRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+        <SkiingHero />
+      </MemoryRouter>,
+    )
+
+    expect(invoke).toHaveBeenCalledWith('getNetworkType', {}, expect.any(Function))
+    expect(play).toHaveBeenCalledTimes(1)
+
+    act(() => {
+      bridgeCallback?.()
+    })
+    expect(play).toHaveBeenCalledTimes(2)
   })
 })

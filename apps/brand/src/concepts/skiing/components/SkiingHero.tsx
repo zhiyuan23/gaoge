@@ -14,6 +14,18 @@ const inlinePlaybackAttributes = {
   'x5-video-player-type': 'h5-page',
 } as const
 
+interface WeixinJSBridge {
+  invoke: (method: string, params: Record<string, never>, callback: () => void) => void
+}
+
+type WeixinWindow = Window & {
+  readonly WeixinJSBridge?: WeixinJSBridge
+}
+
+function getWeixinJSBridge() {
+  return (window as WeixinWindow).WeixinJSBridge
+}
+
 interface SkiingHeroProps {
   readonly onCapabilityOpenChange?: ((open: boolean) => void) | undefined
   readonly onGroupNavigate?: (() => void) | undefined
@@ -38,18 +50,34 @@ export default function SkiingHero({ onCapabilityOpenChange, onGroupNavigate }: 
     }
   }, [])
 
+  const tryPlayVideoThroughWeixinBridge = useCallback(() => {
+    const bridge = getWeixinJSBridge()
+
+    if (!bridge) {
+      void tryPlayVideo()
+      return
+    }
+
+    try {
+      bridge.invoke('getNetworkType', {}, () => void tryPlayVideo())
+    } catch {
+      void tryPlayVideo()
+    }
+  }, [tryPlayVideo])
+
   useEffect(() => {
     if (reducedMotion) return
 
-    document.addEventListener('WeixinJSBridgeReady', tryPlayVideo)
+    document.addEventListener('WeixinJSBridgeReady', tryPlayVideoThroughWeixinBridge)
     document.addEventListener('touchstart', tryPlayVideo, { once: true, passive: true })
     void tryPlayVideo()
+    if (getWeixinJSBridge()) tryPlayVideoThroughWeixinBridge()
 
     return () => {
-      document.removeEventListener('WeixinJSBridgeReady', tryPlayVideo)
+      document.removeEventListener('WeixinJSBridgeReady', tryPlayVideoThroughWeixinBridge)
       document.removeEventListener('touchstart', tryPlayVideo)
     }
-  }, [reducedMotion, tryPlayVideo])
+  }, [reducedMotion, tryPlayVideo, tryPlayVideoThroughWeixinBridge])
 
   return (
     <section id="top" className="relative min-h-[100dvh] w-full overflow-hidden bg-black">
