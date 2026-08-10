@@ -14,6 +14,14 @@ export interface GroupDigitalProduct {
   readonly name: string
 }
 
+export interface GroupContentOverview {
+  readonly capabilities: readonly string[]
+  readonly description: string
+  readonly eyebrow: string
+  readonly headline: readonly [string, string]
+  readonly href: '/content'
+}
+
 export interface BusinessCapability {
   readonly capabilities: readonly string[]
   readonly description: string

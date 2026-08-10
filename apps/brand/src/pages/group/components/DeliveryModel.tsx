@@ -13,7 +13,7 @@ export default function DeliveryModel({ models }: DeliveryModelProps) {
       <div className="group-delivery-model border-white/12 grid gap-12 overflow-hidden rounded-[28px] border px-7 py-12 md:grid-cols-[0.76fr_1.24fr] md:gap-16 md:px-12 md:py-16">
         <div>
           <h2
-            className="max-w-md text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl"
+            className="font-display-cn max-w-md text-4xl font-medium tracking-[-0.025em] text-white md:text-6xl"
             id="delivery-model-title"
           >
             集团协同交付

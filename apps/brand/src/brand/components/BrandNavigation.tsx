@@ -3,6 +3,8 @@ import { ArrowRight, X } from 'lucide-react'
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 
+import ContentSectionNavigation from '@/pages/content/components/ContentSectionNavigation'
+import DigitalSectionNavigation from '@/pages/digital/components/DigitalSectionNavigation'
 import GroupSectionNavigation from '@/pages/group/components/GroupSectionNavigation'
 
 export type BrandArea = 'home' | 'digital' | 'content' | 'group'
@@ -92,6 +94,17 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
       ? brandAreas.find((area) => area.key === activeArea)
       : undefined
     const isDialogOpen = activeArea !== null
+    const usesSectionNavigation =
+      current === 'group' || current === 'digital' || current === 'content'
+
+    function renderSectionNavigation() {
+      if (current === 'group') {
+        return <GroupSectionNavigation active={groupSectionNavigationActive} />
+      }
+
+      if (current === 'content') return <ContentSectionNavigation />
+      return <DigitalSectionNavigation />
+    }
 
     function openCapability(area: CapabilityArea, trigger: HTMLButtonElement) {
       triggerRef.current = trigger
@@ -141,27 +154,35 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
       <>
         <header
           className={`left-0 right-0 top-0 z-20 ${
-            current === 'group' ? 'px-4 pt-4 md:px-10 md:pt-6' : 'px-6 pt-6 md:px-10'
-          } ${overlay ? 'absolute' : current === 'group' ? 'sticky' : 'relative'} ${className ?? ''}`}
+            usesSectionNavigation ? 'px-4 pt-4 md:px-10 md:pt-6' : 'px-6 pt-6 md:px-10'
+          } ${overlay ? 'absolute' : usesSectionNavigation ? 'sticky' : 'relative'} ${className ?? ''}`}
         >
-          {current === 'group' ? (
+          {usesSectionNavigation ? (
             <nav
               aria-label="高歌品牌导航"
               className="brand-group-navigation brand-navigation-surface mx-auto flex h-[52px] max-w-[1440px] items-center overflow-hidden rounded-full border p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_40px_rgba(0,0,0,0.22)] md:h-14 md:p-1.5"
             >
               <Link
                 aria-label="高歌首页"
-                className="flex h-11 shrink-0 items-center gap-2 rounded-full px-3 text-white transition-colors hover:bg-white/[0.06] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/40 md:px-4"
+                className={`flex h-11 shrink-0 items-center gap-2 rounded-full px-3 text-white transition-colors hover:bg-white/[0.06] focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/40 md:px-4 ${
+                  current === 'content' ? 'max-[359px]:gap-0 max-[359px]:px-2' : ''
+                }`}
                 to="/"
               >
                 <BrandMark home />
-                <span className="text-sm font-medium tracking-[0.08em] text-white">GAOGE</span>
+                <span
+                  className={`text-sm font-medium tracking-[0.08em] text-white ${
+                    current === 'content' ? 'max-[359px]:hidden' : ''
+                  }`}
+                >
+                  GAOGE
+                </span>
               </Link>
 
               <span className="hidden shrink-0 border-l border-white/10 pl-3 text-xs text-white/45 md:inline">
-                集团
+                {current === 'group' ? '集团' : current === 'content' ? '内容' : '数字'}
               </span>
-              <GroupSectionNavigation active={groupSectionNavigationActive} />
+              {renderSectionNavigation()}
             </nav>
           ) : (
             <nav
@@ -185,10 +206,8 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
                 role="list"
               >
                 {brandAreas.map((area) => {
-                  const isCurrent = area.key === current
-                  const className = `rounded-full px-5 py-2 text-sm text-neutral-300 transition-colors duration-200 hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/35 ${
-                    isCurrent ? 'bg-white/10 text-white' : ''
-                  }`
+                  const className =
+                    'rounded-full px-5 py-2 text-sm text-neutral-300 transition-colors duration-200 hover:text-white focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-1 focus-visible:outline-white/35'
 
                   return (
                     <span key={area.key} role="listitem">
@@ -236,7 +255,7 @@ const BrandNavigation = forwardRef<BrandNavigationHandle, BrandNavigationProps>(
                   aria-label="当前品牌领域"
                   className="brand-navigation-surface col-start-2 row-start-1 grid h-11 place-items-center rounded-full bg-neutral-900/90 px-4 text-xs text-white/75 backdrop-blur md:hidden"
                 >
-                  {current === 'digital' ? '数字' : '内容'}
+                  内容
                 </span>
               ) : null}
 

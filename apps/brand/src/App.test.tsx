@@ -414,6 +414,38 @@ describe('group organization route', () => {
     expect(screen.queryByTestId('group-route-handoff')).not.toBeInTheDocument()
   })
 
+  it('restores the prior group scroll position after returning from a module page', async () => {
+    let scrollY = 0
+    const originalScrollY = Object.getOwnPropertyDescriptor(window, 'scrollY')
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined)
+
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      get: () => scrollY,
+    })
+
+    try {
+      renderRoute('/group')
+      expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
+      scrollY = 1460
+      fireEvent.scroll(window)
+
+      fireEvent.click(screen.getByRole('link', { name: '进入高歌内容' }))
+      expect(await screen.findByRole('heading', { name: 'GAOGE CONTENT' })).toBeInTheDocument()
+      expect(scrollTo).toHaveBeenLastCalledWith({ left: 0, top: 0 })
+      scrollY = 0
+      fireEvent.scroll(window)
+
+      fireEvent.click(screen.getByRole('button', { name: '测试返回' }))
+      expect(await screen.findByRole('heading', { name: 'GAOGE GROUP' })).toBeInTheDocument()
+      await waitFor(() => {
+        expect(scrollTo).toHaveBeenLastCalledWith({ left: 0, top: 1460 })
+      })
+    } finally {
+      if (originalScrollY) Object.defineProperty(window, 'scrollY', originalScrollY)
+    }
+  })
+
   it('renders the public group structure and metadata', async () => {
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
       addEventListener: vi.fn(),
@@ -454,7 +486,7 @@ describe('group organization route', () => {
 
     expect(activeSectionLink).toHaveAttribute('aria-current', 'location')
     expect(activeSectionLink).toHaveClass('group-section-navigation-link--active')
-    ;['数字', '体育', '管理层', '董事会', '愿景'].forEach((section) => {
+    ;['数字', '内容', '体育', '管理层', '董事会', '愿景'].forEach((section) => {
       expect(within(sectionNavigation!).getByRole('link', { name: section })).toHaveAttribute(
         'href',
         expect.stringMatching(/^#group-/),
@@ -463,6 +495,7 @@ describe('group organization route', () => {
     ;[
       'group-overview',
       'group-digital',
+      'group-content',
       'group-sports',
       'group-leadership',
       'group-board',
@@ -473,7 +506,6 @@ describe('group organization route', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('/group')
     expect(document.title).toBe('高歌集团 - 让热爱持续生长')
     expect(within(groupNavigation).queryByRole('button')).not.toBeInTheDocument()
-    expect(within(groupNavigation).queryByText('内容')).not.toBeInTheDocument()
     expect(within(groupNavigation).queryByText('影视')).not.toBeInTheDocument()
     ;['digital', 'content', 'film', 'sports'].forEach((industry) => {
       expect(document.querySelector(`[data-industry="${industry}"]`)?.tagName).toBe('ARTICLE')
@@ -495,8 +527,31 @@ describe('group organization route', () => {
 
     expect(screen.getByText('以数字连接业务')).toBeInTheDocument()
     const digitalHeading = screen.getByRole('heading', { name: '高歌数字' })
+    const contentHeading = screen.getByRole('heading', { name: '高歌内容' })
     const sportsHeading = screen.getByRole('heading', { name: '高歌体育' })
-    expect(digitalHeading.compareDocumentPosition(sportsHeading)).toBe(
+    const digitalEntry = screen.getByRole('link', { name: '进入高歌数字' })
+    const contentEntry = screen.getByRole('link', { name: '进入高歌内容' })
+    const sportsEntry = screen.getByRole('link', { name: '进入高歌体育' })
+    expect(digitalEntry).toHaveAttribute('href', '/digital')
+    expect(contentEntry).toHaveAttribute('href', '/content')
+    expect(sportsEntry).toHaveAttribute('href', 'https://sports.gaoge.cc')
+    expect(sportsEntry).toHaveAttribute('target', '_blank')
+    expect(sportsEntry).toHaveAttribute('rel', 'noopener noreferrer')
+    const moduleHeaders: Array<[HTMLElement, HTMLElement, HTMLElement]> = [
+      [screen.getByText('以数字连接业务'), digitalEntry, digitalHeading],
+      [screen.getByText('以内容连接热爱'), contentEntry, contentHeading],
+      [screen.getByText('因热爱相聚'), sportsEntry, sportsHeading],
+    ]
+    moduleHeaders.forEach(([eyebrow, entry, heading]) => {
+      expect(heading.parentElement).toContainElement(entry)
+      expect(heading.parentElement).not.toContainElement(eyebrow)
+    })
+    expect(screen.getByTestId('group-content-card').tagName).toBe('ARTICLE')
+    expect(screen.getByTestId('group-content-card').querySelector('a')).not.toBeInTheDocument()
+    expect(digitalHeading.compareDocumentPosition(contentHeading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+    expect(contentHeading.compareDocumentPosition(sportsHeading)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     )
     expect(
@@ -539,13 +594,16 @@ describe('group organization route', () => {
     expect(screen.getByRole('heading', { name: '高歌体育' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '高歌足球俱乐部' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '高歌超级联赛' })).toBeInTheDocument()
-    ;['高歌足球俱乐部', '高歌超级联赛'].forEach((entity) => {
-      const link = screen.getByRole('link', {
-        name: `${entity}，进入高歌体育，将在新窗口打开`,
-      })
-      expect(link).toHaveAttribute('href', 'https://sports.gaoge.cc')
-      expect(link).toHaveAttribute('target', '_blank')
-      expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    const sportsCards = screen.getAllByTestId('group-sports-entity')
+    expect(sportsCards).toHaveLength(2)
+    sportsCards.forEach((card) => {
+      expect(card.tagName).toBe('ARTICLE')
+      expect(card.querySelector('a')).not.toBeInTheDocument()
+      expect(card).toHaveClass(
+        'hover:-translate-y-1',
+        'hover:border-white/25',
+        'active:scale-[0.985]',
+      )
     })
     expect(screen.getByRole('heading', { name: '集团管理层' })).toBeInTheDocument()
     expect(screen.getByText('从集团方向到球队与联赛，我们一起让热爱持续向前。')).toBeInTheDocument()
@@ -587,7 +645,6 @@ describe('group organization route', () => {
 
     expect(screen.queryByRole('heading', { name: '持续生长中的新领域' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '返回高歌首页' })).toHaveAttribute('href', '/')
-    expect(screen.queryByRole('link', { name: '进入高歌数字' })).not.toBeInTheDocument()
   })
 
   it('condenses the group section navigation on mobile', async () => {
@@ -600,7 +657,11 @@ describe('group organization route', () => {
       within(sectionNavigation)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['概览', '数字', '体育', '集团'])
+    ).toEqual(['概览', '数字', '内容', '体育', '集团'])
+    expect(within(sectionNavigation).getByRole('link', { name: '内容' })).toHaveAttribute(
+      'href',
+      '#group-content',
+    )
     expect(within(sectionNavigation).getByRole('link', { name: '集团' })).toHaveAttribute(
       'href',
       '#group-leadership',
@@ -609,64 +670,122 @@ describe('group organization route', () => {
 })
 
 describe('digital matrix route', () => {
-  it('renders the product matrix with truthful link behavior', async () => {
+  it('renders current products and future plans with truthful link behavior', async () => {
     renderRoute('/digital')
 
     expect(await screen.findByRole('heading', { name: 'GAOGE DIGITAL' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '让复杂业务有清晰系统。' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '让复杂业务，运行得更清晰。' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '当前产品' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '未来产品规划' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '产品如何被交付' })).toBeInTheDocument()
     expect(screen.getByText('高歌跨境 ERP')).toBeInTheDocument()
     expect(screen.getByText('高歌 Club')).toBeInTheDocument()
     expect(screen.getByText('高歌客户 CRM')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '企业软件' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '消费者与体育产品' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '消费者产品' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '平台能力' })).toBeInTheDocument()
+    const demoStatuses = screen.getAllByText('演示系统')
+    const plannedStatuses = screen.getAllByText('规划中')
+    const matrixStatuses = [...demoStatuses, ...plannedStatuses]
 
-    const compass = screen.getByRole('link', { name: /高歌跨境 ERP/ })
-    expect(compass).toHaveAttribute('href', 'https://compass.gaoge.cc')
-    expect(compass).toHaveAttribute('target', '_blank')
-    expect(compass).toHaveAttribute('rel', 'noopener noreferrer')
-    expect(screen.queryByRole('link', { name: /高歌通用 ERP/ })).not.toBeInTheDocument()
+    expect(demoStatuses).toHaveLength(3)
+    expect(plannedStatuses).toHaveLength(3)
+    matrixStatuses.forEach((status) => {
+      expect(status).toHaveClass('border-white/10', 'text-white/45')
+    })
+    expect(screen.getByText('多端交付')).toBeInTheDocument()
+    expect(screen.getByText('后续 SaaS')).toBeInTheDocument()
+
+    const digitalProductDestinations = [
+      ['高歌跨境 ERP', 'https://compass.gaoge.cc?demo'],
+      ['高歌客户 CRM', 'https://crm.gaoge.cc?demo'],
+      ['高歌 Club', 'https://club.gaoge.cc?demo'],
+    ] as const
+
+    digitalProductDestinations.forEach(([name, href]) => {
+      const productLink = screen.getByRole('link', { name: new RegExp(name) })
+
+      expect(productLink).toHaveAttribute('href', href)
+      expect(productLink).toHaveAttribute('target', '_blank')
+      expect(productLink).toHaveAttribute('rel', 'noopener noreferrer')
+    })
+    expect(screen.getByText('高歌经营 ERP')).toBeInTheDocument()
+    expect(screen.getByText('连接采购、销售、库存与财务等企业核心经营流程。')).toBeInTheDocument()
+    expect(screen.queryByText('高歌通用 ERP')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '返回高歌首页' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: '进入高歌内容' })).toHaveAttribute('href', '/content')
-    expect(screen.getByRole('link', { name: '数字' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: '内容' })).toHaveAttribute('href', '/content')
-    expect(screen.getByRole('link', { name: '体育，将在新窗口打开' })).toHaveAttribute(
-      'href',
-      'https://sports.gaoge.cc',
-    )
+
+    const sectionNavigation = screen.getByLabelText('数字页面章节')
+
+    const sectionDestinations = [
+      ['概览', '概览', '#digital-overview'],
+      ['当前产品', '产品', '#digital-current'],
+      ['产品规划', '规划', '#digital-roadmap'],
+      ['交付能力', '能力', '#digital-delivery'],
+    ] as const
+
+    sectionDestinations.forEach(([label, mobileLabel, href]) => {
+      const link = within(sectionNavigation).getByRole('link', { name: label })
+
+      expect(link).toHaveAttribute('href', href)
+      expect(within(link).getByText(mobileLabel, { selector: '.md\\:hidden' })).toBeInTheDocument()
+    })
+    expect(within(screen.getByLabelText('高歌品牌导航')).getByText('数字')).toBeInTheDocument()
     expect(document.title).toBe('高歌数字 - 数字产品矩阵')
   })
 })
 
-describe('content matrix route', () => {
-  it('renders content properties, platforms and capabilities', async () => {
-    renderRoute('/content')
+describe('content capability route', () => {
+  it('renders the complete non-navigational capability showcase', async () => {
+    const { container } = renderRoute('/content')
 
     expect(await screen.findByRole('heading', { name: 'GAOGE CONTENT' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '让每一份热爱持续被看见。' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '高歌体育' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '高歌超级联赛' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: '主理人个人 IP' })).toBeInTheDocument()
-    ;['公众号', '视频号', '小红书', '抖音', 'B 站', '社群与私域'].forEach((platform) => {
-      expect(screen.getAllByText(platform).length).toBeGreaterThan(0)
+    expect(screen.getByText('以内容与运营连接品牌、平台和真实社群。')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        name: '内容不是一次传播。它让故事持续发生，让关系慢慢留下。',
+      }),
+    ).toBeInTheDocument()
+    ;['内容策略', '内容创作', '全平台运营', '社群连接'].forEach((capability) => {
+      expect(screen.getByRole('heading', { name: capability })).toBeInTheDocument()
     })
-    ;['内容策划', '多平台分发', '数据复盘'].forEach((capability) => {
-      expect(screen.getByText(capability)).toBeInTheDocument()
-    })
-
-    const sports = screen.getByRole('link', { name: /高歌体育/ })
-    expect(sports).toHaveAttribute('href', 'https://sports.gaoge.cc')
-    expect(sports).toHaveAttribute('target', '_blank')
-    expect(sports).toHaveAttribute('rel', 'noopener noreferrer')
-    expect(screen.queryByRole('link', { name: /高歌超级联赛/ })).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: '让一次被看见，成为持续发生的关系。' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByText('真实实践')).not.toBeInTheDocument()
+    expect(screen.queryByText('内容形态')).not.toBeInTheDocument()
+    expect(screen.queryByText('工作方法')).not.toBeInTheDocument()
+    expect(container.querySelector('video')).not.toBeInTheDocument()
+    expect(container.querySelectorAll('[data-status]')).toHaveLength(0)
+    expect(container.querySelectorAll('main img')).toHaveLength(1)
+    expect(container.querySelector('.content-page-section a')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '返回高歌首页' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: '进入高歌数字' })).toHaveAttribute('href', '/digital')
-    expect(screen.getByRole('link', { name: '内容' })).toHaveAttribute('aria-current', 'page')
-    expect(screen.getByRole('link', { name: '数字' })).toHaveAttribute('href', '/digital')
-    expect(document.title).toBe('高歌内容 - 内容运营矩阵')
+    const sectionNavigation = screen.getByLabelText('内容页面章节')
+    const sectionDestinations = [
+      ['主张', '主张', '#content-overview'],
+      ['内容理念', '理念', '#content-belief'],
+      ['核心能力', '能力', '#content-capabilities'],
+    ] as const
+
+    sectionDestinations.forEach(([label, mobileLabel, href]) => {
+      const link = within(sectionNavigation).getByRole('link', { name: label })
+
+      expect(link).toHaveAttribute('href', href)
+      expect(within(link).getByText(mobileLabel, { selector: '.md\\:hidden' })).toBeInTheDocument()
+    })
+    expect(
+      within(screen.getByLabelText('高歌品牌导航')).getByText('内容', {
+        selector: 'span.hidden',
+      }),
+    ).toBeInTheDocument()
+    expect(document.title).toBe('高歌内容 - 内容创作与全平台运营')
   })
 
   it('updates metadata when crossing between formal brand pages', async () => {
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined)
+
     renderRoute('/digital')
 
     expect(await screen.findByRole('heading', { name: 'GAOGE DIGITAL' })).toBeInTheDocument()
@@ -676,7 +795,8 @@ describe('content matrix route', () => {
 
     expect(await screen.findByRole('heading', { name: 'GAOGE CONTENT' })).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/content')
-    expect(document.title).toBe('高歌内容 - 内容运营矩阵')
+    expect(document.title).toBe('高歌内容 - 内容创作与全平台运营')
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: 0, top: 0 })
   })
 })
 

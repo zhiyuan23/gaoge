@@ -22,7 +22,9 @@ export default function BrandPageShell({
   return (
     <main
       className={`brand-matrix-page min-h-full ${
-        current === 'group' ? 'overflow-x-clip' : 'overflow-hidden'
+        current === 'group' || current === 'digital' || current === 'content'
+          ? 'overflow-x-clip'
+          : 'overflow-hidden'
       }`}
       data-brand-area={current}
       data-entry-presentation={current === 'group' ? entryPresentation : undefined}

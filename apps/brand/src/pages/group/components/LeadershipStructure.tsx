@@ -30,7 +30,7 @@ export default function LeadershipStructure({ leaders }: LeadershipStructureProp
         className="group-page-section mx-auto max-w-[1440px] scroll-mt-32 px-6 py-16 md:px-10 md:py-24"
         id="group-leadership"
       >
-        <h2 className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl">
+        <h2 className="font-display-cn text-4xl font-medium tracking-[-0.025em] text-white md:text-6xl">
           集团管理层
         </h2>
         <p className="mt-6 text-sm text-[rgb(var(--brand-muted))]">团队信息整理中</p>
@@ -45,7 +45,7 @@ export default function LeadershipStructure({ leaders }: LeadershipStructureProp
       id="group-leadership"
     >
       <h2
-        className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl"
+        className="font-display-cn text-4xl font-medium tracking-[-0.025em] text-white md:text-6xl"
         id="leadership-title"
       >
         集团管理层

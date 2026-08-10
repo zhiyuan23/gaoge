@@ -13,12 +13,12 @@ export default function GroupVision({ items }: GroupVisionProps) {
     >
       <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">GROUP VISION</p>
       <h2
-        className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl"
+        className="font-display-cn text-4xl font-medium tracking-[-0.025em] text-white md:text-6xl"
         id="group-vision-title"
       >
         集团愿景
       </h2>
-      <p className="mt-6 max-w-3xl text-3xl leading-tight tracking-[-0.05em] text-white md:text-5xl lg:max-w-none lg:whitespace-nowrap">
+      <p className="font-display-cn mt-6 max-w-3xl text-3xl leading-tight tracking-[-0.025em] text-white md:text-5xl lg:max-w-none lg:whitespace-nowrap">
         让每一份热爱，都有持续生长的可能。
       </p>
 

@@ -1,5 +1,6 @@
 import BrandPageShell from '@/brand/components/BrandPageShell'
 import { useBrandMetadata } from '@/brand/metadata'
+import ContentStructure from '@/pages/group/components/ContentStructure'
 import DigitalStructure from '@/pages/group/components/DigitalStructure'
 import GroupHero from '@/pages/group/components/GroupHero'
 import GroupSectionReveal from '@/pages/group/components/GroupSectionReveal'
@@ -8,6 +9,7 @@ import LeadershipStructure from '@/pages/group/components/LeadershipStructure'
 import LeagueBoard from '@/pages/group/components/LeagueBoard'
 import SportsStructure from '@/pages/group/components/SportsStructure'
 import {
+  groupContentOverview,
   groupDigitalProducts,
   groupIndustries,
   groupLeaders,
@@ -37,6 +39,9 @@ export default function GroupPage({ entryPresentation = 'direct' }: GroupPagePro
       <GroupHero industries={groupIndustries} skipEntranceAnimation={isPersistedEntry} />
       <GroupSectionReveal>
         <DigitalStructure products={groupDigitalProducts} />
+      </GroupSectionReveal>
+      <GroupSectionReveal>
+        <ContentStructure overview={groupContentOverview} />
       </GroupSectionReveal>
       <GroupSectionReveal>
         <SportsStructure entities={sportsEntities} />

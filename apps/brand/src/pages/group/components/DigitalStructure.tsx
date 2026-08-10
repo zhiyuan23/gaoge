@@ -1,5 +1,6 @@
 import { ArrowUpRight } from 'lucide-react'
 
+import GroupModuleLink from '@/pages/group/components/GroupModuleLink'
 import type { GroupDigitalProduct } from '@/pages/group/types'
 
 interface DigitalStructureProps {
@@ -75,14 +76,17 @@ export default function DigitalStructure({ products }: DigitalStructureProps) {
       className="group-page-section mx-auto max-w-[1440px] scroll-mt-32 px-6 py-16 md:px-10 md:py-24"
       id="group-digital"
     >
-      <div className="max-w-2xl">
-        <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">以数字连接业务</p>
-        <h2
-          className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl"
-          id="digital-structure-title"
-        >
-          高歌数字
-        </h2>
+      <div>
+        <p className="text-sm text-[rgb(var(--brand-accent))]">以数字连接业务</p>
+        <div className="mt-4 flex items-center justify-between gap-6">
+          <h2
+            className="font-display-cn shrink-0 text-4xl font-medium tracking-[-0.025em] text-white md:text-6xl"
+            id="digital-structure-title"
+          >
+            高歌数字
+          </h2>
+          <GroupModuleLink label="进入高歌数字" shortLabel="进入数字" to="/digital" />
+        </div>
         <p className="mt-5 max-w-lg text-sm leading-7 text-[rgb(var(--brand-muted))] md:text-base">
           从真实业务出发，把复杂流程变成清晰、可持续使用的数字产品。
         </p>

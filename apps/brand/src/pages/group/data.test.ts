@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  groupContentOverview,
   groupDigitalProducts,
   groupIndustries,
   groupLeaders,
@@ -10,6 +11,16 @@ import {
 } from './data'
 
 describe('group organization data', () => {
+  it('defines the approved group content overview', () => {
+    expect(groupContentOverview).toEqual({
+      capabilities: ['内容策略', '内容创作', '全平台运营', '社群连接'],
+      description: '以内容与运营连接品牌、平台和真实社群。',
+      eyebrow: 'GAOGE CONTENT',
+      headline: ['让每一份热爱', '持续被看见。'],
+      href: '/content',
+    })
+  })
+
   it('keeps the four divisions aligned with the homepage brand statements', () => {
     expect(groupIndustries).toEqual([
       {

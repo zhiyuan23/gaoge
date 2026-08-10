@@ -17,21 +17,44 @@ export interface DigitalProduct {
   }
 }
 
+export const digitalCategoryLabels = {
+  consumer: '消费者产品',
+  enterprise: '企业软件',
+  platform: '平台能力',
+} as const satisfies Record<DigitalCategory, string>
+
+export const digitalCategoryOrder: readonly DigitalCategory[] = [
+  'enterprise',
+  'consumer',
+  'platform',
+]
+
 export const digitalProducts: readonly DigitalProduct[] = [
   {
     category: 'enterprise',
     englishName: 'Gaoge Compass',
     featured: true,
-    href: 'https://compass.gaoge.cc',
+    href: 'https://compass.gaoge.cc?demo',
     name: '高歌跨境 ERP',
     status: 'live',
     summary: '跨境电商业务的订单、商品与经营协同系统。',
     tags: ['企业软件', '跨境电商', '独立部署'],
   },
   {
+    category: 'enterprise',
+    englishName: 'Gaoge CRM',
+    featured: true,
+    href: 'https://crm.gaoge.cc?demo',
+    name: '高歌客户 CRM',
+    status: 'building',
+    summary: '客户关系与跟进过程的统一记录工具。',
+    tags: ['客户', '跟进', '协作'],
+  },
+  {
     category: 'consumer',
     englishName: 'Gaoge Club',
     featured: true,
+    href: 'https://club.gaoge.cc?demo',
     name: '高歌 Club',
     status: 'building',
     summary: '面向会员、活动与俱乐部关系的数字产品。',
@@ -39,20 +62,11 @@ export const digitalProducts: readonly DigitalProduct[] = [
   },
   {
     category: 'enterprise',
-    englishName: 'Gaoge CRM',
-    featured: true,
-    name: '高歌客户 CRM',
-    status: 'building',
-    summary: '客户关系与跟进过程的统一记录工具。',
-    tags: ['客户', '跟进', '协作'],
-  },
-  {
-    category: 'enterprise',
     englishName: 'Gaoge ERP',
     featured: false,
-    name: '高歌通用 ERP',
+    name: '高歌经营 ERP',
     status: 'planned',
-    summary: '面向通用经营流程的独立企业管理产品。',
+    summary: '连接采购、销售、库存与财务等企业核心经营流程。',
     tags: ['经营', '流程', '独立产品'],
   },
   {
@@ -137,9 +151,12 @@ export const featuredDigitalProducts = digitalProducts.filter(({ featured }) => 
 
 export const digitalDirectory = digitalProducts.filter(({ featured }) => !featured)
 
+export const plannedDigitalProducts = digitalProducts.filter(({ status }) => status === 'planned')
+
 export const digitalCapabilities = [
   '独立产品',
   '共享平台能力',
   '独立部署与专属云',
+  '多端交付',
   '后续 SaaS',
 ] as const

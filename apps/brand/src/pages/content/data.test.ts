@@ -1,35 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { contentProperties } from '@/pages/content/data'
+import { contentCapabilities } from '@/pages/content/data'
 
-describe('content operation matrix', () => {
-  it('only publishes the confirmed sports destination', () => {
-    expect(contentProperties.filter(({ href }) => href)).toEqual([
-      expect.objectContaining({
-        href: 'https://sports.gaoge.cc',
-        name: '高歌体育',
-        status: 'live',
-      }),
+describe('content abstract field data', () => {
+  it('defines only the four approved content capabilities', () => {
+    expect(contentCapabilities).toEqual([
+      { description: '找到值得表达的核心', title: '内容策略' },
+      { description: '让故事形成自己的语言', title: '内容创作' },
+      { description: '让内容进入适合的场域', title: '全平台运营' },
+      { description: '让触达沉淀为长期关系', title: '社群连接' },
     ])
-  })
-
-  it('does not invent links for the league or personal IP', () => {
-    ;['高歌超级联赛', '主理人个人 IP'].forEach((name) => {
-      expect(contentProperties.find((property) => property.name === name)?.href).toBeUndefined()
-    })
-  })
-
-  it('uses only configured platform identifiers', () => {
-    const platforms = contentProperties.flatMap(({ platforms }) => platforms)
-    expect(platforms).toEqual(
-      expect.arrayContaining([
-        'wechat',
-        'channels',
-        'xiaohongshu',
-        'douyin',
-        'bilibili',
-        'community',
-      ]),
-    )
   })
 })

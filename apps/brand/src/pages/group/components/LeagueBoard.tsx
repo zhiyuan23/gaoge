@@ -21,7 +21,7 @@ export default function LeagueBoard({ directors }: LeagueBoardProps) {
         <div>
           <p className="mb-4 text-sm text-[rgb(var(--brand-accent))]">本届董事会成员</p>
           <h2
-            className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl"
+            className="font-display-cn text-4xl font-medium tracking-[-0.025em] text-white md:text-6xl"
             id="league-board-title"
           >
             联赛董事会

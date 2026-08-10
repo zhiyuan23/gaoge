@@ -55,7 +55,7 @@ export default function GroupHero({ industries, skipEntranceAnimation = false }:
         </h1>
         <h2
           aria-label="连接热爱，奔赴所爱。"
-          className="mt-5 max-w-lg text-5xl font-medium leading-[0.98] tracking-[-0.07em] text-white sm:text-6xl lg:text-7xl"
+          className="font-display-cn mt-5 max-w-lg text-5xl font-medium leading-[0.98] tracking-[-0.025em] text-white sm:text-6xl lg:text-7xl"
         >
           连接热爱，
           <br />

@@ -12,7 +12,7 @@ export default function BusinessCapabilities({ capabilities }: BusinessCapabilit
     >
       <div className="max-w-2xl">
         <h2
-          className="text-4xl font-medium tracking-[-0.06em] text-white md:text-6xl"
+          className="font-display-cn text-4xl font-medium tracking-[-0.025em] text-white md:text-6xl"
           id="business-capabilities-title"
         >
           企业服务能力

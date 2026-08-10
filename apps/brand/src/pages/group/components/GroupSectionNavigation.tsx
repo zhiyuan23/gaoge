@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 const groupSections = [
   { id: 'group-overview', label: '概览' },
   { id: 'group-digital', label: '数字' },
+  { id: 'group-content', label: '内容' },
   { id: 'group-sports', label: '体育' },
   { id: 'group-leadership', label: '管理层' },
   { id: 'group-board', label: '董事会' },
@@ -26,6 +27,7 @@ const desktopNavigationSections = groupSections.map((section) => ({
 const mobileNavigationSections = [
   { activeIds: ['group-overview'], id: 'group-overview', label: '概览' },
   { activeIds: ['group-digital'], id: 'group-digital', label: '数字' },
+  { activeIds: ['group-content'], id: 'group-content', label: '内容' },
   { activeIds: ['group-sports'], id: 'group-sports', label: '体育' },
   {
     activeIds: ['group-leadership', 'group-board', 'group-vision'],

@@ -1,6 +1,7 @@
 import type {
   BusinessCapability,
   DeliveryModel,
+  GroupContentOverview,
   GroupDigitalProduct,
   GroupIndustry,
   GroupLeader,
@@ -62,6 +63,14 @@ export const groupDigitalProducts: readonly GroupDigitalProduct[] = [
     name: '高歌 Club',
   },
 ]
+
+export const groupContentOverview: GroupContentOverview = {
+  capabilities: ['内容策略', '内容创作', '全平台运营', '社群连接'],
+  description: '以内容与运营连接品牌、平台和真实社群。',
+  eyebrow: 'GAOGE CONTENT',
+  headline: ['让每一份热爱', '持续被看见。'],
+  href: '/content',
+}
 
 export const businessCapabilities: readonly BusinessCapability[] = [
   {
