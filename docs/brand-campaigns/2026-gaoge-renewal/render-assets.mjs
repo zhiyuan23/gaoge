@@ -200,6 +200,29 @@ async function renderEnding() {
   await sharp(artwork).png({ compressionLevel: 9 }).toFile(path.join(outputDir, '08-ending.png'))
 }
 
+async function renderPlaceholder({ description, eyebrow, filename, replacement, title }) {
+  const width = 1080
+  const height = 1080
+  const artwork = svg(
+    width,
+    height,
+    `
+      <rect width="${width}" height="${height}" fill="${colors.background}" />
+      <rect x="56" y="56" width="968" height="968" rx="34" fill="${colors.surface}" stroke="${colors.border}" stroke-width="2" stroke-dasharray="12 14" />
+      <circle cx="884" cy="228" r="250" fill="none" stroke="${colors.accent}" stroke-opacity="0.16" stroke-width="2" />
+      <circle cx="884" cy="228" r="152" fill="none" stroke="${colors.accent}" stroke-opacity="0.12" stroke-width="2" />
+      <text x="104" y="134" fill="${colors.accent}" font-family="${font}" font-size="22" font-weight="500" letter-spacing="6">${eyebrow}</text>
+      <text x="104" y="430" fill="${colors.white}" font-family="${font}" font-size="76" font-weight="600" letter-spacing="-4">${title}</text>
+      <text x="104" y="522" fill="#aeb5ae" font-family="${font}" font-size="30">${description}</text>
+      <rect x="104" y="674" width="872" height="154" rx="22" fill="#0c110d" stroke="${colors.accent}" stroke-opacity="0.35" />
+      <text x="140" y="738" fill="${colors.accent}" font-family="${font}" font-size="20" font-weight="500" letter-spacing="3">PLACEHOLDER · 发布前替换</text>
+      <text x="140" y="790" fill="${colors.white}" font-family="${font}" font-size="28">${replacement}</text>
+      <text x="104" y="944" fill="${colors.muted}" font-family="${font}" font-size="18" letter-spacing="3">GAOGE · A NEW CHAPTER</text>
+    `,
+  )
+  await sharp(artwork).png({ compressionLevel: 9 }).toFile(path.join(outputDir, filename))
+}
+
 async function renderDraftContactSheet() {
   const files = [
     '01-cover-landscape.png',
@@ -250,6 +273,58 @@ async function renderDraftContactSheet() {
     .toFile(path.join(outputDir, 'contact-sheet-draft.png'))
 }
 
+async function renderFinalContactSheet() {
+  const files = [
+    '01-cover-landscape.png',
+    '02-cover-share-safe.png',
+    '03-gaoge-road.png',
+    '04-manifesto.png',
+    '05-brand-values.png',
+    '06-four-expressions.png',
+    '07-gaoge-fc.png',
+    '08-ending.png',
+  ]
+  const cellWidth = 720
+  const cellHeight = 930
+  const gap = 40
+  const margin = 60
+  const sheetWidth = margin * 2 + cellWidth * 2 + gap
+  const sheetHeight = margin * 2 + cellHeight * 4 + gap * 3
+  const composites = []
+
+  for (const [index, filename] of files.entries()) {
+    const x = margin + (index % 2) * (cellWidth + gap)
+    const y = margin + Math.floor(index / 2) * (cellHeight + gap)
+    const preview = await sharp(path.join(outputDir, filename))
+      .resize(cellWidth, cellHeight - 70, {
+        background: '#080b09',
+        fit: 'contain',
+      })
+      .png()
+      .toBuffer()
+    const label = svg(
+      cellWidth,
+      70,
+      `<rect width="${cellWidth}" height="70" fill="#111712" />
+       <text x="24" y="44" fill="#a8bd9b" font-family="${font}" font-size="22" letter-spacing="2">${filename}</text>`,
+    )
+    composites.push({ input: preview, left: x, top: y })
+    composites.push({ input: label, left: x, top: y + cellHeight - 70 })
+  }
+
+  await sharp({
+    create: {
+      background: '#060806',
+      channels: 4,
+      height: sheetHeight,
+      width: sheetWidth,
+    },
+  })
+    .composite(composites)
+    .png({ compressionLevel: 9 })
+    .toFile(path.join(outputDir, 'contact-sheet.png'))
+}
+
 await fs.mkdir(outputDir, { recursive: true })
 await renderCover({ filename: '01-cover-landscape.png', height: 766, width: 1800 })
 await renderCover({ filename: '02-cover-share-safe.png', height: 1080, square: true, width: 1080 })
@@ -257,6 +332,21 @@ await renderManifesto()
 await renderValues()
 await renderExpressions()
 await renderEnding()
+await renderPlaceholder({
+  description: '一个具体的地点，成为高歌最初的坐标。',
+  eyebrow: 'THE NAME · 高歌',
+  filename: '03-gaoge-road.png',
+  replacement: '替换为高歌路或路牌的真实照片',
+  title: '高歌，从一条路开始。',
+})
+await renderPlaceholder({
+  description: '因为共同奔跑，热爱变得具体。',
+  eyebrow: 'GAOGE FC · 高歌体育',
+  filename: '07-gaoge-fc.png',
+  replacement: '替换为高歌 FC 比赛、训练或合影',
+  title: '在球场上，热爱继续发生。',
+})
 await renderDraftContactSheet()
+await renderFinalContactSheet()
 
-console.log('Rendered 6 deterministic GAOGE campaign assets and a draft contact sheet.')
+console.log('Rendered 8 GAOGE campaign assets and contact sheets.')
