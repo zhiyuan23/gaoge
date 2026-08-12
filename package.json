@@ -31,6 +31,7 @@
     "lint:style": "stylelint \"apps/**/*.{css,scss,vue}\" \"packages/**/*.{css,scss,vue}\"",
     "lint:style:fix": "stylelint \"apps/**/*.{css,scss,vue}\" \"packages/**/*.{css,scss,vue}\" --fix",
     "typecheck": "turbo run typecheck",
+    "test:release-manager": "node --test scripts/release-manager-*.test.mjs",
     "typecheck:ios": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project apps/ios/GaogeIOS.xcodeproj -scheme GaogeIOS -destination 'generic/platform=iOS Simulator' build",
     "clean": "turbo run clean && rm -rf .turbo",
     "prepare": "husky",
