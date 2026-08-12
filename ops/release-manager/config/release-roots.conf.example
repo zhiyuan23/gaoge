@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "settings": {
+    "diskWarnPercent": 70,
+    "diskHardPercent": 80,
+    "minimumFreeKiB": 5242880,
+    "inodeHardPercent": 80,
+    "defaultKeepSuccessful": 3,
+    "failedTtlHours": 24,
+    "postDeployMaxDelete": 1,
+    "nightlyMaxDelete": 3,
+    "lockTimeoutSeconds": 30,
+    "loadPerCpuHard": 1.5,
+    "ioPressureAvg10Hard": 20,
+    "allowedRootPrefix": "/var/www"
+  },
+  "targets": [
+    {
+      "id": "gaoge-admin",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge/admin/releases",
+      "currentLink": "/var/www/gaoge/admin/current",
+      "previousLink": "/var/www/gaoge/admin/previous",
+      "owner": "deploy",
+      "runtime": { "kind": "static", "processNames": [] },
+      "healthUrls": ["https://admin.gaoge.cc/"],
+      "requiredPaths": ["index.html"],
+      "auditPaths": [],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "gaoge-api",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge/api/releases/api",
+      "currentLink": "/var/www/gaoge/api/current",
+      "previousLink": "/var/www/gaoge/api/previous",
+      "owner": "deploy",
+      "runtime": { "kind": "pm2", "processNames": ["gaoge-api"] },
+      "healthUrls": ["https://api.gaoge.cc/health", "https://api.gaoge.cc/health/db"],
+      "requiredPaths": [
+        "dist/main.js",
+        "ecosystem.config.cjs",
+        "node_modules/prisma/build/index.js",
+        "prisma/schema.prisma"
+      ],
+      "auditPaths": ["/var/www/gaoge/api/tmp/deploy-state"],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "gaoge-brand",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge/brand/releases",
+      "currentLink": "/var/www/gaoge/brand/current",
+      "previousLink": "/var/www/gaoge/brand/previous",
+      "owner": "deploy",
+      "runtime": { "kind": "static", "processNames": [] },
+      "healthUrls": ["https://gaoge.cc/"],
+      "requiredPaths": ["index.html"],
+      "auditPaths": [],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "gaoge-sports",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge/web/releases",
+      "currentLink": "/var/www/gaoge/web/current",
+      "previousLink": "/var/www/gaoge/web/previous",
+      "owner": "deploy",
+      "runtime": { "kind": "static", "processNames": [] },
+      "healthUrls": ["https://sports.gaoge.cc/"],
+      "requiredPaths": ["index.html"],
+      "auditPaths": [],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "compass-admin",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge-compass/admin/releases",
+      "currentLink": "/var/www/gaoge-compass/admin/current",
+      "previousLink": "/var/www/gaoge-compass/admin/previous",
+      "owner": "root",
+      "runtime": { "kind": "static", "processNames": [] },
+      "healthUrls": ["https://compass.gaoge.cc/"],
+      "requiredPaths": ["index.html"],
+      "auditPaths": [],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "compass-api",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge-compass/api/releases",
+      "currentLink": "/var/www/gaoge-compass/api/current",
+      "previousLink": "/var/www/gaoge-compass/api/previous",
+      "owner": "root",
+      "runtime": { "kind": "pm2", "processNames": ["gaoge-compass-api"] },
+      "healthUrls": ["https://compass-api.gaoge.cc/health", "https://compass-api.gaoge.cc/health/db"],
+      "requiredPaths": [
+        "dist/main.js",
+        "ecosystem.config.cjs",
+        "node_modules/prisma/build/index.js",
+        "prisma/schema.prisma"
+      ],
+      "auditPaths": [],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "club-admin",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge-club/admin/releases",
+      "currentLink": "/var/www/gaoge-club/admin/current",
+      "previousLink": "/var/www/gaoge-club/admin/previous",
+      "owner": "root",
+      "runtime": { "kind": "static", "processNames": [] },
+      "healthUrls": ["https://club.gaoge.cc/"],
+      "requiredPaths": ["index.html"],
+      "auditPaths": [],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "club-api",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge-club/api/releases/api",
+      "currentLink": "/var/www/gaoge-club/api/current",
+      "previousLink": "/var/www/gaoge-club/api/previous",
+      "owner": "root",
+      "runtime": { "kind": "pm2", "processNames": ["gaoge-club-api"] },
+      "healthUrls": ["https://club-api.gaoge.cc/health", "https://club-api.gaoge.cc/health/db"],
+      "requiredPaths": [
+        "dist/main.js",
+        "ecosystem.config.cjs",
+        "node_modules/prisma/build/index.js",
+        "prisma/schema.prisma"
+      ],
+      "auditPaths": [],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "crm-admin",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge-crm/admin/releases",
+      "currentLink": "/var/www/gaoge-crm/admin/current",
+      "previousLink": "/var/www/gaoge-crm/admin/previous",
+      "owner": "deploy",
+      "runtime": { "kind": "static", "processNames": [] },
+      "healthUrls": ["https://crm.gaoge.cc/"],
+      "requiredPaths": ["index.html"],
+      "auditPaths": ["/var/www/gaoge-crm/admin/staging"],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "crm-api",
+      "state": "enabled",
+      "releaseRoot": "/var/www/gaoge-crm/api/releases",
+      "currentLink": "/var/www/gaoge-crm/api/current",
+      "previousLink": "/var/www/gaoge-crm/api/previous",
+      "owner": "deploy",
+      "runtime": { "kind": "pm2", "processNames": ["gaoge-crm-api"] },
+      "healthUrls": ["https://crm-api.gaoge.cc/health", "https://crm-api.gaoge.cc/health/db"],
+      "requiredPaths": [
+        "dist/main.js",
+        "ecosystem.config.cjs",
+        "node_modules/prisma/build/index.js",
+        "prisma/schema.prisma"
+      ],
+      "auditPaths": ["/var/www/gaoge-crm/api/staging"],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    },
+    {
+      "id": "finance",
+      "state": "planned",
+      "releaseRoot": "/var/www/gaoge-finance-news/releases",
+      "currentLink": "/var/www/gaoge-finance-news/current",
+      "previousLink": "/var/www/gaoge-finance-news/previous",
+      "owner": "deploy",
+      "runtime": {
+        "kind": "pm2",
+        "processNames": ["finance-news-api", "finance-news-web"]
+      },
+      "healthUrls": ["https://finance.gaoge.cc/health", "https://admin-finance.gaoge.cc/"],
+      "requiredPaths": [
+        "package.json",
+        "pnpm-lock.yaml",
+        "infra/pm2/ecosystem.config.cjs",
+        "apps/api/dist/main.js",
+        "apps/web/.next/standalone/apps/web/server.js",
+        "apps/admin/dist/index.html"
+      ],
+      "auditPaths": [],
+      "keepSuccessful": 3,
+      "failedTtlHours": 24
+    }
+  ]
+}

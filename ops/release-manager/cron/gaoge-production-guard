@@ -1,0 +1,3 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+@reboot root sleep 60 && EXPECTED_PM2_NAME='gaoge-api' FORBIDDEN_PM2_NAMES='gaoge-server' EXPECTED_DEPLOY_PATH='/var/www/gaoge/api' EXPECTED_DB_HOST='[::1]:5432' API_BASE_URL='https://api.gaoge.cc' CRITICAL_PATHS='/health /health/db /football/teams?page=1&pageSize=1' CORS_ORIGIN='https://admin.gaoge.cc' CORS_PATH='/auth/admin/login' /var/www/gaoge/ops/verify-production-runtime.sh >> /var/log/gaoge-production-guard.log 2>&1

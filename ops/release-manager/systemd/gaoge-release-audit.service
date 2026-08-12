@@ -1,0 +1,11 @@
+[Unit]
+Description=Gaoge release lifecycle audit and bounded prune
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/gaoge-release-manager audit --target all --json
+ExecStart=/usr/local/sbin/gaoge-release-manager prune --target all --max-delete 3 --json
+Nice=19
+IOSchedulingClass=idle

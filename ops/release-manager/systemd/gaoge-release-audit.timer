@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Gaoge release lifecycle audit nightly
+
+[Timer]
+OnCalendar=*-*-* 03:40:00
+RandomizedDelaySec=20m
+Persistent=true
+Unit=gaoge-release-audit.service
+
+[Install]
+WantedBy=timers.target

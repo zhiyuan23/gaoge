@@ -1,0 +1,11 @@
+/root/.pm2/logs/*.log /home/deploy/.pm2/logs/*.log /var/log/gaoge-production-guard.log {
+    daily
+    size 10M
+    rotate 7
+    compress
+    delaycompress
+    copytruncate
+    missingok
+    notifempty
+    su root root
+}

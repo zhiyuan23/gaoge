@@ -270,7 +270,12 @@ async function runtimeReleaseIds(target, options = {}) {
   const result = new Set()
   const realRoot = await realpath(target.releaseRoot)
   for (const runtimePath of runtimePaths) {
-    let current = path.resolve(runtimePath)
+    let current
+    try {
+      current = await realpath(runtimePath)
+    } catch (error) {
+      throw new AuditError(`cannot resolve PM2 runtime path: ${runtimePath}`, { cause: error })
+    }
     while (current !== path.dirname(current)) {
       if (path.dirname(current) === realRoot) {
         result.add(path.basename(current))

@@ -1,0 +1,10 @@
+[Unit]
+Description=Report Gaoge release lifecycle state weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 04:20:00
+Persistent=true
+Unit=gaoge-release-report.service
+
+[Install]
+WantedBy=timers.target

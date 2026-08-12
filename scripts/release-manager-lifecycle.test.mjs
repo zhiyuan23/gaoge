@@ -333,6 +333,28 @@ test('inventory classifies expired in-progress releases as incomplete', async (t
   assert.equal(result.releases.find((item) => item.id === 'unfinished').status, 'incomplete')
 })
 
+test('inventory resolves a PM2 current symlink to the protected release directory', async (t) => {
+  const fixture = await releaseFixture(t)
+  const r1 = await fixture.createRelease('r1')
+  await symlink(r1, fixture.target.currentLink)
+
+  const result = await inventoryTarget(fixture.target, {
+    stateDir: path.join(fixture.base, 'state'),
+    now: NOW,
+    pm2Json: [
+      {
+        name: 'gaoge-api',
+        pm2_env: {
+          pm_cwd: fixture.target.currentLink,
+          pm_exec_path: path.join(fixture.target.currentLink, 'dist/main.js'),
+        },
+      },
+    ],
+  })
+
+  assert.deepEqual(result.runtimeIds, ['r1'])
+})
+
 test('bootstrap previews then marks current and creates a verified previous link', async (t) => {
   const fixture = await releaseFixture(t)
   const r1 = await fixture.createRelease('r1')
