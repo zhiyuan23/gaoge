@@ -22,6 +22,7 @@ concurrency:
 env:
   NODE_VERSION: '22'
   ADMIN_API_CONTRACT_URLS: ${{ vars.ADMIN_API_CONTRACT_URLS || 'https://api.gaoge.cc/health https://api.gaoge.cc/health/db https://api.gaoge.cc/football/teams?page=1&pageSize=1' }}
+  RELEASE_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   verify:
@@ -68,6 +69,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: verify
     if: github.ref == 'refs/heads/main'
+    env:
+      TARGET_ID: gaoge-admin
 
     steps:
       - name: 检出代码
@@ -112,17 +115,30 @@ jobs:
           ssh-keyscan -H ${{ secrets.ADMIN_DEPLOY_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      - name: 执行发布前磁盘门禁
+        run: |
+          ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager preflight --target '$TARGET_ID' &&
+            sudo -n /usr/local/sbin/gaoge-release-manager register-start \
+              --target '$TARGET_ID' \
+              --release '$RELEASE_ID' \
+              --git-sha '${{ github.sha }}' \
+              --workflow-run '${{ github.run_id }}-${{ github.run_attempt }}'
+          "
+
       - name: 确保 Admin 发布目录存在
         run: |
           ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
-            mkdir -p ${{ secrets.ADMIN_DEPLOY_PATH }}/releases/${{ github.sha }}
+            RELEASE_DIR='${{ secrets.ADMIN_DEPLOY_PATH }}/releases/$RELEASE_ID'
+            [ ! -e \"\$RELEASE_DIR\" ] || { echo \"Release ID has already been used: \$RELEASE_DIR\" >&2; exit 1; }
+            mkdir \"\$RELEASE_DIR\"
           "
 
       - name: 上传 Admin 构建产物
         run: |
           rsync -avz --delete \
             apps/admin/dist/ \
-            ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }}:${{ secrets.ADMIN_DEPLOY_PATH }}/releases/${{ github.sha }}/
+            ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }}:${{ secrets.ADMIN_DEPLOY_PATH }}/releases/$RELEASE_ID/
 
       - name: 校验 API 合约
         run: |
@@ -131,10 +147,11 @@ jobs:
           done
 
       - name: 切换 Admin 当前版本
+        id: switch-release
         run: |
           ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
-            rm -rf ${{ secrets.ADMIN_DEPLOY_PATH }}/current
-            ln -sfn ${{ secrets.ADMIN_DEPLOY_PATH }}/releases/${{ github.sha }} ${{ secrets.ADMIN_DEPLOY_PATH }}/current
+            sudo -n /usr/local/sbin/gaoge-release-manager activate \
+              --target '$TARGET_ID' --release '$RELEASE_ID'
           "
 
       - name: 健康检查
@@ -146,3 +163,38 @@ jobs:
             sleep 5
           done
           exit 1
+
+      - name: 记录成功版本并限量回收
+        run: |
+          if ! ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager mark-success \
+              --target '$TARGET_ID' --release '$RELEASE_ID' \
+              --git-sha '${{ github.sha }}' \
+              --workflow-run '${{ github.run_id }}-${{ github.run_attempt }}'
+          "; then
+            echo "::warning::Admin release lifecycle success marker failed; the healthy release remains active"
+          elif ! ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager prune \
+              --target '$TARGET_ID' --max-delete 1
+          "; then
+            echo "::warning::Admin release lifecycle prune failed; the healthy release remains active"
+          fi
+
+      - name: 发布失败时恢复 Admin 版本
+        id: rollback-release
+        if: failure() && steps.switch-release.outcome == 'success'
+        run: |
+          ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager rollback --target '$TARGET_ID'
+          "
+          curl -fsS --retry 5 --retry-delay 3 ${{ secrets.ADMIN_HEALTH_URL }} >/dev/null
+
+      - name: 标记 Admin 失败版本
+        if: failure() && (steps.switch-release.outcome != 'success' || steps.rollback-release.outcome == 'success')
+        run: |
+          if ! ssh ${{ secrets.ADMIN_DEPLOY_USER }}@${{ secrets.ADMIN_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager mark-failed \
+              --target '$TARGET_ID' --release '$RELEASE_ID' --stage workflow
+          "; then
+            echo "::warning::Admin release lifecycle failure marker could not be written"
+          fi

@@ -16,11 +16,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-sports-production
-  cancel-in-progress: true
+  group: gaoge-production-deployment
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: '22'
+  RELEASE_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   verify:
@@ -75,6 +76,7 @@ jobs:
       DEPLOY_USER: ${{ secrets.SPORTS_DEPLOY_USER || secrets.WEB_DEPLOY_USER }}
       DEPLOY_PATH: ${{ secrets.SPORTS_DEPLOY_PATH || secrets.WEB_DEPLOY_PATH }}
       HEALTH_URL: ${{ secrets.SPORTS_HEALTH_URL || secrets.WEB_HEALTH_URL }}
+      TARGET_ID: gaoge-sports
 
     steps:
       - name: 检查 Sports 部署配置
@@ -126,23 +128,37 @@ jobs:
           ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
+      - name: 执行发布前磁盘门禁
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "
+            sudo -n /usr/local/sbin/gaoge-release-manager preflight --target '$TARGET_ID' &&
+            sudo -n /usr/local/sbin/gaoge-release-manager register-start \
+              --target '$TARGET_ID' \
+              --release '$RELEASE_ID' \
+              --git-sha '${{ github.sha }}' \
+              --workflow-run '${{ github.run_id }}-${{ github.run_attempt }}'
+          "
+
       - name: 确保 Sports 发布目录存在
         run: |
           ssh "$DEPLOY_USER@$DEPLOY_HOST" "
-            mkdir -p $DEPLOY_PATH/releases/${{ github.sha }}
+            RELEASE_DIR='$DEPLOY_PATH/releases/$RELEASE_ID'
+            [ ! -e \"\$RELEASE_DIR\" ] || { echo \"Release ID has already been used: \$RELEASE_DIR\" >&2; exit 1; }
+            mkdir \"\$RELEASE_DIR\"
           "
 
       - name: 上传 Sports 构建产物
         run: |
           rsync -avz --delete \
             apps/sports/dist/ \
-            "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/releases/${{ github.sha }}/"
+            "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/releases/$RELEASE_ID/"
 
       - name: 切换 Sports 当前版本
+        id: switch-release
         run: |
           ssh "$DEPLOY_USER@$DEPLOY_HOST" "
-            rm -rf $DEPLOY_PATH/current
-            ln -sfn $DEPLOY_PATH/releases/${{ github.sha }} $DEPLOY_PATH/current
+            sudo -n /usr/local/sbin/gaoge-release-manager activate \
+              --target '$TARGET_ID' --release '$RELEASE_ID'
           "
 
       - name: 健康检查
@@ -154,3 +170,38 @@ jobs:
             sleep 5
           done
           exit 1
+
+      - name: 记录成功版本并限量回收
+        run: |
+          if ! ssh "$DEPLOY_USER@$DEPLOY_HOST" "
+            sudo -n /usr/local/sbin/gaoge-release-manager mark-success \
+              --target '$TARGET_ID' --release '$RELEASE_ID' \
+              --git-sha '${{ github.sha }}' \
+              --workflow-run '${{ github.run_id }}-${{ github.run_attempt }}'
+          "; then
+            echo "::warning::Sports release lifecycle success marker failed; the healthy release remains active"
+          elif ! ssh "$DEPLOY_USER@$DEPLOY_HOST" "
+            sudo -n /usr/local/sbin/gaoge-release-manager prune \
+              --target '$TARGET_ID' --max-delete 1
+          "; then
+            echo "::warning::Sports release lifecycle prune failed; the healthy release remains active"
+          fi
+
+      - name: 发布失败时恢复 Sports 版本
+        id: rollback-release
+        if: failure() && steps.switch-release.outcome == 'success'
+        run: |
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" "
+            sudo -n /usr/local/sbin/gaoge-release-manager rollback --target '$TARGET_ID'
+          "
+          curl -fsS --retry 5 --retry-delay 3 "$HEALTH_URL" >/dev/null
+
+      - name: 标记 Sports 失败版本
+        if: failure() && (steps.switch-release.outcome != 'success' || steps.rollback-release.outcome == 'success')
+        run: |
+          if ! ssh "$DEPLOY_USER@$DEPLOY_HOST" "
+            sudo -n /usr/local/sbin/gaoge-release-manager mark-failed \
+              --target '$TARGET_ID' --release '$RELEASE_ID' --stage workflow
+          "; then
+            echo "::warning::Sports release lifecycle failure marker could not be written"
+          fi

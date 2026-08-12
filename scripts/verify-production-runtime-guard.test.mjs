@@ -60,7 +60,7 @@ test('api deployment uses one database source and persists PM2 only after verifi
   assert.match(workflow, /command -v realpath/)
   assert.match(workflow, /command -v cmp/)
   assert.match(workflow, /Number\.parseInt\(process\.versions\.node, 10\) !== 22/)
-  assert.match(workflow, /api\.env\.next-\$\{\{ github\.sha \}\}/)
+  assert.match(workflow, /api\.env\.next-\$RELEASE_ID/)
   assert.match(workflow, /mv .*NEXT_ENV_FILE.*SHARED_ENV_FILE/)
   assert.match(workflow, /env:\s+DEPLOY_ENV_FILE_API: \$\{\{ secrets\.DEPLOY_ENV_FILE_API \}\}/)
   assert.match(workflow, /printf '%s\\n' "\$DEPLOY_ENV_FILE_API"/)
@@ -87,7 +87,7 @@ test('api deployment uses one database source and persists PM2 only after verifi
   assert.match(workflow, /env-installing/)
   assert.match(workflow, /env-installed/)
   assert.match(workflow, /deploy-state\/\$\{\{ github\.run_id \}\}-\$\{\{ github\.run_attempt \}\}/)
-  assert.match(workflow, /mv -Tf/)
+  assert.match(workflow, /gaoge-release-manager activate/)
   assert.doesNotMatch(workflow, /rm -rf .*current/)
   assert.match(rollback, /previous_release=\$\(realpath "\$recorded_release"/)
   assert.match(rollback, /\[ -f "\$previous_release\/ecosystem\.config\.cjs" \]/)
@@ -100,7 +100,7 @@ test('api deployment uses one database source and persists PM2 only after verifi
   assert.match(workflow, /EXPECTED_DEPLOY_PATH=\\"\$\{\{ secrets\.API_DEPLOY_PATH \}\}\\"/)
   assert.match(
     workflow,
-    /EXPECTED_RELEASE_PATH=\\"\$\{\{ secrets\.API_DEPLOY_PATH \}\}\/releases\/api\/\$\{\{ github\.sha \}\}\\"/,
+    /EXPECTED_RELEASE_PATH=\\"\$\{\{ secrets\.API_DEPLOY_PATH \}\}\/releases\/api\/\$RELEASE_ID\\"/,
   )
   assert.match(workflow, /EXPECTED_DB_HOST=\\"\$\{\{ secrets\.EXPECTED_DATABASE_HOST \}\}\\"/)
   assert.match(workflow, /EXPECTED_DB_PORT=\\"5432\\"/)
@@ -174,10 +174,8 @@ test('admin deployment verifies the API contract before switching frontend relea
   assert.match(workflow, /ADMIN_API_CONTRACT_URLS/)
   assert.match(workflow, /校验 API 合约/)
   assert.match(workflow, /curl -fsS --retry 5 --retry-delay 3/)
-  assert.match(
-    workflow,
-    /ln -sfn \$\{\{ secrets\.ADMIN_DEPLOY_PATH \}\}\/releases\/\$\{\{ github\.sha \}\} \$\{\{ secrets\.ADMIN_DEPLOY_PATH \}\}\/current/,
-  )
+  assert.match(workflow, /gaoge-release-manager activate/)
+  assert.match(workflow, /--target '\$TARGET_ID' --release '\$RELEASE_ID'/)
 })
 
 test('api PM2 production runtime defaults to a single instance with override support', () => {

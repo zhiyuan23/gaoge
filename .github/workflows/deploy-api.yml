@@ -27,6 +27,7 @@ env:
   API_RELEASE_DIR: '.deploy/api'
   API_RELEASE_ARCHIVE: 'api-release.tgz'
   API_RELEASE_ARTIFACT: 'api-release-bundle'
+  RELEASE_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   verify:
@@ -99,6 +100,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: verify
     if: github.ref == 'refs/heads/main'
+    env:
+      TARGET_ID: gaoge-api
 
     steps:
       - name: 检出部署脚本
@@ -161,6 +164,17 @@ jobs:
             }
           '"
 
+      - name: 执行发布前磁盘门禁
+        run: |
+          ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager preflight --target '$TARGET_ID' &&
+            sudo -n /usr/local/sbin/gaoge-release-manager register-start \
+              --target '$TARGET_ID' \
+              --release '$RELEASE_ID' \
+              --git-sha '${{ github.sha }}' \
+              --workflow-run '${{ github.run_id }}-${{ github.run_attempt }}'
+          "
+
       - name: 保存发布回滚状态
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
@@ -170,7 +184,7 @@ jobs:
             STATE_DIR=\$STATE_ROOT/${{ github.run_id }}-${{ github.run_attempt }}
             SHARED_ENV_FILE=\$DEPLOY_PATH/shared/api.env
 
-            find \"\$STATE_ROOT\" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf -- {} +
+            find \"\$STATE_ROOT\" -mindepth 1 -maxdepth 1 -type d -mmin +1440 -exec rm -rf -- {} +
             DEPLOY_PATH=\"\$DEPLOY_PATH\" \
             STATE_ROOT=\"\$STATE_ROOT\" \
             STATE_DIR=\"\$STATE_DIR\" \
@@ -188,13 +202,13 @@ jobs:
             exit 1
           fi
 
-          NEXT_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}
+          NEXT_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-$RELEASE_ID
           printf '%s\n' "$DEPLOY_ENV_FILE_API" |
             ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "umask 077; cat > \"${NEXT_ENV_FILE}\""
 
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -euo pipefail
-            NEXT_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}
+            NEXT_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-$RELEASE_ID
             SHARED_ENV_FILE=${{ secrets.API_DEPLOY_PATH }}/shared/api.env
             STATE_DIR=${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
 
@@ -218,14 +232,14 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}
-            rm -rf \"\$RELEASE_DIR\"
-            mkdir -p \"\$RELEASE_DIR\"
+            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/$RELEASE_ID
+            [ ! -e \"\$RELEASE_DIR\" ] || { echo \"Release ID has already been used: \$RELEASE_DIR\" >&2; exit 1; }
+            mkdir \"\$RELEASE_DIR\"
           '"
 
           rsync -avz \
             ./artifact/${{ env.API_RELEASE_ARCHIVE }} \
-            ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}/${{ env.API_RELEASE_ARCHIVE }}
+            ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }}:${{ secrets.API_DEPLOY_PATH }}/releases/api/$RELEASE_ID/${{ env.API_RELEASE_ARCHIVE }}
 
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
             set -eo pipefail
@@ -233,7 +247,7 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}
+            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/$RELEASE_ID
             tar -xzf \"\$RELEASE_DIR/${{ env.API_RELEASE_ARCHIVE }}\" -C \"\$RELEASE_DIR\"
             rm -f \"\$RELEASE_DIR/${{ env.API_RELEASE_ARCHIVE }}\"
             ln -sfn ${{ secrets.API_DEPLOY_PATH }}/shared/api.env \"\$RELEASE_DIR/.env\"
@@ -247,7 +261,7 @@ jobs:
             [ -f ~/.profile ] && set +u && . ~/.profile && set -u || true
             set -u
 
-            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}
+            RELEASE_DIR=${{ secrets.API_DEPLOY_PATH }}/releases/api/$RELEASE_ID
             cd \"\$RELEASE_DIR\"
 
             EXPECTED_DATABASE_HOST='${{ secrets.EXPECTED_DATABASE_HOST }}' \
@@ -284,17 +298,9 @@ jobs:
             DEPLOY_PATH=${{ secrets.API_DEPLOY_PATH }}
             STATE_DIR=\$DEPLOY_PATH/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}
             CURRENT_LINK=\$DEPLOY_PATH/current
-            NEXT_CURRENT_LINK=\$DEPLOY_PATH/.current-next-${{ github.run_id }}-${{ github.run_attempt }}
-            NEW_RELEASE=\$DEPLOY_PATH/releases/api/${{ github.sha }}
-
-            [ ! -e \"\$CURRENT_LINK\" ] || [ -L \"\$CURRENT_LINK\" ] || {
-              echo \"Current release path is not a symlink: \$CURRENT_LINK\" >&2
-              exit 1
-            }
+            sudo -n /usr/local/sbin/gaoge-release-manager activate \
+              --target '$TARGET_ID' --release '$RELEASE_ID'
             touch \"\$STATE_DIR/switched\"
-            rm -f \"\$NEXT_CURRENT_LINK\"
-            ln -s \"\$NEW_RELEASE\" \"\$NEXT_CURRENT_LINK\"
-            mv -Tf \"\$NEXT_CURRENT_LINK\" \"\$CURRENT_LINK\"
             PM2_HOME_VALUE=\${PM2_HOME:-\$HOME/.pm2}
             env -i HOME=\"\$HOME\" PATH=\"\$PATH\" PM2_HOME=\"\$PM2_HOME_VALUE\" \
               pm2 delete gaoge-api >/dev/null 2>&1 || true
@@ -318,7 +324,7 @@ jobs:
             EXPECTED_PM2_NAME=\"gaoge-api\" \
             FORBIDDEN_PM2_NAMES=\"gaoge-server\" \
             EXPECTED_DEPLOY_PATH=\"${{ secrets.API_DEPLOY_PATH }}\" \
-            EXPECTED_RELEASE_PATH=\"${{ secrets.API_DEPLOY_PATH }}/releases/api/${{ github.sha }}\" \
+            EXPECTED_RELEASE_PATH=\"${{ secrets.API_DEPLOY_PATH }}/releases/api/$RELEASE_ID\" \
             EXPECTED_DB_HOST=\"${{ secrets.EXPECTED_DATABASE_HOST }}\" \
             EXPECTED_DB_PORT=\"5432\" \
             EXPECTED_DB_NAME=\"gaoge_db\" \
@@ -343,7 +349,24 @@ jobs:
             rm -rf \"\$STATE_DIR\"
           '"
 
+      - name: 记录成功版本并限量回收
+        run: |
+          if ! ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager mark-success \
+              --target '$TARGET_ID' --release '$RELEASE_ID' \
+              --git-sha '${{ github.sha }}' \
+              --workflow-run '${{ github.run_id }}-${{ github.run_attempt }}'
+          "; then
+            echo "::warning::API release lifecycle success marker failed; the healthy release remains active"
+          elif ! ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager prune \
+              --target '$TARGET_ID' --max-delete 1
+          "; then
+            echo "::warning::API release lifecycle prune failed; the healthy release remains active"
+          fi
+
       - name: 发布失败时恢复 API 版本与环境
+        id: rollback-release
         if: failure()
         run: |
           ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "bash -lc '
@@ -354,8 +377,8 @@ jobs:
             DEPLOY_PATH=\"${{ secrets.API_DEPLOY_PATH }}\" \
             STATE_DIR=\"${{ secrets.API_DEPLOY_PATH }}/tmp/deploy-state/${{ github.run_id }}-${{ github.run_attempt }}\" \
             SHARED_ENV_FILE=\"${{ secrets.API_DEPLOY_PATH }}/shared/api.env\" \
-            NEXT_ENV_FILE=\"${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-${{ github.sha }}\" \
-            ROLLBACK_TOKEN=\"${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}\" \
+            NEXT_ENV_FILE=\"${{ secrets.API_DEPLOY_PATH }}/shared/api.env.next-$RELEASE_ID\" \
+            ROLLBACK_TOKEN=\"$RELEASE_ID\" \
             RUNTIME_GUARD_PATH=\"${{ secrets.API_DEPLOY_PATH }}/tmp/verify-remote-runtime.sh\" \
             EXPECTED_PM2_NAME=\"gaoge-api\" \
             FORBIDDEN_PM2_NAMES=\"gaoge-server\" \
@@ -371,6 +394,16 @@ jobs:
             CORS_PATH=\"/auth/admin/login\" \
             bash ${{ secrets.API_DEPLOY_PATH }}/tmp/rollback-api-release.sh
           '"
+
+      - name: 标记 API 失败版本
+        if: failure() && steps.rollback-release.outcome == 'success'
+        run: |
+          if ! ssh ${{ secrets.API_DEPLOY_USER }}@${{ secrets.API_DEPLOY_HOST }} "
+            sudo -n /usr/local/sbin/gaoge-release-manager mark-failed \
+              --target '$TARGET_ID' --release '$RELEASE_ID' --stage workflow
+          "; then
+            echo "::warning::API release lifecycle failure marker could not be written"
+          fi
 
       - name: 输出 PM2 状态
         if: always()
