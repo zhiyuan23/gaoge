@@ -38,6 +38,8 @@ gaoge-release-manager rollback --target gaoge-api
 
 `rollback` only changes the `current` link. The owning deployment workflow must restart PM2 and verify HTTPS health. Exit codes are `0` success, `2` argument/config error, `3` path/config-file safety error, `4` disk gate, `5` lock timeout, and `6` audit/runtime inconsistency.
 
+`audit` removes an expired in-progress state file only when the matching release directory does not exist. Existing failed or incomplete release directories keep their state and remain subject to the configured 24-hour TTL.
+
 Disable scheduled maintenance without changing releases:
 
 ```bash

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import {
+  lstat,
   mkdir,
   readdir,
   readFile,
@@ -308,6 +309,34 @@ async function inProgressState(target, stateDir, now) {
     else expired.push(releaseId)
   }
   return { active, expired }
+}
+
+export async function cleanupExpiredInProgress(
+  target,
+  stateDir = DEFAULT_STATE_DIR,
+  now = Date.now(),
+) {
+  const rootMetadata = await lstat(target.releaseRoot)
+  if (!rootMetadata.isDirectory() || rootMetadata.isSymbolicLink())
+    throw new AuditError(`release root is not a real directory: ${target.releaseRoot}`)
+  const progress = await inProgressState(target, stateDir, now)
+  const removed = []
+  const retained = []
+  for (const releaseId of progress.expired) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(releaseId)) {
+      retained.push(releaseId)
+      continue
+    }
+    try {
+      await lstat(path.join(target.releaseRoot, releaseId))
+      retained.push(releaseId)
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error
+      await rm(inProgressPath(stateDir, target, releaseId), { force: true })
+      removed.push(releaseId)
+    }
+  }
+  return { removed: removed.sort(), retained: retained.sort() }
 }
 
 export async function inventoryTarget(target, options = {}) {

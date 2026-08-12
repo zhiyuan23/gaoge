@@ -11,6 +11,7 @@ import {
   AuditError,
   bootstrapTarget,
   buildPlan,
+  cleanupExpiredInProgress,
   inspectAuditPath,
   inventoryTarget,
   LockTimeoutError,
@@ -188,7 +189,7 @@ async function planTarget(target, context) {
   return { inventory, plan }
 }
 
-async function auditTargets(config, selectedTargets, context, probe = true) {
+async function auditTargets(config, selectedTargets, context, probe = true, cleanup = false) {
   const resource = await readResourceState()
   const reports = []
   let status = 'healthy'
@@ -198,6 +199,9 @@ async function auditTargets(config, selectedTargets, context, probe = true) {
       continue
     }
     try {
+      const expiredInProgress = cleanup
+        ? await cleanupExpiredInProgress(target, context.stateDir, context.now)
+        : { removed: [], retained: [] }
       const { inventory, plan } = await planTarget(target, context)
       const disk = readDiskState(target.releaseRoot)
       const health = probe ? await probeHealthUrls(target.healthUrls) : []
@@ -221,6 +225,7 @@ async function auditTargets(config, selectedTargets, context, probe = true) {
         health,
         disk,
         staleTemporaryItems,
+        expiredInProgress,
       })
     } catch (error) {
       status = 'failed'
@@ -357,7 +362,13 @@ async function execute(parsed, config, context) {
     })
   }
   if (parsed.command === 'audit' || parsed.command === 'report') {
-    const report = await auditTargets(config, selectedTargets, context, true)
+    const report = await auditTargets(
+      config,
+      selectedTargets,
+      context,
+      true,
+      parsed.command === 'audit',
+    )
     const result = resultEnvelope(parsed.command, parsed.target, {
       ...report,
       ok: report.status !== 'failed',

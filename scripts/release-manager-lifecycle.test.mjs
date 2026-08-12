@@ -26,6 +26,7 @@ import {
   AuditError,
   bootstrapTarget,
   buildPlan,
+  cleanupExpiredInProgress,
   inventoryTarget,
   registerReleaseStart,
   rollbackLink,
@@ -331,6 +332,26 @@ test('inventory classifies expired in-progress releases as incomplete', async (t
 
   assert.equal(result.inProgressIds.length, 0)
   assert.equal(result.releases.find((item) => item.id === 'unfinished').status, 'incomplete')
+})
+
+test('audit cleanup removes expired orphan state but retains state for an existing release', async (t) => {
+  const fixture = await releaseFixture(t)
+  await fixture.createRelease('existing')
+  const stateDir = path.join(fixture.base, 'state')
+  const metadata = { gitSha: 'c'.repeat(40), workflowRun: '789-1' }
+  const existingState = await registerReleaseStart(fixture.target, 'existing', metadata, {
+    stateDir,
+  })
+  const orphanState = await registerReleaseStart(fixture.target, 'orphan', metadata, { stateDir })
+  const staleTime = new Date(NOW - 25 * HOUR)
+  await utimes(existingState, staleTime, staleTime)
+  await utimes(orphanState, staleTime, staleTime)
+
+  const result = await cleanupExpiredInProgress(fixture.target, stateDir, NOW)
+
+  assert.deepEqual(result.removed, ['orphan'])
+  assert.deepEqual(result.retained, ['existing'])
+  assert.deepEqual((await readdir(path.dirname(existingState))).sort(), ['existing.json'])
 })
 
 test('inventory resolves a PM2 current symlink to the protected release directory', async (t) => {
