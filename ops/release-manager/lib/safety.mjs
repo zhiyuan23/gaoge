@@ -208,7 +208,14 @@ export function readPm2Cwds(processNames, options = {}) {
             'jlist',
           ]
     const command = owner === 'root' ? 'pm2' : 'sudo'
-    pm2Apps = JSON.parse((options.runner ?? execFileSync)(command, args, { encoding: 'utf8' }))
+    const commandOptions =
+      owner === 'root'
+        ? {
+            encoding: 'utf8',
+            env: { ...process.env, HOME: '/root', PM2_HOME: '/root/.pm2' },
+          }
+        : { encoding: 'utf8' }
+    pm2Apps = JSON.parse((options.runner ?? execFileSync)(command, args, commandOptions))
   }
   if (!Array.isArray(pm2Apps)) throw new PathSafetyError('PM2 process list must be an array')
   return parsePm2Cwds(processNames, pm2Apps)

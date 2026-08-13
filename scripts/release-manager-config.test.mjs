@@ -19,6 +19,7 @@ import {
   parsePm2Cwds,
   preflightBlocked,
   probeHealthUrls,
+  readPm2Cwds,
   resolveDirectChild,
   resourceDeletionBlocked,
 } from '../ops/release-manager/lib/safety.mjs'
@@ -268,6 +269,27 @@ test('extracts runtime paths only for configured PM2 process names', () => {
     '/var/www/gaoge/api/releases/api/r1',
     '/var/www/gaoge/api/releases/api/r1/dist',
   ])
+})
+
+test('reads root-owned PM2 state from the root PM2 home without systemd HOME', () => {
+  const paths = readPm2Cwds(['gaoge-club-api'], {
+    owner: 'root',
+    runner(_command, _args, options) {
+      if (options.env?.HOME !== '/root' || options.env?.PM2_HOME !== '/root/.pm2') {
+        return '[PM2][Initialization] Defaulting to /etc/.pm2\n[]'
+      }
+      return JSON.stringify([
+        {
+          name: 'gaoge-club-api',
+          pm2_env: {
+            pm_cwd: '/var/www/gaoge-club/api/releases/api/r1',
+          },
+        },
+      ])
+    },
+  })
+
+  assert.deepEqual([...paths], ['/var/www/gaoge-club/api/releases/api/r1'])
 })
 
 test('returns one health result per URL without leaking command output', async () => {
