@@ -31,6 +31,7 @@ model User {
   refreshTokens  RefreshToken[]
   footballPlayer Player?
   userRoles      UserRole[]
+  auditEvents    AuditEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -123,23 +124,45 @@ model Role {
   @@index([sort])
 }
 
-model Permission {
-  id              Int              @id @default(autoincrement())
-  code            String           @unique
-  name            String
-  module          String
-  resource        String
-  action          String
-  description     String?
-  status          String           @default("active")
-  isBuiltIn       Boolean          @default(false)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  rolePermissions RolePermission[]
-  menuPermissions MenuPermission[]
+model Resource {
+  id            Int            @id @default(autoincrement())
+  key           String         @unique
+  name          String
+  module        String
+  description   String?
+  status        String         @default("active")
+  isBuiltIn     Boolean        @default(false)
+  sort          Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  permissions   Permission[]   @relation("PermissionResource")
+  menuResources MenuResource[]
 
+  @@index([module, status, sort])
+  @@index([isBuiltIn])
+}
+
+model Permission {
+  id                 Int              @id @default(autoincrement())
+  code               String           @unique
+  name               String
+  module             String
+  resource           String
+  action             String
+  description        String?
+  status             String           @default("active")
+  isBuiltIn          Boolean          @default(false)
+  resourceId         Int
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  resourceDefinition Resource         @relation("PermissionResource", fields: [resourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  rolePermissions    RolePermission[]
+  menuPermissions    MenuPermission[]
+
+  @@unique([resourceId, action])
   @@index([module])
   @@index([status])
+  @@index([resourceId, status])
 }
 
 model Menu {
@@ -150,7 +173,7 @@ model Menu {
   name            String
   title           String
   icon            String?
-  path            String
+  path            String?
   routeName       String           @unique
   menuType        String
   sort            Int              @default(0)
@@ -160,6 +183,7 @@ model Menu {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   menuPermissions MenuPermission[]
+  menuResources   MenuResource[]
 
   @@unique([parentId, name])
   @@unique([parentId, path])
@@ -198,6 +222,35 @@ model MenuPermission {
 
   @@id([menuId, permissionId])
   @@index([permissionId])
+}
+
+model MenuResource {
+  menuId     Int
+  resourceId Int
+  sort       Int      @default(0)
+  createdAt  DateTime @default(now())
+  menu       Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([menuId, resourceId])
+  @@index([resourceId, menuId])
+}
+
+model AuditEvent {
+  id          BigInt   @id @default(autoincrement())
+  action      String
+  result      String
+  actorUserId Int?
+  entityType  String?
+  entityId    String?
+  requestId   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  actorUser   User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([requestId])
 }
 
 model WechatShareConfig {

@@ -1,8 +1,3 @@
-<route lang="yaml">
-meta:
-  title: 角色管理
-</route>
-
 <script setup lang="ts">
 import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
 

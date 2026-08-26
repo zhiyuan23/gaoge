@@ -139,6 +139,7 @@ AI 修改代码时应遵循现有配置，不要手写另一套格式风格。
 - [docs/conventions/admin-page-patterns.md](docs/conventions/admin-page-patterns.md)
 - [docs/conventions/frontend-styling.md](docs/conventions/frontend-styling.md)
 - [docs/conventions/admin-crud.md](docs/conventions/admin-crud.md)
+- [docs/conventions/admin-navigation.md](docs/conventions/admin-navigation.md)
 - [docs/conventions/shared-contracts.md](docs/conventions/shared-contracts.md)
 - [docs/conventions/env-and-config.md](docs/conventions/env-and-config.md)
 - [docs/conventions/testing-and-verification.md](docs/conventions/testing-and-verification.md)

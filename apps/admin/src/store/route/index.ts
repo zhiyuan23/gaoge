@@ -1,18 +1,12 @@
 import { cloneDeep } from 'es-toolkit'
 import type { RouteRecordRaw } from 'vue-router'
 
-import apiApp from '@/api/app'
 import { systemRoutes } from '@/router/routes'
 import { resolveRoutePath } from '@/utils'
 
 import useSettingsStore from '../settings'
 
 import type { Route } from '#/global'
-
-const backendViewModules = {
-  ...import.meta.glob('../../views/{index,login,reload,[...all]}.vue'),
-  ...import.meta.glob('../../views/sports/**/*.vue'),
-}
 
 const useRouteStore = defineStore(
   // 唯一ID
@@ -139,36 +133,10 @@ const useRouteStore = defineStore(
       routesRaw.value = cloneDeep(asyncRoutes) as any
       isGenerate.value = true
     }
-    // 格式化后端路由数据
-    function formatBackRoutes(routes: any, views = backendViewModules): Route.recordMainRaw[] {
-      return routes.map((route: any) => {
-        switch (route.component) {
-          case 'Layout':
-            route.component = () => import('@/layouts/index.vue')
-            break
-          default:
-            if (route.component) {
-              route.component = views[`../../views/${route.component}`]
-            } else {
-              delete route.component
-            }
-        }
-        if (route.children) {
-          route.children = formatBackRoutes(route.children, views)
-        }
-        return route
-      })
-    }
-    // 生成路由（后端获取）
-    async function generateRoutesAtBack() {
-      await apiApp
-        .routeList()
-        .then((res) => {
-          // 设置 routes 数据
-          routesRaw.value = formatBackRoutes(res.data) as any
-          isGenerate.value = true
-        })
-        .catch(() => {})
+    // 设置服务端已解析的受控路由
+    function generateRoutesFromServer(routes: Route.recordMainRaw[]) {
+      routesRaw.value = cloneDeep(routes)
+      isGenerate.value = true
     }
     // 生成路由（文件系统生成）
     function generateRoutesAtFilesystem(asyncRoutes: RouteRecordRaw[]) {
@@ -198,7 +166,7 @@ const useRouteStore = defineStore(
       flatRoutes,
       flatSystemRoutes,
       generateRoutesAtFront,
-      generateRoutesAtBack,
+      generateRoutesFromServer,
       generateRoutesAtFilesystem,
       setCurrentRemoveRoutes,
       removeRoutes,

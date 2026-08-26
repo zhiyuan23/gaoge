@@ -1,8 +1,3 @@
-<route lang="yaml">
-meta:
-  title: 微信分享配置
-</route>
-
 <script setup lang="ts">
 import { ElDialog, ElMessage, ElTag, type FormInstance, type FormRules } from 'element-plus'
 

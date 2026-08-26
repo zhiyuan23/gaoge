@@ -15,6 +15,7 @@
 - [miniapp-architecture.md](./miniapp-architecture.md)：`apps/miniapp` 微信原生小程序目录、服务分组和导入路径约定
 - [frontend-styling.md](./frontend-styling.md)：前端样式方案的应用边界与使用原则
 - [admin-crud.md](./admin-crud.md)：`apps/admin` CRUD 页面结构与通用组件使用约定
+- [admin-navigation.md](./admin-navigation.md)：`apps/admin` 服务端菜单与受控页面注册表约定
 - [shared-contracts.md](./shared-contracts.md)：共享类型、schema、sdk 与跨包边界约定
 - [env-and-config.md](./env-and-config.md)：环境变量、配置读取与多应用配置边界约定
 - [testing-and-verification.md](./testing-and-verification.md)：按改动范围执行校验与提交前验证约定

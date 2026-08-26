@@ -1,8 +1,3 @@
-<route lang="yaml">
-meta:
-  title: 高歌首页
-</route>
-
 <script setup lang="ts"></script>
 
 <template>

@@ -17,9 +17,7 @@ import PermissionExample from './modules/example/permission'
 import PluginExample from './modules/example/plugin'
 import TabExample from './modules/example/tab'
 import Playground from './modules/playground'
-import Sports from './modules/sports'
-import System from './modules/system'
-import Wechat from './modules/wechat'
+import { fixedHiddenRoutes } from './fixed-hidden-routes'
 
 import type { Route } from '#/global'
 
@@ -81,11 +79,11 @@ const systemRoutes: RouteRecordRaw[] = [
       },
     ],
   },
+  ...fixedHiddenRoutes,
 ]
 
 // 动态路由（异步路由、导航栏路由）
 const asyncRoutes: Route.recordMainRaw[] = [
-  Sports,
   {
     meta: {
       title: '演示',
@@ -112,13 +110,6 @@ const asyncRoutes: Route.recordMainRaw[] = [
       icon: 'lucide:flask-conical',
     },
     children: [Playground],
-  },
-  {
-    meta: {
-      title: '系统管理',
-      icon: 'ri:settings-3-line',
-    },
-    children: [System, Wechat],
   },
 ]
 

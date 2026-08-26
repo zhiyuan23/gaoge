@@ -1,8 +1,3 @@
-<route lang="yaml">
-meta:
-  title: 球员信息
-</route>
-
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 

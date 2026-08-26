@@ -29,7 +29,7 @@ export function createSystemMenuFormFromRow(menu: SystemMenu): SystemMenuFormMod
     name: menu.name,
     title: menu.title,
     icon: menu.icon ?? '',
-    path: menu.path,
+    path: menu.path ?? '',
     routeName: menu.routeName,
     menuType: menu.menuType,
     sort: menu.sort,

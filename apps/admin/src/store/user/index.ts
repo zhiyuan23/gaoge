@@ -107,6 +107,7 @@ const useUserStore = defineStore(
       settingsStore.updateSettings({}, true)
       tabbarStore.clean()
       routeStore.removeRoutes()
+      menuStore.clearServerMenus()
       menuStore.setActived(0)
     }
 

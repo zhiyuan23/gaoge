@@ -3,12 +3,14 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import apiApp from '@/api/app'
 import menu from '@/menu'
+import { resolveServerNavigation } from '@/router/server-navigation'
 import { resolveRoutePath } from '@/utils'
 
 import useRouteStore from '../route'
 import useSettingsStore from '../settings'
 import useUserStore from '../user'
 
+import { shouldFilterMenusByPermission } from './navigation-mode'
 import { resolveSidebarMenus } from './resolve-sidebar-menus'
 
 import type { Menu, Route } from '#/global'
@@ -22,6 +24,7 @@ const useMenuStore = defineStore(
     const routeStore = useRouteStore()
 
     const filesystemMenusRaw = ref<Menu.recordMainRaw[]>([])
+    const serverMenusRaw = ref<Menu.recordMainRaw[]>([])
     const actived = ref(0)
 
     // 将原始路由转换成导航菜单
@@ -70,13 +73,20 @@ const useMenuStore = defineStore(
     // 完整导航数据
     const allMenus = computed(() => {
       let returnMenus: Menu.recordMainRaw[]
-      if (settingsStore.settings.app.routeBaseOn !== 'filesystem') {
+      if (settingsStore.settings.app.routeBaseOn === 'backend') {
+        returnMenus = serverMenusRaw.value
+      } else if (settingsStore.settings.app.routeBaseOn !== 'filesystem') {
         returnMenus = convertRouteToMenu(routeStore.routesRaw)
       } else {
         returnMenus = filesystemMenusRaw.value
       }
       // 如果权限功能开启，则需要对导航数据进行筛选过滤
-      if (settingsStore.settings.app.enablePermission) {
+      if (
+        shouldFilterMenusByPermission(
+          settingsStore.settings.app.routeBaseOn,
+          settingsStore.settings.app.enablePermission,
+        )
+      ) {
         return filterAsyncMenus(returnMenus, userStore.permissions)
       }
       return returnMenus
@@ -193,19 +203,23 @@ const useMenuStore = defineStore(
       return res
     }
     // 生成导航（前端生成）
-    async function generateMenusAtFront() {
+    function generateMenusAtFront() {
       filesystemMenusRaw.value = menu.filter((item) => item.children.length !== 0)
     }
-    // 生成导航（后端生成）
+    // 文件系统路由下仍可由服务端提供菜单结构；路由本身由文件系统注册。
     async function generateMenusAtBack() {
-      await apiApp
-        .menuList()
-        .then(async (res) => {
-          filesystemMenusRaw.value = (res.data as Menu.recordMainRaw[]).filter(
-            (item) => item.children.length !== 0,
-          )
-        })
-        .catch(() => {})
+      try {
+        filesystemMenusRaw.value = resolveServerNavigation(await apiApp.menuList()).menus
+      } catch {
+        filesystemMenusRaw.value = []
+      }
+    }
+    // 设置服务端已授权的导航数据
+    function setServerMenus(menus: Menu.recordMainRaw[]) {
+      serverMenusRaw.value = cloneDeep(menus)
+    }
+    function clearServerMenus() {
+      serverMenusRaw.value = []
     }
     // 设置主导航
     function isPathInMenus(menus: Menu.recordRaw[], path: string) {
@@ -242,6 +256,8 @@ const useMenuStore = defineStore(
       defaultOpenedPaths,
       generateMenusAtFront,
       generateMenusAtBack,
+      setServerMenus,
+      clearServerMenus,
       setActived,
     }
   },

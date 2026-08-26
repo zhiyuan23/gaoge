@@ -1,5 +1,14 @@
 import { Type } from 'class-transformer'
-import { IsBoolean, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
+import {
+  IsArray,
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator'
 
 import type { SystemMenuType, UserStatus } from '@gaoge/shared-types'
 
@@ -22,15 +31,15 @@ export class UpdateSystemMenuDto {
   @IsString()
   icon?: string
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  path: string
+  path: string | null
 
   @IsString()
   @IsNotEmpty()
   routeName: string
 
-  @IsIn(['catalog', 'menu'])
+  @IsIn(['group', 'catalog', 'menu'])
   menuType: SystemMenuType
 
   @IsOptional()
@@ -43,4 +52,13 @@ export class UpdateSystemMenuDto {
 
   @IsBoolean()
   visible: boolean
+
+  @IsOptional()
+  @IsArray()
+  @Type(() => Number)
+  @IsInt({ each: true })
+  resourceIds?: number[]
+
+  @IsString()
+  expectedUpdatedAt: string
 }

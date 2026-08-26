@@ -1,8 +1,3 @@
-<route lang="yaml">
-meta:
-  title: Banner 管理
-</route>
-
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 import Sortable from 'sortablejs'

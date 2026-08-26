@@ -7,6 +7,16 @@ export interface BuiltInRoleDefinition {
   isBuiltIn: true
 }
 
+export interface BuiltInResourceDefinition {
+  key: string
+  name: string
+  module: string
+  description: string
+  status: 'active' | 'inactive'
+  sort: number
+  isBuiltIn: true
+}
+
 export interface BuiltInPermissionDefinition {
   code: string
   name: string
@@ -22,9 +32,9 @@ export interface BuiltInMenuDefinition {
   name: string
   title: string
   icon?: string
-  path: string
+  path: string | null
   routeName: string
-  menuType: 'catalog' | 'menu'
+  menuType: 'group' | 'catalog' | 'menu'
   sort: number
   status: 'active' | 'inactive'
   visible: boolean
@@ -32,6 +42,8 @@ export interface BuiltInMenuDefinition {
   permissionCodes: string[]
   children?: BuiltInMenuDefinition[]
 }
+
+export const DEPRECATED_BUILT_IN_MENU_ROUTE_NAMES = ['systemPermission'] as const
 
 export const BUILT_IN_ROLE_DEFINITIONS: BuiltInRoleDefinition[] = [
   {
@@ -70,6 +82,7 @@ const resourceLabels: Record<string, string> = {
   role: '角色',
   permission: '权限',
   menu: '菜单',
+  audit: '审计日志',
   'wechat-share': '微信分享配置',
 }
 
@@ -141,6 +154,7 @@ const permissionCodes = [
   'system.menu.delete',
   'system.menu.sort',
   'system.menu.assign-permission',
+  'system.audit.view',
   'system.wechat-share.view',
   'system.wechat-share.update',
 ] as const
@@ -161,155 +175,256 @@ export const BUILT_IN_PERMISSION_DEFINITIONS: BuiltInPermissionDefinition[] = pe
   },
 )
 
+export const BUILT_IN_RESOURCE_DEFINITIONS: BuiltInResourceDefinition[] = [
+  ...new Map(
+    BUILT_IN_PERMISSION_DEFINITIONS.map((permission) => {
+      const key = `${permission.module}.${permission.resource}`
+      return [
+        key,
+        {
+          key,
+          name: resourceLabels[permission.resource] ?? permission.resource,
+          module: permission.module,
+          description: '',
+          status: 'active' as const,
+          sort: 0,
+          isBuiltIn: true as const,
+        },
+      ]
+    }),
+  ).values(),
+].map((resource, index) => ({
+  ...resource,
+  sort: index * 10,
+}))
+
 export const SUPER_ADMIN_PERMISSION_CODES = BUILT_IN_PERMISSION_DEFINITIONS.map((item) => item.code)
 
 export const SYSTEM_VIEWER_PERMISSION_CODES = BUILT_IN_PERMISSION_DEFINITIONS.map(
   (item) => item.code,
 ).filter((code) => code.endsWith('.view'))
 
+const footballCatalog: BuiltInMenuDefinition = {
+  name: 'football',
+  title: '高歌 FC',
+  icon: 'proicons:soccer',
+  path: '/sports/football',
+  routeName: 'sportsFootball',
+  menuType: 'catalog',
+  sort: 0,
+  status: 'active',
+  visible: true,
+  isBuiltIn: true,
+  permissionCodes: [],
+  children: [
+    {
+      name: 'player',
+      title: '球员信息',
+      path: '/sports/football/player',
+      routeName: 'player',
+      menuType: 'menu',
+      sort: 0,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['football.player.view'],
+    },
+    {
+      name: 'team',
+      title: '球队信息',
+      path: '/sports/football/team',
+      routeName: 'team',
+      menuType: 'menu',
+      sort: 10,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['football.team.view'],
+    },
+    {
+      name: 'matchRound',
+      title: '比赛信息',
+      path: '/sports/football/match-round',
+      routeName: 'matchRound',
+      menuType: 'menu',
+      sort: 20,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['football.matchRound.view'],
+    },
+    {
+      name: 'assetRecord',
+      title: '资产信息',
+      path: '/sports/football/asset-record',
+      routeName: 'assetRecord',
+      menuType: 'menu',
+      sort: 30,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['football.assetRecord.view'],
+    },
+  ],
+}
+
+const contentCatalog: BuiltInMenuDefinition = {
+  name: 'content',
+  title: '内容管理',
+  path: '/sports/content',
+  routeName: 'sportsContent',
+  menuType: 'catalog',
+  sort: 10,
+  status: 'active',
+  visible: true,
+  isBuiltIn: true,
+  permissionCodes: [],
+  children: [
+    {
+      name: 'contentBanner',
+      title: 'Banner 管理',
+      path: '/sports/content/banner',
+      routeName: 'contentBanner',
+      menuType: 'menu',
+      sort: 0,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['content.banner.view'],
+    },
+    {
+      name: 'contentRumorPost',
+      title: '流言板',
+      path: '/sports/content/rumor-post',
+      routeName: 'contentRumorPost',
+      menuType: 'menu',
+      sort: 10,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['content.rumorPost.view'],
+    },
+  ],
+}
+
+const systemCatalog: BuiltInMenuDefinition = {
+  name: 'system',
+  title: '用户权限',
+  icon: 'ri:settings-3-line',
+  path: '/system',
+  routeName: 'system',
+  menuType: 'catalog',
+  sort: 0,
+  status: 'active',
+  visible: true,
+  isBuiltIn: true,
+  permissionCodes: [],
+  children: [
+    {
+      name: 'systemUser',
+      title: '用户管理',
+      path: '/system/user',
+      routeName: 'systemUser',
+      menuType: 'menu',
+      sort: 0,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['system.user.view'],
+    },
+    {
+      name: 'systemRole',
+      title: '角色管理',
+      path: '/system/role',
+      routeName: 'systemRole',
+      menuType: 'menu',
+      sort: 10,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['system.role.view'],
+    },
+    {
+      name: 'systemMenu',
+      title: '菜单与权限',
+      path: '/system/menu',
+      routeName: 'systemMenu',
+      menuType: 'menu',
+      sort: 20,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['system.menu.view', 'system.permission.view'],
+    },
+    {
+      name: 'systemAudit',
+      title: '审计日志',
+      path: '/system/audit',
+      routeName: 'systemAudit',
+      menuType: 'menu',
+      sort: 30,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['system.audit.view'],
+    },
+  ],
+}
+
+const wechatCatalog: BuiltInMenuDefinition = {
+  name: 'wechat',
+  title: '微信管理',
+  icon: 'ri:wechat-2-line',
+  path: '/wechat',
+  routeName: 'wechat',
+  menuType: 'catalog',
+  sort: 10,
+  status: 'active',
+  visible: true,
+  isBuiltIn: true,
+  permissionCodes: [],
+  children: [
+    {
+      name: 'wechatShare',
+      title: '微信分享配置',
+      path: '/wechat/share',
+      routeName: 'wechatShare',
+      menuType: 'menu',
+      sort: 0,
+      status: 'active',
+      visible: true,
+      isBuiltIn: true,
+      permissionCodes: ['system.wechat-share.view'],
+    },
+  ],
+}
+
 export const BUILT_IN_MENU_DEFINITIONS: BuiltInMenuDefinition[] = [
   {
-    name: 'system',
-    title: '用户权限',
-    icon: 'ri:settings-3-line',
-    path: '/system',
-    routeName: 'system',
-    menuType: 'catalog',
+    name: 'sports',
+    title: '高歌体育',
+    path: null,
+    routeName: 'sports',
+    menuType: 'group',
     sort: 0,
     status: 'active',
     visible: true,
     isBuiltIn: true,
     permissionCodes: [],
-    children: [
-      {
-        name: 'systemUser',
-        title: '用户管理',
-        path: '/system/user',
-        routeName: 'systemUser',
-        menuType: 'menu',
-        sort: 0,
-        status: 'active',
-        visible: true,
-        isBuiltIn: true,
-        permissionCodes: ['system.user.view'],
-      },
-      {
-        name: 'systemRole',
-        title: '角色管理',
-        path: '/system/role',
-        routeName: 'systemRole',
-        menuType: 'menu',
-        sort: 10,
-        status: 'active',
-        visible: true,
-        isBuiltIn: true,
-        permissionCodes: ['system.role.view'],
-      },
-      {
-        name: 'systemMenu',
-        title: '菜单管理',
-        path: '/system/menu',
-        routeName: 'systemMenu',
-        menuType: 'menu',
-        sort: 20,
-        status: 'active',
-        visible: true,
-        isBuiltIn: true,
-        permissionCodes: ['system.menu.view'],
-      },
-      {
-        name: 'systemPermission',
-        title: '权限管理',
-        path: '/system/permission',
-        routeName: 'systemPermission',
-        menuType: 'menu',
-        sort: 30,
-        status: 'active',
-        visible: true,
-        isBuiltIn: true,
-        permissionCodes: ['system.permission.view'],
-      },
-    ],
+    children: [footballCatalog, contentCatalog],
   },
   {
-    name: 'sports',
-    title: '高歌体育',
-    icon: 'solar:cup-star-outline',
-    path: '/sports',
-    routeName: 'sports',
-    menuType: 'catalog',
-    sort: 15,
-    status: 'active',
-    visible: true,
-    isBuiltIn: true,
-    permissionCodes: [],
-    children: [
-      {
-        name: 'content',
-        title: '内容管理',
-        path: '/sports/content',
-        routeName: 'sportsContent',
-        menuType: 'catalog',
-        sort: 0,
-        status: 'active',
-        visible: true,
-        isBuiltIn: true,
-        permissionCodes: [],
-        children: [
-          {
-            name: 'contentRumorPost',
-            title: '流言板',
-            path: '/sports/content/rumor-post',
-            routeName: 'contentRumorPost',
-            menuType: 'menu',
-            sort: 0,
-            status: 'active',
-            visible: true,
-            isBuiltIn: true,
-            permissionCodes: ['content.rumorPost.view'],
-          },
-          {
-            name: 'contentBanner',
-            title: 'Banner 管理',
-            path: '/sports/content/banner',
-            routeName: 'contentBanner',
-            menuType: 'menu',
-            sort: 10,
-            status: 'active',
-            visible: true,
-            isBuiltIn: true,
-            permissionCodes: ['content.banner.view'],
-          },
-        ],
-      },
-    ],
-  },
-  {
-    name: 'wechat',
-    title: '微信管理',
-    icon: 'ri:wechat-2-line',
-    path: '/wechat',
-    routeName: 'wechat',
-    menuType: 'catalog',
+    name: 'systemManagement',
+    title: '系统管理',
+    path: null,
+    routeName: 'systemManagement',
+    menuType: 'group',
     sort: 10,
     status: 'active',
     visible: true,
     isBuiltIn: true,
     permissionCodes: [],
-    children: [
-      {
-        name: 'wechatShare',
-        title: '微信分享配置',
-        path: '/wechat/share',
-        routeName: 'wechatShare',
-        menuType: 'menu',
-        sort: 0,
-        status: 'active',
-        visible: true,
-        isBuiltIn: true,
-        permissionCodes: ['system.wechat-share.view'],
-      },
-    ],
+    children: [systemCatalog, wechatCatalog],
   },
 ]
 

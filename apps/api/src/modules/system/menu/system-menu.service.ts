@@ -6,12 +6,15 @@ import {
 } from '@nestjs/common'
 
 import type {
+  AdminPageRouteName,
   CreateSystemMenuPayload,
   SystemMenu,
+  SystemMenuType,
   UpdateSystemMenuPayload,
   UpdateSystemMenuPermissionsPayload,
   UpdateSystemMenuSortPayload,
 } from '@gaoge/shared-types'
+import { ADMIN_PAGE_ROUTE_NAMES } from '@gaoge/shared-types'
 
 import { PrismaService } from '@/common/prisma/prisma.service'
 
@@ -28,6 +31,10 @@ export class SystemMenuService {
             permission: true,
           },
         },
+        menuResources: {
+          orderBy: { sort: 'asc' },
+          include: { resource: true },
+        },
       },
     })
 
@@ -37,8 +44,9 @@ export class SystemMenuService {
   async create(payload: CreateSystemMenuPayload) {
     const parentId = normalizeNullableId(payload.parentId)
     const name = normalizeRequiredText(payload.name, '菜单标识不能为空')
-    const path = normalizeRequiredText(payload.path, '菜单路径不能为空')
+    const path = normalizePath(payload.path)
     const routeName = normalizeRequiredText(payload.routeName, '路由名不能为空')
+    assertMenuNavigation(payload.menuType, path, routeName)
 
     await this.ensureParentExists(parentId)
     await this.ensureUniqueRoute(routeName, null)
@@ -63,6 +71,10 @@ export class SystemMenuService {
             permission: true,
           },
         },
+        menuResources: {
+          orderBy: { sort: 'asc' },
+          include: { resource: true },
+        },
       },
     })
 
@@ -74,8 +86,9 @@ export class SystemMenuService {
     const parentId =
       payload.parentId === undefined ? currentMenu.parentId : normalizeNullableId(payload.parentId)
     const name = normalizeRequiredText(payload.name, '菜单标识不能为空')
-    const path = normalizeRequiredText(payload.path, '菜单路径不能为空')
+    const path = normalizePath(payload.path)
     const routeName = normalizeRequiredText(payload.routeName, '路由名不能为空')
+    assertMenuNavigation(payload.menuType, path, routeName)
 
     await this.ensureSafeParent(id, parentId)
     await this.ensureUniqueRoute(routeName, id)
@@ -101,6 +114,10 @@ export class SystemMenuService {
             permission: true,
           },
         },
+        menuResources: {
+          orderBy: { sort: 'asc' },
+          include: { resource: true },
+        },
       },
     })
 
@@ -116,10 +133,11 @@ export class SystemMenuService {
       icon: menu.icon ?? undefined,
       path: menu.path,
       routeName: menu.routeName,
-      menuType: menu.menuType as 'catalog' | 'menu',
+      menuType: menu.menuType as SystemMenuType,
       sort: payload.sort,
       status: menu.status as 'active' | 'inactive',
       visible: menu.visible,
+      expectedUpdatedAt: menu.updatedAt.toISOString(),
     })
   }
 
@@ -227,7 +245,7 @@ export class SystemMenuService {
   private async ensureUniqueSibling(
     parentId: number | null,
     name: string,
-    path: string,
+    path: string | null,
     excludeId: number | null,
   ) {
     const excludeWhere = excludeId ? { id: { not: excludeId } } : {}
@@ -242,15 +260,17 @@ export class SystemMenuService {
       throw new ConflictException('同级菜单标识已存在')
     }
 
-    const duplicatedPath = await this.prisma.menu.findFirst({
-      where: {
-        parentId,
-        path,
-        ...excludeWhere,
-      },
-    })
-    if (duplicatedPath) {
-      throw new ConflictException('同级菜单路径已存在')
+    if (path !== null) {
+      const duplicatedPath = await this.prisma.menu.findFirst({
+        where: {
+          parentId,
+          path,
+          ...excludeWhere,
+        },
+      })
+      if (duplicatedPath) {
+        throw new ConflictException('同级菜单路径已存在')
+      }
     }
   }
 }
@@ -261,7 +281,7 @@ type MenuRecord = {
   name: string
   title: string
   icon: string | null
-  path: string
+  path: string | null
   routeName: string
   menuType: string
   sort: number
@@ -275,6 +295,15 @@ type MenuRecord = {
       id: number
       code: string
       name: string
+    }
+  }[]
+  menuResources: {
+    resource: {
+      id: number
+      key: string
+      name: string
+      module: string
+      status: string
     }
   }[]
 }
@@ -323,6 +352,13 @@ function serializeMenuNode(menu: MenuRecord, children: SystemMenu[]): SystemMenu
       code: item.permission.code,
       name: item.permission.name,
     })),
+    resources: menu.menuResources.map((item) => ({
+      id: item.resource.id,
+      key: item.resource.key,
+      name: item.resource.name,
+      module: item.resource.module,
+      status: item.resource.status as SystemMenu['status'],
+    })),
     children,
     createdAt: menu.createdAt.toISOString(),
     updatedAt: menu.updatedAt.toISOString(),
@@ -345,6 +381,22 @@ function normalizeRequiredText(value: unknown, message: string) {
   }
 
   return normalized
+}
+
+function normalizePath(value: unknown) {
+  return normalizeOptionalText(value) ?? null
+}
+
+function assertMenuNavigation(menuType: SystemMenuType, path: string | null, routeName: string) {
+  if (menuType === 'group' && path !== null) {
+    throw new BadRequestException('导航分组不能配置路径')
+  }
+  if (menuType !== 'group' && !path) {
+    throw new BadRequestException('只有导航分组允许空路径')
+  }
+  if (menuType === 'menu' && !ADMIN_PAGE_ROUTE_NAMES.includes(routeName as AdminPageRouteName)) {
+    throw new BadRequestException('页面路由未在当前 Admin 版本注册')
+  }
 }
 
 function normalizeInteger(value: unknown, fallback: number) {

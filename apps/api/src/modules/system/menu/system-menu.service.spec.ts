@@ -2,6 +2,22 @@ import { BadRequestException, ConflictException } from '@nestjs/common'
 
 import { SystemMenuService } from './system-menu.service'
 
+jest.mock('@gaoge/shared-types', () => ({
+  ADMIN_PAGE_ROUTE_NAMES: [
+    'player',
+    'team',
+    'matchRound',
+    'assetRecord',
+    'contentBanner',
+    'contentRumorPost',
+    'systemUser',
+    'systemRole',
+    'systemMenu',
+    'systemAudit',
+    'wechatShare',
+  ],
+}))
+
 describe('SystemMenuService', () => {
   const now = new Date('2026-05-20T00:00:00.000Z')
 
@@ -117,6 +133,7 @@ describe('SystemMenuService', () => {
       ...menuRecord,
       parentId: 4,
       menuPermissions: [],
+      menuResources: [],
     })
 
     await expect(

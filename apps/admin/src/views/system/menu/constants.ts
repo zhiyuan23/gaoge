@@ -66,6 +66,10 @@ export function collectMenuBranchIds(
 }
 
 export function formatMenuTypeLabel(menuType: SystemMenu['menuType']) {
+  if (menuType === 'group') {
+    return '分组'
+  }
+
   return menuType === 'catalog' ? '目录' : '菜单'
 }
 

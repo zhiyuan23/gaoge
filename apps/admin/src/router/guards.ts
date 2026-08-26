@@ -1,6 +1,8 @@
 import { useNProgress } from '@vueuse/integrations/useNProgress'
+import { ElMessage } from 'element-plus'
 import type { Router, RouteRecordRaw } from 'vue-router'
 
+import apiApp from '@/api/app'
 import useKeepAliveStore from '@/store/keepAlive'
 import useMenuStore from '@/store/menu'
 import useRouteStore from '@/store/route'
@@ -8,6 +10,8 @@ import useSettingsStore from '@/store/settings'
 import useUserStore from '@/store/user'
 
 import { asyncRoutes, asyncRoutesByFilesystem } from './routes'
+import { resolveServerNavigation } from './server-navigation'
+import { initializeServerNavigation } from './server-navigation-guard'
 
 import '@/assets/styles/nprogress.css'
 
@@ -71,7 +75,18 @@ function setupRoutes(router: Router) {
               if (!permissionsReady) {
                 throw new Error('后端路由模式依赖权限初始化成功后再生成路由')
               }
-              await routeStore.generateRoutesAtBack()
+              await initializeServerNavigation({
+                fetchNavigation: () => apiApp.menuList(),
+                resolveNavigation: resolveServerNavigation,
+                setRoutes: (routes) => routeStore.generateRoutesFromServer(routes),
+                setMenus: (menus) => menuStore.setServerMenus(menus),
+                reportDiagnostics: (diagnostics) => {
+                  if (diagnostics.length > 0) {
+                    console.error('[Gaoge Admin] 服务端导航存在未注册页面', diagnostics)
+                    ElMessage.error('部分菜单配置与当前前端版本不匹配，已安全隐藏。')
+                  }
+                },
+              })
               break
             case 'filesystem':
               routeStore.generateRoutesAtFilesystem([...asyncRoutesByFilesystem])

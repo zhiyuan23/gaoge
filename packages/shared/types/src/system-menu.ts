@@ -1,7 +1,8 @@
+import type { SystemMenuType } from './admin-navigation.js'
 import type { UserStatus } from './auth.js'
 import type { DateTimeString } from './common.js'
 
-export type SystemMenuType = 'catalog' | 'menu'
+export type { SystemMenuType } from './admin-navigation.js'
 
 export interface SystemMenu {
   id: number
@@ -9,7 +10,7 @@ export interface SystemMenu {
   name: string
   title: string
   icon: string | null
-  path: string
+  path: string | null
   routeName: string
   menuType: SystemMenuType
   sort: number
@@ -21,6 +22,13 @@ export interface SystemMenu {
     code: string
     name: string
   }[]
+  resources: {
+    id: number
+    key: string
+    name: string
+    module: string
+    status: UserStatus
+  }[]
   children: SystemMenu[]
   createdAt: DateTimeString
   updatedAt: DateTimeString
@@ -31,12 +39,13 @@ export interface CreateSystemMenuPayload {
   name: string
   title: string
   icon?: string
-  path: string
+  path: string | null
   routeName: string
   menuType: SystemMenuType
   sort?: number
   status: UserStatus
   visible: boolean
+  resourceIds?: number[]
 }
 
 export interface UpdateSystemMenuPayload {
@@ -44,12 +53,14 @@ export interface UpdateSystemMenuPayload {
   name: string
   title: string
   icon?: string
-  path: string
+  path: string | null
   routeName: string
   menuType: SystemMenuType
   sort?: number
   status: UserStatus
   visible: boolean
+  resourceIds?: number[]
+  expectedUpdatedAt: DateTimeString
 }
 
 export interface UpdateSystemMenuSortPayload {
@@ -58,4 +69,10 @@ export interface UpdateSystemMenuSortPayload {
 
 export interface UpdateSystemMenuPermissionsPayload {
   permissionIds: number[]
+  expectedUpdatedAt: DateTimeString
+}
+
+export interface UpdateSystemMenuResourcesPayload {
+  resourceIds: number[]
+  expectedUpdatedAt: DateTimeString
 }

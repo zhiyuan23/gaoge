@@ -9,6 +9,7 @@ const globalSettings: Settings.all = {
   app: {
     enablePermission: true,
     enableDynamicTitle: true,
+    routeBaseOn: 'backend',
   },
   layout: {
     enableMobileAdaptation: true,

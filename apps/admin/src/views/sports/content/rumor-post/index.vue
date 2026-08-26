@@ -1,8 +1,3 @@
-<route lang="yaml">
-meta:
-  title: 流言板
-</route>
-
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 
