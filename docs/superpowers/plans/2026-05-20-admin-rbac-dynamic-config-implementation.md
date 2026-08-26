@@ -1,5 +1,7 @@
 # Admin RBAC Dynamic Config Implementation Plan
 
+> **历史实施计划。** 当前执行和排障入口已合并为 [2026-08-26 Admin RBAC 工程底座实施与验证记录](./2026-08-26-admin-rbac-foundation-implementation.md)，请勿再按本文阶段任务重复迁移。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Upgrade the current admin RBAC implementation so menu management and permission management are database-configurable while keeping front-end route components controlled by code.

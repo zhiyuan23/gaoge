@@ -1,5 +1,7 @@
 # Admin RBAC Implementation Plan
 
+> **历史实施计划。** 本文用于追溯第一阶段落地，不再作为当前执行入口。当前完整实现与验证记录见 [2026-08-26 Admin RBAC 工程底座实施与验证记录](./2026-08-26-admin-rbac-foundation-implementation.md)，设计入口见 [总设计](../specs/2026-08-26-admin-rbac-foundation-design.md)。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the first real admin RBAC implementation for `apps/api` and `apps/admin` while keeping the current static route/menu runtime intact.

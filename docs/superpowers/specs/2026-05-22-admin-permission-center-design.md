@@ -1,5 +1,7 @@
 # Admin 权限中心重设计
 
+> **历史产品设计。** 本文保留权限中心演进背景；当前 Resource/Permission 数据模型、菜单与资源同页工作区、服务端导航和跨项目同步边界以 [2026-08-26 Admin RBAC 工程底座总设计](./2026-08-26-admin-rbac-foundation-design.md) 为准。
+
 ## 背景
 
 当前 `apps/admin` 已经具备一轮可运行的 RBAC 基础：

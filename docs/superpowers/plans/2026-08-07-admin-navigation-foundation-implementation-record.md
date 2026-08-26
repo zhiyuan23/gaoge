@@ -2,6 +2,8 @@
 
 > **状态：已完成。** 本文件记录最终结果，不再作为待执行计划使用。
 
+> 本记录只覆盖 2026-08-07 导航布局底座。服务端驱动导航与 RBAC 的后续实施、复验和同步清单见 [Admin RBAC 工程底座实施与验证记录](./2026-08-26-admin-rbac-foundation-implementation.md)。
+
 ## 对应设计
 
 - [Admin 导航工程底座设计](../specs/2026-08-07-admin-navigation-foundation-design.md)

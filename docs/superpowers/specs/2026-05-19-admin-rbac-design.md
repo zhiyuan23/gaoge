@@ -1,5 +1,7 @@
 # 后台 RBAC 与系统管理模块设计
 
+> **历史设计。** 本文记录第一阶段 RBAC 起点，不代表当前运行时结构。当前 Resource 权限、服务端导航、精确内置同步和 Admin 工作区以 [2026-08-26 Admin RBAC 工程底座总设计](./2026-08-26-admin-rbac-foundation-design.md) 为准；实施证据见 [配套记录](../plans/2026-08-26-admin-rbac-foundation-implementation.md)。
+
 ## 背景
 
 当前仓库中，`apps/admin` 已具备静态路由、静态菜单和基于权限字符串的前端访问控制能力：

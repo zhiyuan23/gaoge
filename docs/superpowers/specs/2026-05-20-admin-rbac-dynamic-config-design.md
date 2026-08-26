@@ -1,5 +1,7 @@
 # 后台 RBAC 动态配置设计
 
+> **历史设计。** 本文记录动态配置阶段的中间边界。当前菜单运行时事实源、Resource 权限和受控页面注册以 [2026-08-26 Admin RBAC 工程底座总设计](./2026-08-26-admin-rbac-foundation-design.md) 为准。
+
 ## 背景
 
 当前 `feat/admin-rbac` 分支已经具备第一轮 RBAC 基础：

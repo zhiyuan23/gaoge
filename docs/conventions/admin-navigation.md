@@ -20,3 +20,7 @@
 ## 跨仓库同步
 
 跨 Gaoge Admin/RBAC 仓库只同步机制：服务端 Menu 来源、受控页面注册表、fail-closed 回退和一致性测试。不得同步本项目的实际 registry key、组件映射或业务菜单树；各项目必须按自身产品和权限模型配置标题、图标、层级和排序。
+
+同步还必须保留内置字段所有权、精确内置数据回收和自定义依赖阻断：代码维护结构字段，数据库维护标题、图标、排序、状态和显隐；任何目标项目都必须使用独立数据库与自己的注册表验证，不能把其他 Gaoge 项目的内置数据当作本项目默认值。
+
+完整架构、当前 Gaoge 菜单树和一次同步清单见 [Admin RBAC 工程底座总设计](../superpowers/specs/2026-08-26-admin-rbac-foundation-design.md) 与 [实施验证记录](../superpowers/plans/2026-08-26-admin-rbac-foundation-implementation.md)。
