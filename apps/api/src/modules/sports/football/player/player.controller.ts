@@ -11,8 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common'
 
-import { Roles } from '@/common/auth/roles.decorator'
-import { RolesGuard } from '@/common/auth/roles.guard'
+import { RequirePermissions } from '@/common/auth/permissions.decorator'
+import { PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreatePlayerDto } from './dto/create-player.dto'
@@ -24,8 +24,8 @@ export class PlayerController {
   constructor(private readonly playerService: PlayerService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.player.create')
   create(@Body() dto: CreatePlayerDto) {
     return this.playerService.create(dto)
   }
@@ -41,15 +41,15 @@ export class PlayerController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.player.update')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdatePlayerDto) {
     return this.playerService.update(id, dto)
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.player.delete')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.playerService.remove(id)
   }

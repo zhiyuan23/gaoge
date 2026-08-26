@@ -34,6 +34,10 @@ import type {
 import SystemMenuConfigurationDialog from './components/SystemMenuConfigurationDialog.vue'
 import SystemPermissionDialog from './components/SystemPermissionDialog.vue'
 import SystemResourceDialog from './components/SystemResourceDialog.vue'
+import {
+  buildSystemMenuConfigurationCreatePayload,
+  buildSystemMenuConfigurationUpdatePayload,
+} from './model/mapper'
 import { SYSTEM_MENU_PERMISSIONS } from './auth'
 import { useSystemAccessWorkspaceMode } from './workspace-mode'
 
@@ -213,26 +217,13 @@ function openEditPermission(permission: SystemResource['permissions'][number]) {
 async function saveMenu(value: MenuConfigurationFormValue) {
   saving.value = true
   try {
-    const payload = {
-      icon: value.icon || undefined,
-      menuType: value.menuType,
-      name: value.name,
-      parentId: value.parentId,
-      path: value.path,
-      resourceIds: value.menuType === 'catalog' ? [] : value.resourceIds,
-      routeName: value.routeName,
-      sort: value.sort,
-      status: value.status,
-      title: value.title,
-      visible: value.visible,
-    }
     if (editingMenu.value) {
-      await systemMenuApi.update(editingMenu.value.id, {
-        ...payload,
-        expectedUpdatedAt: value.expectedUpdatedAt!,
-      })
+      await systemMenuApi.update(
+        editingMenu.value.id,
+        buildSystemMenuConfigurationUpdatePayload(value, value.expectedUpdatedAt!),
+      )
     } else {
-      await systemMenuApi.create(payload)
+      await systemMenuApi.create(buildSystemMenuConfigurationCreatePayload(value))
     }
     menuDialogOpen.value = false
     ElMessage.success(editingMenu.value ? '菜单已更新' : '菜单已创建')

@@ -71,14 +71,18 @@ export interface UpdateSystemUserPayload {
   nickname: string
   avatarUrl?: string
   roleIds: number[]
+  status?: UserStatus
+  expectedUpdatedAt: DateTimeString
 }
 
 /** 更新系统用户状态时的提交参数。 */
 export interface UpdateSystemUserStatusPayload {
   status: UserStatus
+  expectedUpdatedAt: DateTimeString
 }
 
 /** 重置系统用户密码时的提交参数。 */
 export interface ResetSystemUserPasswordPayload {
   newPassword: string
+  expectedUpdatedAt: DateTimeString
 }

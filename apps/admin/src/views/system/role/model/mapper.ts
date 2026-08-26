@@ -19,7 +19,9 @@ export function buildSystemRoleCreatePayload(model: SystemRoleFormModel): Create
   }
 }
 
-export function buildSystemRoleUpdatePayload(model: SystemRoleFormModel): UpdateSystemRolePayload {
+export function buildSystemRoleUpdatePayload(
+  model: SystemRoleFormModel,
+): Omit<UpdateSystemRolePayload, 'expectedUpdatedAt'> {
   return {
     name: model.name.trim(),
     description: model.description.trim() || undefined,

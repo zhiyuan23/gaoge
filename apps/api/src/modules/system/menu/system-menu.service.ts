@@ -14,7 +14,7 @@ import type {
   UpdateSystemMenuPermissionsPayload,
   UpdateSystemMenuSortPayload,
 } from '@gaoge/shared-types'
-import { ADMIN_PAGE_ROUTE_NAMES } from '@gaoge/shared-types'
+import { ADMIN_PAGE_ROUTE_NAMES } from '@gaoge/shared-types/admin-page-route-names'
 
 import { PrismaService } from '@/common/prisma/prisma.service'
 

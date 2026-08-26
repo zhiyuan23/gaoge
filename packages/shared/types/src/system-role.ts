@@ -11,6 +11,8 @@ export interface SystemRole {
   isBuiltIn: boolean
   permissionCount: number
   userCount: number
+  resourceCount: number
+  moduleCount: number
   createdAt: DateTimeString
   updatedAt: DateTimeString
 }
@@ -32,19 +34,24 @@ export interface CreateSystemRolePayload {
   description?: string
   status: UserStatus
   sort?: number
+  permissionIds?: number[]
 }
 
 export interface UpdateSystemRolePayload {
   name: string
   description?: string
-  status: UserStatus
+  status?: UserStatus
   sort?: number
+  permissionIds?: number[]
+  expectedUpdatedAt: DateTimeString
 }
 
 export interface UpdateSystemRoleStatusPayload {
   status: UserStatus
+  expectedUpdatedAt: DateTimeString
 }
 
 export interface UpdateSystemRolePermissionsPayload {
   permissionIds: number[]
+  expectedUpdatedAt: DateTimeString
 }

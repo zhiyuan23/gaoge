@@ -12,8 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common'
 
-import { Roles } from '@/common/auth/roles.decorator'
-import { RolesGuard } from '@/common/auth/roles.guard'
+import { RequirePermissions } from '@/common/auth/permissions.decorator'
+import { PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateFundDto, QueryFundDto, UpdateFundDto } from './dto/fund.dto'
@@ -51,8 +51,8 @@ export class FundController {
    * 创建资金记录 (仅管理员)
    */
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.fund.create')
   create(@Body() dto: CreateFundDto, @Req() req: { user: { id: number } }) {
     return this.fundService.create(dto, req.user.id)
   }
@@ -61,8 +61,8 @@ export class FundController {
    * 更新资金记录 (需要管理员权限)
    */
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.fund.update')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateFundDto) {
     return this.fundService.update(id, dto)
   }
@@ -71,8 +71,8 @@ export class FundController {
    * 删除资金记录 (需要管理员权限)
    */
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.fund.delete')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.fundService.remove(id)
   }

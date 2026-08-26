@@ -2,10 +2,12 @@ export interface TableAction {
   key: string
   label: string
   auth?: string | string[]
+  authMatch?: 'any' | 'all'
   icon?: string
   type?: 'primary' | 'success' | 'warning' | 'info' | 'danger'
   visible?: boolean | ((row: any) => boolean)
   disabled?: boolean | ((row: any) => boolean)
+  loading?: boolean | ((row: any) => boolean)
 }
 
 export interface TableColumn {
@@ -27,6 +29,8 @@ export interface TableColumn {
   linkParams?: any
   actionParams?: any
   actions?: TableAction[]
+  inlineActionLimit?: number
+  showOverflowTooltip?: boolean
   fixed?: 'left' | 'right' | boolean
   align?: 'left' | 'center' | 'right'
   visible?: boolean
@@ -54,6 +58,7 @@ export interface EsTableProps {
   showIndex?: boolean
   showSelection?: boolean
   showPagination?: boolean
+  hidePaginationWhenSinglePage?: boolean
   total?: number
   page?: number
   pageSize?: number
@@ -61,6 +66,7 @@ export interface EsTableProps {
   paginationLayout?: string
   background?: boolean
   border?: boolean
+  stripe?: boolean
   tableSize?: TableSize
   tableHeight?: string | number
   maxHeight?: string | number

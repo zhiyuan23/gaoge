@@ -18,7 +18,7 @@ import { hashPassword, verifyPassword } from '@/common/auth/password.util'
 import { PrismaService } from '@/common/prisma/prisma.service'
 import { deletePreviousAdminAvatarUrls } from '@/common/storage/admin-avatar-storage'
 import { WechatService } from '@/common/wechat/wechat.service'
-import { BUILT_IN_PERMISSION_DEFINITIONS } from '@/modules/system/rbac/builtins'
+import { PermissionResolverService } from '@/modules/system/rbac/permission-resolver.service'
 
 import type { ChangePasswordDto } from './dto/change-password.dto'
 import type { AdminLoginDto, MiniappLoginDto, PhoneLoginDto } from './dto/login.dto'
@@ -41,6 +41,7 @@ export class AuthService {
     private readonly wechatService: WechatService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly permissionResolver: PermissionResolverService,
   ) {}
 
   hashAdminPassword = (password: string) => hashPassword(password)
@@ -65,8 +66,8 @@ export class AuthService {
       throw new UnauthorizedException('账号或密码错误')
     }
 
-    const roles = await this.getActiveRoles(user.id)
-    if (roles.length === 0) {
+    const authorization = await this.permissionResolver.resolve(user.id)
+    if (authorization.roles.length === 0) {
       throw new UnauthorizedException('当前账号无后台权限')
     }
 
@@ -431,17 +432,12 @@ export class AuthService {
       throw new UnauthorizedException('用户不存在或已被禁用')
     }
 
-    const roles = await this.getActiveRoles(user.id)
+    const authorization = await this.permissionResolver.resolve(user.id)
 
     return {
-      permissions: this.buildPermissionsFromRoles(roles),
-      role: this.toEffectiveUserRole(user, roles),
-      roles: roles.map((role) => ({
-        id: role.id,
-        code: role.code,
-        name: role.name,
-        status: role.status,
-      })),
+      permissions: authorization.permissions,
+      role: this.toEffectiveUserRole(user, authorization.roles),
+      roles: authorization.roles,
     }
   }
 
@@ -533,84 +529,6 @@ export class AuthService {
     if (role === 'admin') return 'admin'
     if (role === 'viewer') return 'viewer'
     return 'user'
-  }
-
-  private async getActiveRoles(userId: number): Promise<
-    (AuthRoleSummary & {
-      rolePermissions: {
-        permission: {
-          code: string
-          status: string
-        }
-      }[]
-    })[]
-  > {
-    const userRoles = await this.prisma.userRole.findMany({
-      where: {
-        userId,
-        role: {
-          status: 'active',
-        },
-      },
-      select: {
-        role: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-            status: true,
-            rolePermissions: {
-              where: {
-                permission: {
-                  status: 'active',
-                },
-              },
-              select: {
-                permission: {
-                  select: {
-                    code: true,
-                    status: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    return userRoles
-      .map((item: { role: any }) => item.role)
-      .filter((role: { status: string }) => role.status === 'active')
-      .map((role: any) => ({
-        ...role,
-        rolePermissions: role.rolePermissions.filter(
-          (item: { permission: { status: string } }) => item.permission.status === 'active',
-        ),
-      }))
-  }
-
-  private buildPermissionsFromRoles(
-    roles: {
-      code?: string
-      rolePermissions: {
-        permission: {
-          code: string
-          status: string
-        }
-      }[]
-    }[],
-  ) {
-    const builtInPermissions = roles.some((role) => role.code === 'super_admin')
-      ? BUILT_IN_PERMISSION_DEFINITIONS.map((item) => item.code)
-      : []
-
-    return [
-      ...new Set([
-        ...roles.flatMap((role) => role.rolePermissions.map((item) => item.permission.code)),
-        ...builtInPermissions,
-      ]),
-    ].sort()
   }
 
   private toEffectiveUserRole(

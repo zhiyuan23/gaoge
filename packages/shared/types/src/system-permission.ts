@@ -11,6 +11,13 @@ export interface SystemPermission {
   description: string | null
   status: UserStatus
   isBuiltIn: boolean
+  resourceId: number
+  resourceDefinition: {
+    id: number
+    key: string
+    name: string
+    status: UserStatus
+  }
   createdAt: DateTimeString
   updatedAt: DateTimeString
 }
@@ -29,6 +36,14 @@ export interface CreateSystemPermissionPayload {
 }
 
 export interface UpdateSystemPermissionPayload {
+  name: string
+  description?: string
+  status: UserStatus
+  expectedUpdatedAt: DateTimeString
+}
+
+export interface CreateSystemResourcePermissionPayload {
+  action: string
   name: string
   description?: string
   status: UserStatus

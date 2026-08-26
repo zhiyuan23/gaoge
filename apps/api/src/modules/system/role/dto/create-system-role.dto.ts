@@ -1,4 +1,5 @@
-import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsArray, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
 
 import type { UserStatus } from '@gaoge/shared-types'
 
@@ -22,4 +23,10 @@ export class CreateSystemRoleDto {
   @IsInt()
   @Min(0)
   sort?: number
+
+  @IsOptional()
+  @IsArray()
+  @Type(() => Number)
+  @IsInt({ each: true })
+  permissionIds?: number[]
 }

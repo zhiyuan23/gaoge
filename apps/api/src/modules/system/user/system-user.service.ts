@@ -8,8 +8,11 @@ import type { Prisma } from '@prisma/client'
 
 import type { SystemUser, SystemUserListParams } from '@gaoge/shared-types'
 
+import { AuditLogService } from '@/common/audit/audit-log.service'
 import { hashPassword } from '@/common/auth/password.util'
 import { PrismaService } from '@/common/prisma/prisma.service'
+
+import { assertExpectedUpdatedAt, runSerializable } from '../system-transaction'
 
 import type { CreateSystemUserDto } from './dto/create-system-user.dto'
 import type { ResetSystemUserPasswordDto } from './dto/reset-system-user-password.dto'
@@ -64,9 +67,12 @@ type RoleSummaryRecord = Prisma.RoleGetPayload<{
 
 @Injectable()
 export class SystemUserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly audit: AuditLogService,
+  ) {}
 
-  async create(dto: CreateSystemUserDto) {
+  async create(dto: CreateSystemUserDto, actorUserId?: number) {
     const account = normalizeRequiredText(dto.account, '账号不能为空')
     const passwordHash = await hashPassword(normalizeRequiredPassword(dto.password, '密码不能为空'))
     const existingUser = await this.prisma.user.findFirst({
@@ -80,9 +86,8 @@ export class SystemUserService {
       throw new ConflictException('账号已存在')
     }
 
-    const roles = await this.loadRoles(dto.roleIds)
-
-    const createdUser = await this.prisma.$transaction(async (tx) => {
+    const created = await runSerializable(this.prisma, async (tx) => {
+      const roles = await this.loadRoles(dto.roleIds, tx)
       const user = await tx.user.create({
         data: {
           account,
@@ -96,11 +101,21 @@ export class SystemUserService {
       })
 
       await this.replaceUserRoles(tx, user.id, dto.roleIds)
+      await this.audit.record(
+        {
+          action: 'SYSTEM_USER_CREATED',
+          actorUserId,
+          entityType: 'User',
+          entityId: user.id,
+          metadata: { roleIds: dto.roleIds },
+        },
+        tx,
+      )
 
-      return user
+      return { user, roles }
     })
 
-    return serializeSystemUser(createdUser, roles)
+    return serializeSystemUser(created.user, created.roles)
   }
 
   async findAll(params: SystemUserListParams = {}) {
@@ -124,87 +139,152 @@ export class SystemUserService {
     }
   }
 
-  async update(id: number, dto: UpdateSystemUserDto) {
+  async update(id: number, dto: UpdateSystemUserDto, actorUserId?: number) {
     const user = await this.findOneOrThrow(id)
-    const roles = await this.loadRoles(dto.roleIds)
-
-    if (user.account === 'admin' && !hasSuperAdminRole(roles)) {
-      throw new BadRequestException('默认 admin 账号不允许降级')
+    if (user.account === 'admin' && dto.status === 'inactive') {
+      throw new BadRequestException('默认 admin 账号不允许停用')
     }
-
-    const updatedUser = await this.prisma.$transaction(async (tx) => {
+    assertExpectedUpdatedAt(user.updatedAt, dto.expectedUpdatedAt)
+    const updated = await runSerializable(this.prisma, async (tx) => {
+      const current = await this.findOneOrThrow(id, tx)
+      assertExpectedUpdatedAt(current.updatedAt, dto.expectedUpdatedAt)
+      const roles = await this.loadRoles(dto.roleIds, tx)
+      if (current.account === 'admin' && !hasSuperAdminRole(roles)) {
+        throw new BadRequestException('默认 admin 账号不允许降级')
+      }
+      await this.ensureSuperAdminChangeSafe(tx, current, dto.roleIds, dto.status, actorUserId)
       const nextUser = await tx.user.update({
         where: { id },
         data: {
           nickname: normalizeRequiredText(dto.nickname, '昵称不能为空'),
           avatarUrl: normalizeOptionalText(dto.avatarUrl),
           role: deriveLegacyRole(roles),
+          ...(dto.status ? { status: dto.status } : {}),
         },
         select: systemUserSelect,
       })
 
       await this.replaceUserRoles(tx, id, dto.roleIds)
+      await this.audit.record(
+        {
+          action: 'SYSTEM_USER_UPDATED',
+          actorUserId,
+          entityType: 'User',
+          entityId: id,
+          metadata: { roleIds: dto.roleIds, ...(dto.status ? { status: dto.status } : {}) },
+        },
+        tx,
+      )
 
-      return nextUser
+      return { user: nextUser, roles }
     })
 
-    return serializeSystemUser(updatedUser, roles)
+    return serializeSystemUser(updated.user, updated.roles)
   }
 
-  async updateStatus(id: number, dto: UpdateSystemUserStatusDto) {
+  async updateStatus(id: number, dto: UpdateSystemUserStatusDto, actorUserId?: number) {
     const user = await this.findOneOrThrow(id)
     if (user.account === 'admin' && dto.status === 'inactive') {
       throw new BadRequestException('默认 admin 账号不允许停用')
     }
 
-    const updatedUser = await this.prisma.user.update({
-      where: { id },
-      data: {
-        status: dto.status,
-      },
-      select: systemUserSelect,
+    assertExpectedUpdatedAt(user.updatedAt, dto.expectedUpdatedAt)
+    const updatedUser = await runSerializable(this.prisma, async (tx) => {
+      const current = await this.findOneOrThrow(id, tx)
+      assertExpectedUpdatedAt(current.updatedAt, dto.expectedUpdatedAt)
+      await this.ensureSuperAdminChangeSafe(
+        tx,
+        current,
+        current.userRoles.map((relation) => relation.role.id),
+        dto.status,
+        actorUserId,
+      )
+      const updated = await tx.user.update({
+        where: { id },
+        data: { status: dto.status },
+        select: systemUserSelect,
+      })
+      await this.audit.record(
+        {
+          action: 'SYSTEM_USER_STATUS_CHANGED',
+          actorUserId,
+          entityType: 'User',
+          entityId: id,
+          metadata: { status: dto.status },
+        },
+        tx,
+      )
+      return updated
     })
 
     return serializeSystemUser(updatedUser)
   }
 
-  async resetPassword(id: number, dto: ResetSystemUserPasswordDto) {
-    await this.findOneOrThrow(id)
-
-    const updatedUser = await this.prisma.user.update({
-      where: { id },
-      data: {
-        passwordHash: await hashPassword(
-          normalizeRequiredPassword(dto.newPassword, '密码不能为空'),
-        ),
-      },
-      select: systemUserSelect,
+  async resetPassword(id: number, dto: ResetSystemUserPasswordDto, actorUserId?: number) {
+    const user = await this.findOneOrThrow(id)
+    assertExpectedUpdatedAt(user.updatedAt, dto.expectedUpdatedAt)
+    const passwordHash = await hashPassword(
+      normalizeRequiredPassword(dto.newPassword, '密码不能为空'),
+    )
+    const updatedUser = await runSerializable(this.prisma, async (tx) => {
+      const current = await this.findOneOrThrow(id, tx)
+      assertExpectedUpdatedAt(current.updatedAt, dto.expectedUpdatedAt)
+      const updated = await tx.user.update({
+        where: { id },
+        data: { passwordHash },
+        select: systemUserSelect,
+      })
+      const revoked = await tx.refreshToken.deleteMany({ where: { userId: id } })
+      await this.audit.record(
+        {
+          action: 'SYSTEM_USER_PASSWORD_RESET',
+          actorUserId,
+          entityType: 'User',
+          entityId: id,
+          metadata: { revokedCount: revoked.count },
+        },
+        tx,
+      )
+      return updated
     })
 
     return serializeSystemUser(updatedUser)
   }
 
-  async remove(id: number) {
+  async remove(id: number, actorUserId?: number) {
     const user = await this.findOneOrThrow(id)
     if (user.account === 'admin') {
       throw new BadRequestException('默认 admin 账号不允许删除')
     }
 
-    const removedUser = await this.prisma.user.update({
-      where: { id },
-      data: {
-        account: buildDeletedAccount(user.account, user.id),
-        status: 'inactive',
-        deletedAt: new Date(),
-      },
-      select: systemUserSelect,
+    const removedUser = await runSerializable(this.prisma, async (tx) => {
+      const current = await this.findOneOrThrow(id, tx)
+      await this.ensureSuperAdminChangeSafe(tx, current, [], 'inactive', actorUserId)
+      const removed = await tx.user.update({
+        where: { id },
+        data: {
+          account: buildDeletedAccount(current.account, current.id),
+          status: 'inactive',
+          deletedAt: new Date(),
+        },
+        select: systemUserSelect,
+      })
+      await tx.refreshToken.deleteMany({ where: { userId: id } })
+      await this.audit.record(
+        { action: 'SYSTEM_USER_DELETED', actorUserId, entityType: 'User', entityId: id },
+        tx,
+      )
+      return removed
     })
 
     return serializeSystemUser(removedUser)
   }
 
-  private async findOneOrThrow(id: number): Promise<BackendSystemUserLookupRecord> {
-    const user = await this.prisma.user.findUnique({
+  private async findOneOrThrow(
+    id: number,
+    client: PrismaService | Prisma.TransactionClient = this.prisma,
+  ): Promise<BackendSystemUserLookupRecord> {
+    const user = await client.user.findUnique({
       where: { id },
       select: systemUserLookupSelect,
     })
@@ -216,14 +296,18 @@ export class SystemUserService {
     return user as BackendSystemUserLookupRecord
   }
 
-  private async loadRoles(roleIds: number[]) {
+  private async loadRoles(
+    roleIds: number[],
+    client: PrismaService | Prisma.TransactionClient = this.prisma,
+  ) {
     const normalizedRoleIds = normalizeRoleIds(roleIds)
 
-    const roles = await this.prisma.role.findMany({
+    const roles = await client.role.findMany({
       where: {
         id: {
           in: normalizedRoleIds,
         },
+        status: 'active',
       },
       select: roleSummarySelect,
     })
@@ -246,6 +330,50 @@ export class SystemUserService {
       })),
       skipDuplicates: true,
     })
+  }
+
+  private async ensureSuperAdminChangeSafe(
+    tx: Prisma.TransactionClient,
+    user: BackendSystemUserLookupRecord,
+    nextRoleIds: number[],
+    nextStatus: string | undefined,
+    actorUserId?: number,
+  ) {
+    const superAdminRole = await tx.role.findUnique({
+      where: { code: 'super_admin' },
+      select: { id: true, status: true },
+    })
+    if (!superAdminRole || superAdminRole.status !== 'active') {
+      throw new BadRequestException('超级管理员恢复角色不可用')
+    }
+    const currentlySuperAdmin = user.userRoles.some(
+      (relation) => relation.role.id === superAdminRole.id && relation.role.status === 'active',
+    )
+    const remainsSuperAdmin =
+      nextStatus !== 'inactive' &&
+      [...new Set(nextRoleIds.map(Number).filter((item) => item > 0))].includes(superAdminRole.id)
+
+    if (!currentlySuperAdmin || remainsSuperAdmin) {
+      return
+    }
+    if (actorUserId === user.id) {
+      throw new BadRequestException('当前账号不能移除自己的超级管理员资格')
+    }
+    const activeSuperAdminCount = await tx.user.count({
+      where: {
+        status: 'active',
+        deletedAt: null,
+        userRoles: {
+          some: {
+            roleId: superAdminRole.id,
+            role: { status: 'active' },
+          },
+        },
+      },
+    })
+    if (activeSuperAdminCount <= 1) {
+      throw new BadRequestException('系统必须保留至少一个有效超级管理员')
+    }
   }
 }
 

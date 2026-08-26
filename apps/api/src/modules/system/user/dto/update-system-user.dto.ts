@@ -1,5 +1,15 @@
 import { Type } from 'class-transformer'
-import { ArrayMinSize, IsArray, IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import {
+  ArrayMinSize,
+  IsArray,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator'
+
+import type { UserStatus } from '@gaoge/shared-types'
 
 export class UpdateSystemUserDto {
   @IsString()
@@ -15,4 +25,11 @@ export class UpdateSystemUserDto {
   @Type(() => Number)
   @IsInt({ each: true })
   roleIds: number[]
+
+  @IsOptional()
+  @IsIn(['active', 'inactive'])
+  status?: UserStatus
+
+  @IsString()
+  expectedUpdatedAt: string
 }

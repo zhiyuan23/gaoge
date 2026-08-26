@@ -15,7 +15,7 @@ import type {
   UpdateSystemMenuResourcesPayload,
   UpdateSystemMenuSortPayload,
 } from '@gaoge/shared-types'
-import { ADMIN_PAGE_ROUTE_NAMES } from '@gaoge/shared-types'
+import { ADMIN_PAGE_ROUTE_NAMES } from '@gaoge/shared-types/admin-page-route-names'
 
 import { AuditLogService } from '@/common/audit/audit-log.service'
 import { PrismaService } from '@/common/prisma/prisma.service'
@@ -39,6 +39,9 @@ export class SystemMenuConfigurationService {
 
   create(payload: CreateSystemMenuPayload, actorUserId?: number) {
     return runSerializable(this.prisma, async (tx) => {
+      if ((payload as CreateSystemMenuPayload & { isBuiltIn?: boolean }).isBuiltIn === true) {
+        throw new BadRequestException('内置菜单只能由系统配置创建')
+      }
       const normalized = normalizeMenuPayload(payload)
       await this.ensureParentExists(tx, normalized.parentId)
       await this.ensureUnique(
@@ -68,19 +71,35 @@ export class SystemMenuConfigurationService {
     return runSerializable(this.prisma, async (tx) => {
       const current = await this.findOne(tx, id)
       assertExpectedUpdatedAt(current.updatedAt, payload.expectedUpdatedAt)
+      if (current.isBuiltIn) {
+        assertBuiltInPayloadUnchanged(current, payload)
+      }
       const normalized = normalizeMenuPayload(payload)
-      await this.ensureSafeParent(tx, id, normalized.parentId)
-      await this.ensureUnique(
-        tx,
-        normalized.parentId,
-        normalized.name,
-        normalized.path,
-        normalized.routeName,
-        id,
-      )
-      await tx.menu.update({ where: { id }, data: normalized.data })
-      if (payload.resourceIds !== undefined || payload.menuType === 'group') {
-        await replaceResources(tx, id, payload.menuType, normalizeIds(payload.resourceIds ?? []))
+      if (current.isBuiltIn) {
+        await tx.menu.update({
+          where: { id },
+          data: {
+            title: normalized.data.title,
+            icon: normalized.data.icon,
+            sort: normalized.data.sort,
+            status: normalized.data.status,
+            visible: normalized.data.visible,
+          },
+        })
+      } else {
+        await this.ensureSafeParent(tx, id, normalized.parentId)
+        await this.ensureUnique(
+          tx,
+          normalized.parentId,
+          normalized.name,
+          normalized.path,
+          normalized.routeName,
+          id,
+        )
+        await tx.menu.update({ where: { id }, data: normalized.data })
+        if (payload.resourceIds !== undefined || payload.menuType === 'group') {
+          await replaceResources(tx, id, payload.menuType, normalizeIds(payload.resourceIds ?? []))
+        }
       }
       await this.audit.record(
         {
@@ -124,6 +143,10 @@ export class SystemMenuConfigurationService {
       const menu = await this.findOne(tx, id)
       assertExpectedUpdatedAt(menu.updatedAt, payload.expectedUpdatedAt)
       const resourceIds = normalizeIds(payload.resourceIds)
+      if (menu.isBuiltIn) {
+        assertUnchangedResourceIds(menu, resourceIds)
+        return serializeMenu(menu)
+      }
       await replaceResources(tx, id, menu.menuType, resourceIds)
       await tx.menu.update({ where: { id }, data: { updatedAt: new Date() } })
       await this.audit.record(
@@ -326,6 +349,40 @@ function serializeMenu(menu: Prisma.MenuGetPayload<{ include: typeof menuConfigu
   }
 }
 
+function assertBuiltInPayloadUnchanged(
+  current: Prisma.MenuGetPayload<{ include: typeof menuConfigurationInclude }>,
+  payload: UpdateSystemMenuPayload,
+) {
+  const requestedBuiltIn = (payload as UpdateSystemMenuPayload & { isBuiltIn?: boolean }).isBuiltIn
+  const structureChanged =
+    normalizeNullableId(payload.parentId) !== current.parentId ||
+    normalizeOptionalText(payload.name) !== current.name ||
+    normalizePath(payload.path) !== current.path ||
+    normalizeOptionalText(payload.routeName) !== current.routeName ||
+    payload.menuType !== current.menuType ||
+    (requestedBuiltIn !== undefined && requestedBuiltIn !== current.isBuiltIn)
+
+  if (structureChanged) {
+    throw new BadRequestException('内置菜单的结构和资源关联由系统配置维护')
+  }
+  if (payload.resourceIds !== undefined) {
+    assertUnchangedResourceIds(current, normalizeIds(payload.resourceIds))
+  }
+}
+
+function assertUnchangedResourceIds(
+  current: Prisma.MenuGetPayload<{ include: typeof menuConfigurationInclude }>,
+  requestedResourceIds: number[],
+) {
+  const currentResourceIds = current.menuResources.map((relation) => relation.resourceId)
+  if (
+    currentResourceIds.length !== requestedResourceIds.length ||
+    currentResourceIds.some((resourceId, index) => resourceId !== requestedResourceIds[index])
+  ) {
+    throw new BadRequestException('内置菜单的结构和资源关联由系统配置维护')
+  }
+}
+
 function normalizeMenuPayload(payload: CreateSystemMenuPayload | UpdateSystemMenuPayload) {
   const parentId = normalizeNullableId(payload.parentId)
   const name = normalizeRequiredText(payload.name, '菜单标识不能为空')
@@ -341,7 +398,7 @@ function normalizeMenuPayload(payload: CreateSystemMenuPayload | UpdateSystemMen
       parentId,
       name,
       title: normalizeRequiredText(payload.title, '菜单标题不能为空'),
-      icon: normalizeOptionalText(payload.icon),
+      icon: payload.icon === undefined ? undefined : (normalizeOptionalText(payload.icon) ?? null),
       path,
       routeName,
       menuType: payload.menuType,

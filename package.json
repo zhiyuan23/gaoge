@@ -19,6 +19,8 @@
     "install:desktop-native": "pnpm --filter @gaoge/app-desktop run install:native",
     "db:migrate:api": "pnpm --filter @gaoge/app-api db:migrate",
     "db:migrate:prod:api": "pnpm --filter @gaoge/app-api db:migrate:prod",
+    "verify:rbac-migration": "node scripts/verify-rbac-resource-migration.mjs",
+    "verify:server-navigation-migration": "node scripts/verify-server-navigation-migration.mjs",
     "build": "turbo run build",
     "build:brand": "turbo run build --filter=@gaoge/app-brand",
     "build:desktop": "turbo run build --filter=@gaoge/app-desktop",

@@ -63,7 +63,7 @@ describe('rumor post naming contract', () => {
     expect(BUILT_IN_MENU_DEFINITIONS).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          path: '/sports',
+          path: null,
           children: expect.arrayContaining([
             expect.objectContaining({
               path: '/sports/content',

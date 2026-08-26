@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { createCorsOptions } from './bootstrap/cors-options'
 import { resolveListenOptions } from './bootstrap/listen-options'
 import { HttpExceptionFilter } from './common/http/http-exception.filter'
+import { RequestContextInterceptor } from './common/http/request-context.interceptor'
 import { ResponseInterceptor } from './common/http/response.interceptor'
 import { resolveUploadRoot, uploadPublicPrefix } from './common/storage/upload-path'
 import { setupApiDocs } from './swagger/setup-api-docs'
@@ -34,7 +35,7 @@ async function bootstrap() {
       transform: true,
     }),
   )
-  app.useGlobalInterceptors(new ResponseInterceptor())
+  app.useGlobalInterceptors(new RequestContextInterceptor(), new ResponseInterceptor())
   app.useGlobalFilters(new HttpExceptionFilter())
   app.useStaticAssets(resolveUploadRoot(), {
     prefix: `${uploadPublicPrefix}/`,

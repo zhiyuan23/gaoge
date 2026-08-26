@@ -13,8 +13,8 @@ import {
 
 import type { MatchRoundListParams } from '@gaoge/shared-types'
 
-import { Roles } from '@/common/auth/roles.decorator'
-import { RolesGuard } from '@/common/auth/roles.guard'
+import { RequirePermissions } from '@/common/auth/permissions.decorator'
+import { PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateMatchRoundDto } from './dto/create-match-round.dto'
@@ -36,22 +36,22 @@ export class MatchRoundController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.matchRound.create')
   create(@Body() dto: CreateMatchRoundDto) {
     return this.matchRoundService.create(dto)
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.matchRound.update')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateMatchRoundDto) {
     return this.matchRoundService.update(id, dto)
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.matchRound.delete')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.matchRoundService.remove(id)
   }

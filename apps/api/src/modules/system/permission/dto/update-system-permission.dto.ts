@@ -13,4 +13,7 @@ export class UpdateSystemPermissionDto {
 
   @IsIn(['active', 'inactive'])
   status: UserStatus
+
+  @IsString()
+  expectedUpdatedAt: string
 }

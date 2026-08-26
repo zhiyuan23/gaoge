@@ -13,8 +13,8 @@ import {
 
 import type { TeamListParams } from '@gaoge/shared-types'
 
-import { Roles } from '@/common/auth/roles.decorator'
-import { RolesGuard } from '@/common/auth/roles.guard'
+import { RequirePermissions } from '@/common/auth/permissions.decorator'
+import { PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateTeamDto } from './dto/create-team.dto'
@@ -26,8 +26,8 @@ export class TeamController {
   constructor(private readonly teamService: TeamService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.team.create')
   create(@Body() dto: CreateTeamDto) {
     return this.teamService.create(dto)
   }
@@ -43,15 +43,15 @@ export class TeamController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.team.update')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTeamDto) {
     return this.teamService.update(id, dto)
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.team.delete')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.teamService.remove(id)
   }

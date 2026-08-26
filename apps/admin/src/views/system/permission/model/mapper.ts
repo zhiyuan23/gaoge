@@ -26,7 +26,7 @@ export function buildSystemPermissionCreatePayload(
 
 export function buildSystemPermissionUpdatePayload(
   model: SystemPermissionFormModel,
-): UpdateSystemPermissionPayload {
+): Omit<UpdateSystemPermissionPayload, 'expectedUpdatedAt'> {
   return {
     name: model.name.trim(),
     description: model.description.trim() || undefined,

@@ -3,6 +3,7 @@ import type {
   SystemMenu,
   UpdateSystemMenuPayload,
   UpdateSystemMenuPermissionsPayload,
+  UpdateSystemMenuResourcesPayload,
   UpdateSystemMenuSortPayload,
 } from '@gaoge/shared-types'
 
@@ -13,6 +14,7 @@ export type {
   SystemMenu,
   UpdateSystemMenuPayload,
   UpdateSystemMenuPermissionsPayload,
+  UpdateSystemMenuResourcesPayload,
   UpdateSystemMenuSortPayload,
 }
 
@@ -24,6 +26,8 @@ export default {
   updateSort: (id: number, data: UpdateSystemMenuSortPayload) =>
     api.patch<SystemMenu>(`/system/menus/${id}/sort`, data),
   updatePermissions: (id: number, data: UpdateSystemMenuPermissionsPayload) =>
-    api.patch<SystemMenu[]>(`/system/menus/${id}/permissions`, data),
+    api.patch<SystemMenu>(`/system/menus/${id}/permissions`, data),
+  updateResources: (id: number, data: UpdateSystemMenuResourcesPayload) =>
+    api.patch<SystemMenu>(`/system/menus/${id}/resources`, data),
   remove: (id: number) => api.delete<{ id: number }>(`/system/menus/${id}`),
 }

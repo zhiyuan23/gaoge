@@ -1,11 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
-import { BUILT_IN_PERMISSION_DEFINITIONS } from '@/modules/system/rbac/builtins'
-
-import { PrismaService } from '../prisma/prisma.service'
+import { PermissionResolverService } from '@/modules/system/rbac/permission-resolver.service'
 
 export interface JwtPayload {
   sub: number
@@ -18,24 +16,11 @@ export interface JwtPayload {
   exp: number
 }
 
-interface JwtRequestUserRole {
-  id: number
-  code: string
-  name: string
-  status: string
-  rolePermissions: {
-    permission: {
-      code: string
-      status: string
-    }
-  }[]
-}
-
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private readonly configService: ConfigService,
-    private readonly prisma: PrismaService,
+    private readonly permissionResolver: PermissionResolverService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -45,60 +30,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: Number(payload.sub) },
-      include: {
-        userRoles: {
-          where: {
-            role: {
-              status: 'active',
-            },
-          },
-          select: {
-            role: {
-              select: {
-                id: true,
-                code: true,
-                name: true,
-                status: true,
-                rolePermissions: {
-                  where: {
-                    permission: {
-                      status: 'active',
-                    },
-                  },
-                  select: {
-                    permission: {
-                      select: {
-                        code: true,
-                        status: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!user || user.deletedAt || user.status !== 'active') {
-      throw new UnauthorizedException('用户不存在或已被禁用')
-    }
-
-    const roles = user.userRoles
-      .map((item) => item.role)
-      .filter((role) => role.status === 'active') as JwtRequestUserRole[]
-    const builtInPermissions = roles.some((role) => role.code === 'super_admin')
-      ? BUILT_IN_PERMISSION_DEFINITIONS.map((item) => item.code)
-      : []
-    const permissions = [
-      ...new Set([
-        ...roles.flatMap((role) => role.rolePermissions.map((item) => item.permission.code)),
-        ...builtInPermissions,
-      ]),
-    ]
+    const authorization = await this.permissionResolver.resolve(Number(payload.sub))
+    const user = authorization.user
 
     return {
       id: user.id,
@@ -106,13 +39,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       account: user.account,
       phone: user.phone,
       role: user.role,
-      roles: roles.map((role) => ({
-        id: role.id,
-        code: role.code,
-        name: role.name,
-        status: role.status,
-      })),
-      permissions,
+      roles: authorization.roles,
+      permissions: authorization.permissions,
       clientType: payload.clientType,
       status: user.status,
     }

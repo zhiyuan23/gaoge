@@ -5,6 +5,8 @@ import type { HTMLAttributes } from 'vue'
 
 import { cn } from '@/utils'
 
+import { resolveIconSource } from './resolve'
+
 defineOptions({
   name: 'FaIcon',
 })
@@ -14,20 +16,7 @@ const { name, class: className = '' } = defineProps<{
   class?: HTMLAttributes['class']
 }>()
 
-const outputType = computed(() => {
-  const hasPathFeatures = (str: string) => {
-    return /^\.{1,2}\//.test(str) || str.startsWith('/') || str.includes('/')
-  }
-  if (/^https?:\/\//.test(name) || hasPathFeatures(name) || !name) {
-    return 'img'
-  } else if (/i-[^:]+:[^:]+/.test(name)) {
-    return 'unocss'
-  } else if (name.includes(':')) {
-    return 'iconify'
-  } else {
-    return 'svg'
-  }
-})
+const source = computed(() => resolveIconSource(name))
 </script>
 
 <template>
@@ -39,12 +28,19 @@ const outputType = computed(() => {
       )
     "
   >
-    <i v-if="outputType === 'unocss'" class="size-inherit shrink-0" :class="name" />
-    <Icon v-else-if="outputType === 'iconify'" :icon="name" class="size-inherit! shrink-0" />
-    <svg v-else-if="outputType === 'svg'" class="size-inherit shrink-0" aria-hidden="true">
-      <use :xlink:href="`#icon-${name}`" />
+    <Icon
+      v-if="source.outputType === 'iconify'"
+      :icon="source.name"
+      class="size-inherit! shrink-0"
+    />
+    <svg v-else-if="source.outputType === 'svg'" class="size-inherit shrink-0" aria-hidden="true">
+      <use :xlink:href="`#icon-${source.name}`" />
     </svg>
-    <UseImage v-else-if="outputType === 'img'" :src="name" class="size-inherit shrink-0">
+    <UseImage
+      v-else-if="source.outputType === 'img'"
+      :src="source.name"
+      class="size-inherit shrink-0"
+    >
       <template #loading>
         <i class="i-line-md:loading-loop size-inherit" />
       </template>

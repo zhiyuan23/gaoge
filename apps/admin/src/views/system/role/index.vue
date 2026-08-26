@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
 
-import type { GroupedSystemPermissionResponse } from '@/api/system/permission'
-import systemPermissionApi from '@/api/system/permission'
+import systemAccessCatalogApi from '@/api/system/access-catalog'
+import type { SystemResource } from '@/api/system/resource'
 import type { SystemRole } from '@/api/system/role'
 import systemRoleApi from '@/api/system/role'
 import type { SearchFormData } from '@/components/common/EsSearch/types'
@@ -24,7 +24,7 @@ defineOptions({
 const submitLoading = ref(false)
 const allRoles = ref<SystemRole[]>([])
 const loading = ref(false)
-const permissionGroups = ref<GroupedSystemPermissionResponse['groups']>([])
+const resources = ref<SystemResource[]>([])
 const permissionVisible = ref(false)
 const selectedPermissionIds = ref<number[]>([])
 
@@ -57,9 +57,8 @@ async function fetchList() {
   }
 }
 
-async function fetchPermissionGroups() {
-  const res = await systemPermissionApi.grouped()
-  permissionGroups.value = res.groups
+async function fetchResources() {
+  resources.value = (await systemAccessCatalogApi.get()).resources
 }
 
 function handleSearch(formData: SearchFormData) {
@@ -76,7 +75,10 @@ async function handleSubmit(payload: any) {
       await systemRoleApi.create(buildSystemRoleCreatePayload(payload))
       ElMessage.success('角色已创建')
     } else if (currentRow.value) {
-      await systemRoleApi.update(currentRow.value.id, buildSystemRoleUpdatePayload(payload))
+      await systemRoleApi.update(currentRow.value.id, {
+        ...buildSystemRoleUpdatePayload(payload),
+        expectedUpdatedAt: currentRow.value.updatedAt,
+      })
       ElMessage.success('角色已更新')
     }
     dialogVisible.value = false
@@ -95,6 +97,7 @@ async function handleAction(row: SystemRole, key: string) {
   if (key === 'enable' || key === 'disable') {
     await systemRoleApi.updateStatus(row.id, {
       status: key === 'enable' ? 'active' : 'inactive',
+      expectedUpdatedAt: row.updatedAt,
     })
     ElMessage.success(key === 'enable' ? '角色已启用' : '角色已停用')
     await fetchList()
@@ -127,6 +130,7 @@ async function handlePermissionSubmit() {
   }
   await systemRoleApi.updatePermissions(currentRow.value.id, {
     permissionIds: selectedPermissionIds.value,
+    expectedUpdatedAt: currentRow.value.updatedAt,
   })
   ElMessage.success('角色权限已更新')
   permissionVisible.value = false
@@ -134,7 +138,7 @@ async function handlePermissionSubmit() {
 }
 
 onMounted(() => {
-  Promise.all([fetchList(), fetchPermissionGroups()])
+  Promise.all([fetchList(), fetchResources()])
 })
 </script>
 
@@ -193,7 +197,7 @@ onMounted(() => {
 
     <PermissionDialog
       v-model="permissionVisible"
-      :permission-groups="permissionGroups"
+      :resources="resources"
       :selected-ids="selectedPermissionIds"
       @update:selected-ids="selectedPermissionIds = $event"
       @submit="handlePermissionSubmit"

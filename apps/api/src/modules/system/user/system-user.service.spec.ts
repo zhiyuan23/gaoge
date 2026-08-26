@@ -30,10 +30,14 @@ describe('SystemUserService', () => {
       },
       role: {
         findMany: jest.fn(),
+        findUnique: jest.fn().mockResolvedValue({ id: 2, status: 'active' }),
       },
       userRole: {
         deleteMany: jest.fn(),
         createMany: jest.fn(),
+      },
+      refreshToken: {
+        deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
       },
       $transaction: jest.fn(async (input: ((tx: any) => Promise<unknown>) | Promise<unknown>[]) => {
         if (typeof input === 'function') {
@@ -44,10 +48,14 @@ describe('SystemUserService', () => {
       }),
     }
 
-    const service = new SystemUserService(prisma as any)
+    const audit = {
+      record: jest.fn().mockResolvedValue(undefined),
+    }
+    const service = new SystemUserService(prisma as any, audit as any)
 
     return {
       prisma,
+      audit,
       service,
     }
   }
@@ -353,6 +361,29 @@ describe('SystemUserService', () => {
     expect(prisma.user.update).not.toHaveBeenCalled()
   })
 
+  it('rejects disabling the default admin account through compound update', async () => {
+    const { prisma, service } = createService()
+    prisma.user.findUnique.mockResolvedValue({
+      id: 1,
+      account: 'admin',
+      nickname: 'Administrator',
+      roles: [{ id: 2, code: 'super_admin', name: '超级管理员', status: 'active' }],
+      status: 'active',
+      deletedAt: null,
+      updatedAt: new Date('2026-05-06T00:00:00.000Z'),
+    })
+
+    await expect(
+      service.update(1, {
+        nickname: 'Administrator',
+        roleIds: [2],
+        status: 'inactive',
+        expectedUpdatedAt: '2026-05-06T00:00:00.000Z',
+      }),
+    ).rejects.toThrow('默认 admin 账号不允许停用')
+    expect(prisma.user.update).not.toHaveBeenCalled()
+  })
+
   it('rejects demoting the default admin account', async () => {
     const { prisma, service } = createService()
     prisma.user.findUnique.mockResolvedValue({
@@ -373,15 +404,67 @@ describe('SystemUserService', () => {
     expect(prisma.user.update).not.toHaveBeenCalled()
   })
 
+  it('rejects removing the current account own super-admin recovery role', async () => {
+    const { prisma, service } = createService()
+    prisma.user.findUnique.mockResolvedValue({
+      id: 7,
+      account: 'owner',
+      nickname: 'Owner',
+      avatarUrl: null,
+      userRoles: [{ role: { id: 2, code: 'super_admin', name: '超级管理员', status: 'active' } }],
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: null,
+      createdAt: new Date('2026-05-06T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-06T00:00:00.000Z'),
+    })
+
+    await expect(
+      service.updateStatus(
+        7,
+        { status: 'inactive', expectedUpdatedAt: '2026-05-06T00:00:00.000Z' },
+        7,
+      ),
+    ).rejects.toThrow('当前账号不能移除自己的超级管理员资格')
+    expect(prisma.user.update).not.toHaveBeenCalled()
+  })
+
+  it('keeps at least one active super-admin recovery account', async () => {
+    const { prisma, service } = createService()
+    prisma.user.findUnique.mockResolvedValue({
+      id: 7,
+      account: 'owner',
+      nickname: 'Owner',
+      avatarUrl: null,
+      userRoles: [{ role: { id: 2, code: 'super_admin', name: '超级管理员', status: 'active' } }],
+      status: 'active',
+      deletedAt: null,
+      lastLoginAt: null,
+      createdAt: new Date('2026-05-06T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-06T00:00:00.000Z'),
+    })
+    prisma.user.count.mockResolvedValue(1)
+
+    await expect(
+      service.updateStatus(
+        7,
+        { status: 'inactive', expectedUpdatedAt: '2026-05-06T00:00:00.000Z' },
+        8,
+      ),
+    ).rejects.toThrow('系统必须保留至少一个有效超级管理员')
+    expect(prisma.user.update).not.toHaveBeenCalled()
+  })
+
   it('rejects whitespace-only password when resetting password', async () => {
     const { prisma, service } = createService()
     prisma.user.findUnique.mockResolvedValue({
       id: 7,
       account: 'editor',
       nickname: 'Editor',
-      roles: [],
+      userRoles: [],
       status: 'active',
       deletedAt: null,
+      updatedAt: new Date('2026-05-06T00:00:00.000Z'),
     })
 
     await expect(service.resetPassword(7, { newPassword: '   ' })).rejects.toBeInstanceOf(
@@ -397,9 +480,10 @@ describe('SystemUserService', () => {
       id: 7,
       account: 'editor',
       nickname: 'Editor',
-      roles: [],
+      userRoles: [],
       status: 'active',
       deletedAt: null,
+      updatedAt: new Date('2026-05-06T00:00:00.000Z'),
     })
     prisma.user.update.mockResolvedValue({
       id: 7,
@@ -409,7 +493,7 @@ describe('SystemUserService', () => {
       lastLoginAt: null,
       createdAt: new Date('2026-05-06T00:00:00.000Z'),
       updatedAt: new Date('2026-05-06T00:00:00.000Z'),
-      roles: [],
+      userRoles: [],
       status: 'inactive',
       deletedAt: new Date('2026-05-06T00:00:00.000Z'),
     })
@@ -472,8 +556,18 @@ describe('SystemUserService', () => {
       'roleIds',
       'status',
     ])
-    expect(updateErrors.map((error) => error.property).sort()).toEqual(['nickname', 'roleIds'])
-    expect(updateStatusErrors.map((error) => error.property)).toEqual(['status'])
-    expect(resetPasswordErrors.map((error) => error.property)).toEqual(['newPassword'])
+    expect(updateErrors.map((error) => error.property).sort()).toEqual([
+      'expectedUpdatedAt',
+      'nickname',
+      'roleIds',
+    ])
+    expect(updateStatusErrors.map((error) => error.property).sort()).toEqual([
+      'expectedUpdatedAt',
+      'status',
+    ])
+    expect(resetPasswordErrors.map((error) => error.property).sort()).toEqual([
+      'expectedUpdatedAt',
+      'newPassword',
+    ])
   })
 })

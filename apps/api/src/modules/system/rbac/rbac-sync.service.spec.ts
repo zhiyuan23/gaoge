@@ -112,9 +112,9 @@ describe('RbacSyncService', () => {
       ...create,
     }))
     prisma.user.findMany.mockResolvedValue([
-      { id: 8, role: 'admin', account: 'admin' },
-      { id: 9, role: 'viewer', account: 'viewer' },
-      { id: 10, role: 'user', account: null },
+      { id: 8, role: 'admin', account: 'admin', userRoles: [] },
+      { id: 9, role: 'viewer', account: 'viewer', userRoles: [] },
+      { id: 10, role: 'user', account: null, userRoles: [] },
     ])
 
     const result = await service.syncBuiltIns()
@@ -155,6 +155,34 @@ describe('RbacSyncService', () => {
     expect(result.permissions).toBeGreaterThan(0)
     expect(result.resources).toBeGreaterThan(0)
     expect(result.menus).toBeGreaterThanOrEqual(5)
+  })
+
+  it('does not augment API-managed user roles from the legacy role column', async () => {
+    const { service, prisma } = createService()
+    prepareSuccessfulSync(prisma)
+    prisma.user.findMany.mockResolvedValue([
+      {
+        id: 8,
+        role: 'admin',
+        account: 'restricted',
+        userRoles: [{ roleId: 3 }],
+      },
+      {
+        id: 9,
+        role: 'admin',
+        account: 'legacy-admin',
+        userRoles: [],
+      },
+    ])
+
+    await service.syncBuiltIns()
+
+    expect(prisma.userRole.upsert).toHaveBeenCalledTimes(1)
+    expect(prisma.userRole.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId_roleId: { userId: 9, roleId: 1 } },
+      }),
+    )
   })
 
   it('upserts built-in permissions with localized Chinese names', async () => {

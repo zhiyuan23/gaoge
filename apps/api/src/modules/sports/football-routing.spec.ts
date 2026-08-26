@@ -1,6 +1,6 @@
 import { PATH_METADATA } from '@nestjs/common/constants'
 
-import { ROLES_KEY } from '@/common/auth/roles.decorator'
+import { PERMISSIONS_KEY } from '@/common/auth/permissions.decorator'
 import { AuthController } from '@/modules/auth/auth.controller'
 
 import { FundController } from './football/fund/fund.controller'
@@ -30,10 +30,16 @@ describe('football route metadata', () => {
     expect(Reflect.getMetadata(PATH_METADATA, FundController)).toBe('football/fund')
   })
 
-  it('requires admin role for fund writes', () => {
-    expect(Reflect.getMetadata(ROLES_KEY, FundController.prototype.create)).toEqual(['admin'])
-    expect(Reflect.getMetadata(ROLES_KEY, FundController.prototype.update)).toEqual(['admin'])
-    expect(Reflect.getMetadata(ROLES_KEY, FundController.prototype.remove)).toEqual(['admin'])
+  it('requires exact resource permissions for fund writes', () => {
+    expect(Reflect.getMetadata(PERMISSIONS_KEY, FundController.prototype.create)).toEqual([
+      'football.fund.create',
+    ])
+    expect(Reflect.getMetadata(PERMISSIONS_KEY, FundController.prototype.update)).toEqual([
+      'football.fund.update',
+    ])
+    expect(Reflect.getMetadata(PERMISSIONS_KEY, FundController.prototype.remove)).toEqual([
+      'football.fund.delete',
+    ])
   })
 
   it('keeps profile and permission under /auth', () => {

@@ -1,7 +1,7 @@
 # Admin 服务端驱动导航设计
 
 - 日期：2026-08-26
-- 状态：已确认，待实施
+- 状态：已实施并通过验证
 - 目标仓库：`gaoge`
 - 影响范围：`apps/api`、`apps/admin`、`packages/shared/types`、Prisma migration 与相关测试
 
@@ -196,3 +196,19 @@ API 先发布期间，旧 Admin 仍能递归收集分组后代路径；Admin 先
 - 管理员在后台修改内置菜单标题、图标、排序、状态或显隐后，刷新导航即可生效，普通内置同步不会覆盖修改。
 - 服务端配置无法解析的页面不会出现在可点击导航中，并产生明确诊断。
 - 所有页面仍由服务端 Permission/Resource 与 API Guard 保护，受限账号不可通过直接 URL 或 API 绕过。
+
+## Review Round 1 复验（2026-08-26）
+
+状态保持“已实施并通过验证”。复验补强了以下已落地约束：
+
+- Admin 控制的足球写接口全部使用精确 Resource action Permission；内容与微信 Admin 接口也通过 HTTP 回归矩阵确认，legacy `role=admin` 不再构成写授权。
+- 版本化导航 migration 能在不运行 seed 的既有合法旧树上补建两个 group、重挂四个 catalog，并仅修改结构字段；既有标题、图标、排序、状态、显隐和更新时间保持不变。
+- 内置菜单的稳定名称、路径、类型、父级、内置标记和 Resource 关联由服务端拒绝直接修改；标题、图标、排序、状态、显隐仍可编辑，包含清空图标。
+- 内置同步只为尚无显式 `UserRole` 的历史用户回填 legacy role。经 System User API 分配自定义角色的用户即使兼容列为 `role=admin`，重复同步也不会追加 `super_admin`。
+- 共享类型 typecheck 自动校验 CJS 运行时 route-name 列表与 `.d.cts` 字面量声明完全同序一致。
+
+最终复验使用隔离本地数据库 `gaoge_task7_navigation_r2_20260826` 和隔离端口 API `3123` / Admin `9013`；Prisma、空库与既有库 migration drill、248 个 API 测试、21 个 Admin 聚焦测试、共享类型契约、三方 typecheck/build、真实浏览器管理员/受限角色/直接 URL/API Guard 均通过。详细证据见 Task 7 报告。
+
+## Review Round 2 复验（2026-08-26）
+
+Admin 菜单表单的“清空图标”语义现已在所有提交路径闭环：active workspace 和 legacy 编辑页都通过同一纯 payload normalizer 将空白输入映射为更新请求中的显式空字符串，API 因而能执行清除；创建请求仍可省略空图标。可执行 Admin 测试直接断言 active workspace 的完整更新 payload 含 `icon: ''` 且绝非 `undefined`，并覆盖 legacy mapper。最终 Admin 聚焦测试 27/27、typecheck/build、共享类型 typecheck、任务路径 ESLint/Prettier/diff check 均通过。

@@ -12,8 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common'
 
-import { Roles } from '@/common/auth/roles.decorator'
-import { RolesGuard } from '@/common/auth/roles.guard'
+import { RequirePermissions } from '@/common/auth/permissions.decorator'
+import { PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { AssetRecordListDto } from './dto/asset-record-list.dto'
@@ -41,22 +41,22 @@ export class AssetRecordController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.assetRecord.create')
   create(@Body() dto: CreateAssetRecordDto, @Req() req: { user: { id: number } }) {
     return this.assetRecordService.create(dto, req.user.id)
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.assetRecord.update')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateAssetRecordDto) {
     return this.assetRecordService.update(id, dto)
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('football.assetRecord.delete')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.assetRecordService.remove(id)
   }

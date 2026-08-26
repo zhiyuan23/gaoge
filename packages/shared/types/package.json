@@ -6,11 +6,16 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./admin-page-route-names": {
+      "types": "./admin-page-route-names.d.cts",
+      "require": "./admin-page-route-names.cjs",
+      "default": "./admin-page-route-names.cjs"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "node --test tests/admin-page-route-names-contract.test.mjs && tsc -p tsconfig.json --noEmit",
     "clean": "rm -rf dist"
   }
 }

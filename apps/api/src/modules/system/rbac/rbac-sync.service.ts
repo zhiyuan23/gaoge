@@ -156,10 +156,16 @@ export class RbacSyncService {
           id: true,
           role: true,
           account: true,
+          userRoles: {
+            select: { roleId: true },
+          },
         },
       })
 
       for (const user of legacyUsers) {
+        if (user.userRoles.length > 0) {
+          continue
+        }
         const roleCode = LEGACY_ROLE_CODE_MAP[user.role]
         if (!roleCode) {
           continue

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer'
-import { ArrayMinSize, IsArray, IsInt } from 'class-validator'
+import { ArrayMinSize, IsArray, IsInt, IsString } from 'class-validator'
 
 export class UpdateSystemRolePermissionsDto {
   @IsArray()
@@ -7,4 +7,7 @@ export class UpdateSystemRolePermissionsDto {
   @Type(() => Number)
   @IsInt({ each: true })
   permissionIds: number[]
+
+  @IsString()
+  expectedUpdatedAt: string
 }

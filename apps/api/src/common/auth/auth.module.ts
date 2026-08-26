@@ -4,6 +4,8 @@ import { Reflector } from '@nestjs/core'
 import { JwtModule } from '@nestjs/jwt'
 import { PassportModule } from '@nestjs/passport'
 
+import { RbacModule } from '@/modules/system/rbac/rbac.module'
+
 import { PrismaModule } from '../prisma/prisma.module'
 import { WechatModule } from '../wechat/wechat.module'
 
@@ -26,6 +28,7 @@ import { RolesGuard } from './roles.guard'
     }),
     PrismaModule,
     WechatModule,
+    RbacModule,
   ],
   providers: [JwtStrategy, Reflector, RolesGuard, PermissionsGuard],
   exports: [JwtModule, PassportModule, RolesGuard, PermissionsGuard],

@@ -100,12 +100,20 @@ describe('AuthService miniapp login', () => {
     const jwtService = {
       signAsync: jest.fn(),
     }
+    const permissionResolver = {
+      resolve: jest.fn(),
+    }
 
     return {
       prisma,
       wechatService,
       jwtService,
-      service: new AuthService(wechatService as any, prisma as any, jwtService as any),
+      service: new AuthService(
+        wechatService as any,
+        prisma as any,
+        jwtService as any,
+        permissionResolver as any,
+      ),
     }
   }
 
@@ -274,17 +282,26 @@ describe('AuthService admin RBAC', () => {
     const jwtService = {
       signAsync: jest.fn(),
     }
+    const permissionResolver = {
+      resolve: jest.fn().mockResolvedValue({ roles: [], permissions: [] }),
+    }
 
     return {
       prisma,
       wechatService,
       jwtService,
-      service: new AuthService(wechatService as any, prisma as any, jwtService as any),
+      permissionResolver,
+      service: new AuthService(
+        wechatService as any,
+        prisma as any,
+        jwtService as any,
+        permissionResolver as any,
+      ),
     }
   }
 
   it('rejects admin login when the backend account has no active role', async () => {
-    const { service, prisma } = createService()
+    const { service, prisma, permissionResolver } = createService()
 
     prisma.user.findFirst.mockResolvedValue({
       id: 1,
@@ -294,7 +311,7 @@ describe('AuthService admin RBAC', () => {
       status: 'active',
       deletedAt: null,
     })
-    prisma.userRole.findMany.mockResolvedValue([])
+    permissionResolver.resolve.mockResolvedValue({ roles: [], permissions: [] })
 
     await expect(
       service.adminLogin({
@@ -305,7 +322,7 @@ describe('AuthService admin RBAC', () => {
   })
 
   it('aggregates permissions from multiple active roles and filters inactive entries', async () => {
-    const { service, prisma } = createService()
+    const { service, prisma, permissionResolver } = createService()
 
     prisma.user.findUnique.mockResolvedValue({
       id: 3,
@@ -319,62 +336,13 @@ describe('AuthService admin RBAC', () => {
       deletedAt: null,
       lastLoginAt: null,
     })
-    prisma.userRole.findMany.mockResolvedValue([
-      {
-        role: {
-          id: 11,
-          code: 'super_admin',
-          name: '超级管理员',
-          status: 'active',
-          rolePermissions: [
-            {
-              permission: {
-                code: 'system.user.view',
-                status: 'active',
-              },
-            },
-            {
-              permission: {
-                code: 'system.role.view',
-                status: 'inactive',
-              },
-            },
-          ],
-        },
-      },
-      {
-        role: {
-          id: 12,
-          code: 'auditor',
-          name: '审计员',
-          status: 'active',
-          rolePermissions: [
-            {
-              permission: {
-                code: 'system.permission.view',
-                status: 'active',
-              },
-            },
-          ],
-        },
-      },
-      {
-        role: {
-          id: 13,
-          code: 'disabled',
-          name: '停用角色',
-          status: 'inactive',
-          rolePermissions: [
-            {
-              permission: {
-                code: 'system.menu.view',
-                status: 'active',
-              },
-            },
-          ],
-        },
-      },
-    ])
+    permissionResolver.resolve.mockResolvedValue({
+      permissions: ['system.permission.view', 'system.user.view', 'system.wechat-share.view'],
+      roles: [
+        { id: 11, code: 'super_admin', name: '超级管理员', status: 'active' },
+        { id: 12, code: 'auditor', name: '审计员', status: 'active' },
+      ],
+    })
 
     await expect(service.getPermission(3)).resolves.toEqual({
       permissions: expect.arrayContaining([
@@ -401,7 +369,7 @@ describe('AuthService admin RBAC', () => {
   })
 
   it('includes latest built-in permissions for super_admin even before rbac sync updates role bindings', async () => {
-    const { service, prisma } = createService()
+    const { service, prisma, permissionResolver } = createService()
 
     prisma.user.findUnique.mockResolvedValue({
       id: 9,
@@ -415,24 +383,10 @@ describe('AuthService admin RBAC', () => {
       deletedAt: null,
       lastLoginAt: null,
     })
-    prisma.userRole.findMany.mockResolvedValue([
-      {
-        role: {
-          id: 1,
-          code: 'super_admin',
-          name: '超级管理员',
-          status: 'active',
-          rolePermissions: [
-            {
-              permission: {
-                code: 'system.user.view',
-                status: 'active',
-              },
-            },
-          ],
-        },
-      },
-    ])
+    permissionResolver.resolve.mockResolvedValue({
+      permissions: ['system.user.view', 'system.wechat-share.view', 'system.wechat-share.update'],
+      roles: [{ id: 1, code: 'super_admin', name: '超级管理员', status: 'active' }],
+    })
 
     const result = await service.getPermission(9)
 

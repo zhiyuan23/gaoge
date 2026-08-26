@@ -25,7 +25,9 @@ export function buildSystemUserCreatePayload(model: SystemUserFormModel): Create
   }
 }
 
-export function buildSystemUserUpdatePayload(model: SystemUserFormModel): UpdateSystemUserPayload {
+export function buildSystemUserUpdatePayload(
+  model: SystemUserFormModel,
+): Omit<UpdateSystemUserPayload, 'expectedUpdatedAt'> {
   return {
     nickname: model.nickname.trim(),
     avatarUrl: model.avatarUrl.trim() || undefined,

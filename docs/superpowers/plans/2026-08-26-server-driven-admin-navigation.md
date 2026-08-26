@@ -8,6 +8,8 @@
 
 **Tech Stack:** NestJS 11、Prisma 5、PostgreSQL、Vue 3、Vue Router、Pinia、TypeScript、Jest、Node test runner、pnpm/Turborepo
 
+**Status:** 已实施并于 2026-08-26 通过数据库、API、Admin、浏览器与权限回归验证。
+
 ## Global Constraints
 
 - 数据库 `Menu` 是业务菜单标题、图标、层级、排序、状态和显隐的运行时唯一事实源。
@@ -963,3 +965,31 @@ git commit -m "docs(admin): record server navigation verification"
 - 实施完成并获得新鲜验证后，通过 `kb-maintainer` 将 `gaoge` 更新为新的可验证 CURRENT，并更新源码修订证据。
 - 后续同步活动成员时，重新执行 `gaoge-admin-sync` / RBAC 同步流程：Discover membership → Snapshot → BASE/CURRENT → Classify → Recheck → Verify → Report。
 - 跨仓只同步服务端菜单事实源、受控组件注册表、失败关闭、内置字段所有权和一致性测试；每个项目分别维护业务菜单树、页面键、Resource 绑定、品牌、租户与部署配置。
+
+## Task 7 实际验证结果（2026-08-26）
+
+- Prisma 与数据库：`prisma validate`、`db:generate`、共享类型 typecheck 均通过；在项目约定的本地 PostgreSQL `127.0.0.1:5432/gaoge_task7_navigation_v2` 上从空库应用 27 个 migration，`db:seed` 输出 `menus=17`，最终 `prisma migrate status` 为 `Database schema is up to date!`。Resource 迁移空库、既有合法数据和非法数据 drill 均通过。
+- API：计划中的 `pnpm ... test -- ... --runInBand` 会把 `--runInBand` 误当 Jest pattern，因此改用等价的 `pnpm --filter @gaoge/app-api exec jest ... --runInBand`；指定 5 个 suite 为 27 tests 通过，全量为 41 suites / 221 tests 通过，API typecheck/build 通过。
+- Admin：指定 Node 测试为 21 tests 通过，Admin typecheck/build 通过。`pnpm lint:style` 和任务路径 ESLint 通过；根 `pnpm lint` 仅命中既有 `.worktrees/release-lifecycle-governance`：212 个文件、461 errors、7 warnings，仓库其余路径为 0 个文件、0 errors、0 warnings。
+- 接口 smoke：最新隔离进程运行于 API `127.0.0.1:3122`、Admin `127.0.0.1:9012`；管理员 `/admin/navigation` 一级为 `sports, systemManagement`、系统子级为 `system, wechat`，与 `/system/access-catalog` 同级 `routeName` 顺序一致。
+- 管理员浏览器：主导航、两棵侧栏目录和“菜单与权限”树的结构/顺序符合设计；`systemPermission` 兼容地址重定向到 `/system/menu?view=resources`；临时把内置 `systemManagement` 改为标题“系统管理验收”、图标 `ri:shield-check-line`、排序 20 后刷新生效，重复内置同步仍保留，验收后已恢复为“系统管理”/空图标/排序 10。
+- 权限回归：仅有 `football.player.view` 的自定义角色登录后只看到“高歌体育 → 高歌 FC → 球员信息”，直接打开 `/system/user` 呈现 404；`GET /system/users` 按现有全局响应约定返回 HTTP 200 包络、应用码 `403`。浏览器验收发现并修复了 legacy `RolesGuard` 阻止自定义角色读取自身 `/auth/permission` 的问题，并加入控制器 metadata 回归测试。
+- 控制台：管理员与受限角色的全新 Chrome 标签均无未注册 `routeName`、重复路由、图标加载或其他 error；仅保留既有 Vue Router `next()` callback deprecation warning。
+- 证据：详细命令、输出摘要、提交范围和截图清单位于 `.superpowers/sdd/2026-08-26-server-driven-admin-navigation/task-7-report.md`。
+
+## Task 7 Review Round 1 复验结果（2026-08-26）
+
+- 数据库：新建且仅使用本地隔离库 `gaoge_task7_navigation_r2_20260826`；`migrate dev` 从空库应用 27 个 migration，seed 为 `roles=2, permissions=57, menus=17`，最终 status 为 up to date。Resource drill 继续覆盖空库/既有/非法数据；新增导航 drill 覆盖空库 deploy 与既有旧树 deploy（不运行 seed），确认两个 group、四个 catalog 精确重挂且既有展示字段及 `updatedAt` 不变。
+- API：业务 controller 不再存在 `RolesGuard/@Roles`；legacy `role=admin` 且只有 `football.player.view` 的 HTTP fixture 对球员同资源 POST/PATCH/DELETE，以及球队、比赛、资产、资金、Banner、流言板、微信跨资源写入均返回应用码 403。最终全量为 43 suites / 248 tests，API typecheck/build 通过。
+- 字段所有权：内置菜单结构/Resource 绕过请求返回应用码 400，展示字段更新成功；重复同步两次保留 title/icon/sort/status/visible。运行时发现并修复空字符串无法清除 icon，以及内置同步会按 legacy `admin` 给 API 管理用户追加 `super_admin`；两项均有回归测试。
+- 真实 fixture：角色 `task7_player_viewer_r2` 和用户 `task7restrictedr2` 均通过 System Role/User API 创建与分配；数据库确认 `legacy_role=admin`，显式角色仅为该自定义角色，Permission 仅 `football.player.view`。修复后重复同步两次仍保持该状态。
+- Admin/共享：Admin 指定 Node 测试 21/21、typecheck/build 通过；共享类型 typecheck 自动运行 CJS/`.d.cts` 同序一致 gate（2/2）。任务路径 ESLint、Prettier、Stylelint 和 diff check 全部通过；根 lint 的既有非零证据仍仅位于 `.worktrees/release-lifecycle-governance`。
+- 最新隔离运行时：API `127.0.0.1:3123`、Admin `127.0.0.1:9013`。管理员 navigation/catalog 均应用码 0；`systemPermission` 打开 `/system/menu?view=resources`。受限浏览器仅显示“高歌体育 → 高歌 FC → 球员信息”，直接 `/system/user` 为 404；`GET /system/users` 和 10 个写入 smoke 均应用码 403，球员 GET 应用码 0。浏览器 0 errors，仅既有 Vue Router `next()` deprecation warning。
+- Review 修复提交：`e39e1c9`、`9d57d77`、`507827e`、`84c98eb`、`1afb576`、`cce7884`、`c97d8e7`。截图和完整命令证据位于 Task 7 报告及 `evidence/round2-*.png`。
+
+## Task 7 Review Round 2 复验结果（2026-08-26）
+
+- `d80851f` 将 active workspace 的菜单 create/update payload 构建提取为纯函数；update 对清空图标发送显式 `icon: ''`，create 对空图标保持省略。legacy mapper 的 update 同样发送显式空值，不再存在 `trim() || undefined` 回归路径。
+- 新增可执行 `system-menu-payload.test.ts`，直接构造已有菜单表单和 `expectedUpdatedAt`，断言最终 API update payload 的 `icon` 严格等于空字符串且不为 `undefined`；同时覆盖 legacy update 与 create 省略语义。回退 active update 一次后该测试按预期红，再恢复修复后 2/2 绿。
+- Admin 导航/RBAC/工作区/payload 聚焦测试 27/27，Admin typecheck/build、共享类型 typecheck、任务路径 ESLint/Prettier 和 diff check 全部通过。尝试运行所有 `apps/admin/tests/*.test.ts` 时，除任务外既有 `football-match-round-latest.test.ts` 因 Node 24 无法解析 extensionless `model/latest` 导入而失败，其余 46 tests（包含本次 2 tests）通过；本任务未扩展范围修改该既有 loader 问题。
+- 本轮只修改 Admin 纯映射与调用路径，没有修改 API、shared contract 或数据库，因此无需重启隔离 API/Admin 或触碰任何本地数据库。

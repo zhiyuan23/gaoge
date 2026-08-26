@@ -1,16 +1,6 @@
-export const ADMIN_PAGE_ROUTE_NAMES = [
-  'player',
-  'team',
-  'matchRound',
-  'assetRecord',
-  'contentBanner',
-  'contentRumorPost',
-  'systemUser',
-  'systemRole',
-  'systemMenu',
-  'systemAudit',
-  'wechatShare',
-] as const
+import { ADMIN_PAGE_ROUTE_NAMES } from '../admin-page-route-names.cjs'
+
+export { ADMIN_PAGE_ROUTE_NAMES }
 
 export type AdminPageRouteName = (typeof ADMIN_PAGE_ROUTE_NAMES)[number]
 

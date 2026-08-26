@@ -7,11 +7,12 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common'
 
-import { RequirePermissions } from '@/common/auth/permissions.decorator'
-import { PermissionsGuard } from '@/common/auth/permissions.guard'
+import { RequireAllPermissions, RequirePermissions } from '@/common/auth/permissions.decorator'
+import { assertUserPermission, PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateSystemRoleDto } from './dto/create-system-role.dto'
@@ -26,27 +27,45 @@ export class SystemRoleController {
   constructor(private readonly systemRoleService: SystemRoleService) {}
 
   @Get()
-  @RequirePermissions('system.role.view')
+  @RequirePermissions('system.role.view', 'system.user.create', 'system.user.update')
   findAll() {
     return this.systemRoleService.findAll()
   }
 
   @Post()
-  @RequirePermissions('system.role.create')
-  create(@Body() dto: CreateSystemRoleDto) {
-    return this.systemRoleService.create(dto)
+  @RequireAllPermissions('system.role.create', 'system.role.assign-permission')
+  create(@Body() dto: CreateSystemRoleDto, @Req() request: { user?: { id?: number } }) {
+    return this.systemRoleService.create(dto, request.user?.id)
   }
 
   @Patch(':id')
-  @RequirePermissions('system.role.update')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemRoleDto) {
-    return this.systemRoleService.update(id, dto)
+  @RequireAllPermissions('system.role.update', 'system.role.assign-permission')
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSystemRoleDto,
+    @Req() request: { user?: { id?: number; permissions?: string[] } },
+  ) {
+    if (dto.status) {
+      assertUserPermission(
+        request.user,
+        dto.status === 'active' ? 'system.role.enable' : 'system.role.disable',
+      )
+    }
+    return this.systemRoleService.update(id, dto, request.user?.id)
   }
 
   @Patch(':id/status')
   @RequirePermissions('system.role.enable', 'system.role.disable')
-  updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemRoleStatusDto) {
-    return this.systemRoleService.updateStatus(id, dto)
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSystemRoleStatusDto,
+    @Req() request: { user?: { id?: number; permissions?: string[] } },
+  ) {
+    assertUserPermission(
+      request.user,
+      dto.status === 'active' ? 'system.role.enable' : 'system.role.disable',
+    )
+    return this.systemRoleService.updateStatus(id, dto, request.user?.id)
   }
 
   @Get(':id/permissions')
@@ -60,13 +79,14 @@ export class SystemRoleController {
   updatePermissions(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateSystemRolePermissionsDto,
+    @Req() request: { user?: { id?: number } },
   ) {
-    return this.systemRoleService.updatePermissions(id, dto)
+    return this.systemRoleService.updatePermissions(id, dto, request.user?.id)
   }
 
   @Delete(':id')
   @RequirePermissions('system.role.delete')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.systemRoleService.remove(id)
+  remove(@Param('id', ParseIntPipe) id: number, @Req() request: { user?: { id?: number } }) {
+    return this.systemRoleService.remove(id, request.user?.id)
   }
 }

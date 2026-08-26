@@ -14,31 +14,52 @@ describe('SystemPermissionService', () => {
         update: jest.fn(),
         delete: jest.fn(),
       },
+      resource: {
+        findUnique: jest.fn(),
+      },
       rolePermission: {
         count: jest.fn().mockResolvedValue(0),
       },
       menuPermission: {
         count: jest.fn().mockResolvedValue(0),
       },
+      $transaction: jest.fn(async (callback: (tx: any) => Promise<unknown>) => callback(prisma)),
     }
     const rbacSyncService = {
       syncBuiltIns: jest.fn(),
     }
 
+    const audit = {
+      record: jest.fn().mockResolvedValue(undefined),
+    }
+
     return {
       prisma,
+      audit,
       rbacSyncService,
-      service: new SystemPermissionService(prisma as any, rbacSyncService as any),
+      service: new SystemPermissionService(prisma as any, rbacSyncService as any, audit as any),
     }
   }
 
   it('creates a custom permission by parsing module, resource, and action from code', async () => {
     const { prisma, service } = createService()
     prisma.permission.findUnique.mockResolvedValue(null)
+    prisma.resource.findUnique.mockResolvedValue({
+      id: 7,
+      key: 'system.audit',
+      name: '审计日志',
+      status: 'active',
+    })
     prisma.permission.create.mockImplementation(async ({ data }: any) => ({
       id: 12,
       createdAt: now,
       updatedAt: now,
+      resourceDefinition: {
+        id: 7,
+        key: 'system.audit',
+        name: '审计日志',
+        status: 'active',
+      },
       ...data,
     }))
 
@@ -56,10 +77,12 @@ describe('SystemPermissionService', () => {
         module: 'system',
         resource: 'audit',
         action: 'view',
+        resourceId: 7,
         description: '查看审计日志',
         status: 'active',
         isBuiltIn: false,
       },
+      include: { resourceDefinition: true },
     })
     expect(result).toMatchObject({
       id: 12,
@@ -111,6 +134,7 @@ describe('SystemPermissionService', () => {
       id: 3,
       code: 'system.audit.view',
       isBuiltIn: false,
+      updatedAt: now,
     })
     prisma.permission.update.mockResolvedValue({
       id: 3,
@@ -124,11 +148,19 @@ describe('SystemPermissionService', () => {
       isBuiltIn: false,
       createdAt: now,
       updatedAt: now,
+      resourceId: 7,
+      resourceDefinition: {
+        id: 7,
+        key: 'system.audit',
+        name: '审计日志',
+        status: 'active',
+      },
     })
 
     await service.update(3, {
       name: '审计查看',
       status: 'inactive',
+      expectedUpdatedAt: now.toISOString(),
     })
 
     expect(prisma.permission.update).toHaveBeenCalledWith({
@@ -138,6 +170,7 @@ describe('SystemPermissionService', () => {
         description: undefined,
         status: 'inactive',
       },
+      include: { resourceDefinition: true },
     })
   })
 
@@ -171,6 +204,13 @@ describe('SystemPermissionService', () => {
     prisma.rolePermission.count.mockResolvedValueOnce(0)
     prisma.menuPermission.count.mockResolvedValueOnce(1)
     await expect(service.remove(3)).rejects.toBeInstanceOf(BadRequestException)
+
+    prisma.permission.findUnique.mockResolvedValueOnce({
+      id: 4,
+      isBuiltIn: false,
+      action: 'view',
+    })
+    await expect(service.remove(4)).rejects.toBeInstanceOf(BadRequestException)
 
     expect(prisma.permission.delete).not.toHaveBeenCalled()
   })

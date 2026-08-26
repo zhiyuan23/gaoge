@@ -53,6 +53,39 @@ describe('SystemMenuConfigurationService', () => {
     resourceIds: [7],
   }
 
+  const builtInGroup = {
+    id: 30,
+    parentId: null,
+    name: 'sports',
+    title: '高歌体育',
+    icon: null,
+    path: null,
+    routeName: 'sports',
+    menuType: 'group',
+    sort: 0,
+    status: 'active',
+    visible: true,
+    isBuiltIn: true,
+    createdAt: now,
+    updatedAt: now,
+    menuResources: [],
+    menuPermissions: [],
+  }
+
+  const builtInGroupPayload = {
+    parentId: null,
+    name: 'sports',
+    title: '高歌体育',
+    path: null,
+    routeName: 'sports',
+    menuType: 'group' as const,
+    sort: 0,
+    status: 'active' as const,
+    visible: true,
+    resourceIds: [],
+    expectedUpdatedAt: now.toISOString(),
+  }
+
   it('dual-writes MenuResource and legacy MenuPermission from resource view permissions', async () => {
     const { prisma, service } = createService()
     const menu = {
@@ -175,5 +208,201 @@ describe('SystemMenuConfigurationService', () => {
       '父级必须是导航分组或目录菜单',
     )
     expect(prisma.menu.create).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['name', 'renamedSports'],
+    ['routeName', 'renamedSports'],
+    ['path', '/renamed-sports'],
+    ['menuType', 'catalog'],
+    ['parentId', 99],
+    ['isBuiltIn', false],
+  ] as const)('rejects changing built-in structural field %s', async (field, value) => {
+    const { prisma, service } = createService()
+    prisma.menu.findUnique.mockResolvedValue(builtInGroup)
+
+    await expect(
+      service.update(30, { ...builtInGroupPayload, [field]: value } as any, 1),
+    ).rejects.toThrow('内置菜单的结构和资源关联由系统配置维护')
+    expect(prisma.menu.update).not.toHaveBeenCalled()
+  })
+
+  it('allows built-in presentation changes while accepting unchanged echoed structure', async () => {
+    const { prisma, service } = createService()
+    const updated = {
+      ...builtInGroup,
+      title: '定制体育',
+      icon: 'custom:sports',
+      sort: 25,
+      status: 'inactive',
+      visible: false,
+    }
+    prisma.menu.findUnique.mockResolvedValueOnce(builtInGroup).mockResolvedValueOnce(updated)
+    prisma.menu.update.mockResolvedValue(updated)
+
+    const result = await service.update(
+      30,
+      {
+        ...builtInGroupPayload,
+        title: '定制体育',
+        icon: 'custom:sports',
+        sort: 25,
+        status: 'inactive',
+        visible: false,
+        isBuiltIn: true,
+      } as any,
+      1,
+    )
+
+    expect(prisma.menu.update).toHaveBeenCalledWith({
+      where: { id: 30 },
+      data: {
+        title: '定制体育',
+        icon: 'custom:sports',
+        sort: 25,
+        status: 'inactive',
+        visible: false,
+      },
+    })
+    expect(prisma.menuResource.deleteMany).not.toHaveBeenCalled()
+    expect(result.title).toBe('定制体育')
+  })
+
+  it('allows an administrator to clear a built-in presentation icon', async () => {
+    const { prisma, service } = createService()
+    const current = { ...builtInGroup, icon: 'custom:sports' }
+    const updated = { ...current, icon: null }
+    prisma.menu.findUnique.mockResolvedValueOnce(current).mockResolvedValueOnce(updated)
+    prisma.menu.update.mockResolvedValue(updated)
+
+    await service.update(30, { ...builtInGroupPayload, icon: '' }, 1)
+
+    expect(prisma.menu.update).toHaveBeenCalledWith({
+      where: { id: 30 },
+      data: expect.objectContaining({ icon: null }),
+    })
+  })
+
+  it('rejects replacing built-in Resource associations', async () => {
+    const { prisma, service } = createService()
+    const builtInPage = {
+      ...builtInGroup,
+      id: 31,
+      name: 'player',
+      title: '球员信息',
+      path: '/sports/football/player',
+      routeName: 'player',
+      menuType: 'menu',
+      menuResources: [
+        {
+          resourceId: 7,
+          resource: {
+            id: 7,
+            key: 'football.player',
+            name: '球员',
+            module: 'football',
+            status: 'active',
+          },
+        },
+      ],
+    }
+    prisma.menu.findUnique.mockResolvedValue(builtInPage)
+
+    await expect(
+      service.updateResources(31, { resourceIds: [8], expectedUpdatedAt: now.toISOString() }, 1),
+    ).rejects.toThrow('内置菜单的结构和资源关联由系统配置维护')
+    expect(prisma.menuResource.deleteMany).not.toHaveBeenCalled()
+  })
+
+  it('accepts unchanged echoed Resource associations on a built-in page', async () => {
+    const { prisma, service } = createService()
+    const builtInPage = {
+      ...builtInGroup,
+      id: 31,
+      name: 'player',
+      title: '球员信息',
+      path: '/sports/football/player',
+      routeName: 'player',
+      menuType: 'menu',
+      menuResources: [
+        {
+          resourceId: 7,
+          resource: {
+            id: 7,
+            key: 'football.player',
+            name: '球员',
+            module: 'football',
+            status: 'active',
+          },
+        },
+      ],
+    }
+    prisma.menu.findUnique.mockResolvedValue(builtInPage)
+
+    const result = await service.updateResources(
+      31,
+      { resourceIds: [7], expectedUpdatedAt: now.toISOString() },
+      1,
+    )
+
+    expect(prisma.menuResource.deleteMany).not.toHaveBeenCalled()
+    expect(prisma.menu.update).not.toHaveBeenCalled()
+    expect(result.resources).toEqual([
+      { id: 7, key: 'football.player', name: '球员', module: 'football', status: 'active' },
+    ])
+  })
+
+  it('rejects creating a client-declared built-in menu', async () => {
+    const { prisma, service } = createService()
+
+    await expect(service.create({ ...payload, isBuiltIn: true } as any, 1)).rejects.toThrow(
+      '内置菜单只能由系统配置创建',
+    )
+    expect(prisma.menu.create).not.toHaveBeenCalled()
+  })
+
+  it('retains structural and Resource editing for custom menus', async () => {
+    const { prisma, service } = createService()
+    const current = {
+      id: 40,
+      ...payload,
+      icon: null,
+      sort: 0,
+      isBuiltIn: false,
+      createdAt: now,
+      updatedAt: now,
+      menuResources: [],
+      menuPermissions: [],
+    }
+    const updated = {
+      ...current,
+      name: 'renamedReport',
+      path: '/renamed-report',
+      updatedAt: new Date('2026-08-26T00:01:00.000Z'),
+    }
+    prisma.menu.findUnique.mockResolvedValueOnce(current).mockResolvedValueOnce(updated)
+    prisma.menu.update.mockResolvedValue(updated)
+    prisma.resource.findMany.mockResolvedValue([{ id: 8, permissions: [{ id: 80 }] }])
+
+    await service.update(
+      40,
+      {
+        ...payload,
+        name: 'renamedReport',
+        path: '/renamed-report',
+        resourceIds: [8],
+        expectedUpdatedAt: now.toISOString(),
+      },
+      1,
+    )
+
+    expect(prisma.menu.update).toHaveBeenCalledWith({
+      where: { id: 40 },
+      data: expect.objectContaining({ name: 'renamedReport', path: '/renamed-report' }),
+    })
+    expect(prisma.menuResource.createMany).toHaveBeenCalledWith({
+      data: [{ menuId: 40, resourceId: 8, sort: 0 }],
+      skipDuplicates: true,
+    })
   })
 })

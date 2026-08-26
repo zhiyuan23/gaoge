@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import useAuth from '@/composables/useAuth'
 
-import { ACTION_COLUMN_MIN_WIDTH, hasVisibleActions, isActionDisabled } from './action'
+import {
+  hasVisibleActions,
+  isActionDisabled,
+  isActionLoading,
+  normalizeActionColumnWidth,
+  normalizeTableColumnWidth,
+} from './action'
 import EsTableActionCell from './EsTableActionCell.vue'
 import type { EsTableEmits, TableAction, TableColumn, TableSize } from './types'
 
@@ -32,6 +38,10 @@ const props = defineProps({
   },
   // 是否显示分页
   showPagination: {
+    type: Boolean,
+    default: true,
+  },
+  hidePaginationWhenSinglePage: {
     type: Boolean,
     default: true,
   },
@@ -70,6 +80,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  stripe: {
+    type: Boolean,
+    default: true,
+  },
   // 表格尺寸
   tableSize: {
     type: String as () => TableSize,
@@ -103,34 +117,11 @@ const currentPage = ref(props.page)
 // 每页条数
 const internalPageSize = ref(props.pageSize)
 
-function normalizeColumnWidth(column: TableColumn): TableColumn {
-  const { fixedWidth, width, minWidth, ...rest } = column
-
-  if (typeof fixedWidth === 'number') {
-    return {
-      ...rest,
-      minWidth,
-      width: fixedWidth,
-    }
-  }
-
-  if (typeof minWidth === 'number') {
-    return {
-      ...rest,
-      minWidth,
-      width,
-    }
-  }
-
-  if (typeof width === 'number') {
-    return {
-      ...rest,
-      minWidth: width,
-    }
-  }
-
-  return rest
-}
+const paginationVisible = computed(
+  () =>
+    props.showPagination &&
+    (!props.hidePaginationWhenSinglePage || props.total > internalPageSize.value),
+)
 
 // 最终列配置（加上序号列）
 const finalColumns = computed(() => {
@@ -159,7 +150,9 @@ const finalColumns = computed(() => {
   }
 
   const normalizedColumns = props.columns.map((col) => {
-    const normalizedWidthColumn = normalizeColumnWidth(col)
+    const normalizedWidthColumn = col.actions?.length
+      ? normalizeActionColumnWidth(col)
+      : normalizeTableColumnWidth(col)
 
     if (!col.actions?.length) {
       return normalizedWidthColumn
@@ -167,7 +160,6 @@ const finalColumns = computed(() => {
 
     return {
       ...normalizedWidthColumn,
-      minWidth: Math.max(normalizedWidthColumn.minWidth ?? 0, ACTION_COLUMN_MIN_WIDTH),
       fixed: normalizedWidthColumn.fixed ?? 'right',
       visible:
         (normalizedWidthColumn.visible ?? true) && hasVisibleActions(col.actions, props.data, auth),
@@ -216,7 +208,7 @@ function emitPaginationChange() {
 }
 
 function handleActionClick(row: any, action: TableAction) {
-  if (isActionDisabled(action, row)) {
+  if (isActionDisabled(action, row) || isActionLoading(action, row)) {
     return
   }
 
@@ -232,7 +224,7 @@ function handleSelectionChange(rows: any[]) {
 </script>
 
 <template>
-  <div class="flex-col" :class="showPagination ? 'h-[calc(100%-45px)]' : 'h-full'">
+  <div class="flex-col" :class="paginationVisible ? 'h-[calc(100%-45px)]' : 'h-full'">
     <!-- 表格区域 -->
     <ElTable
       v-loading="loading"
@@ -241,7 +233,7 @@ function handleSelectionChange(rows: any[]) {
       :height="tableHeight"
       :max-height="maxHeight"
       :size="tableSize"
-      stripe
+      :stripe="stripe"
       class="w-full"
       :class="tableSize ? '' : 'table-wrap'"
       v-bind="$attrs"
@@ -255,6 +247,7 @@ function handleSelectionChange(rows: any[]) {
           <template #default="{ row }">
             <EsTableActionCell
               :actions="col.actions"
+              :inline-limit="col.inlineActionLimit"
               :row="row"
               @action-click="(action) => handleActionClick(row, action)"
             />
@@ -272,7 +265,7 @@ function handleSelectionChange(rows: any[]) {
         <ElTableColumn
           v-else-if="col.visible ?? true"
           v-bind="col"
-          show-overflow-tooltip
+          :show-overflow-tooltip="col.showOverflowTooltip ?? true"
           color="text-primary"
         >
           <template #default="{ row }">
@@ -289,7 +282,7 @@ function handleSelectionChange(rows: any[]) {
     </ElTable>
 
     <!-- 分页区域 -->
-    <div v-if="showPagination" class="flex-center-end mt-4">
+    <div v-if="paginationVisible" class="es-table-pagination flex-center-end mt-4">
       <ElPagination
         v-model:current-page="currentPage"
         v-model:page-size="internalPageSize"
@@ -317,5 +310,18 @@ function handleSelectionChange(rows: any[]) {
 
 :deep(.el-table-fixed-column--right) {
   padding: 0;
+}
+</style>
+
+<style>
+@media (width <= 700px) {
+  .es-table-pagination .el-pagination__sizes,
+  .es-table-pagination .el-pagination__jump {
+    display: none;
+  }
+
+  .es-table-pagination {
+    justify-content: center;
+  }
 }
 </style>

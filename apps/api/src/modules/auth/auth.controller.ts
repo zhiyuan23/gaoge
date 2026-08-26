@@ -15,8 +15,6 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express'
 import type { Request } from 'express'
 
-import { Roles } from '@/common/auth/roles.decorator'
-import { RolesGuard } from '@/common/auth/roles.guard'
 import { type AdminUploadedFile, saveAdminAvatar } from '@/common/storage/admin-avatar-storage'
 
 import { ChangePasswordDto } from './dto/change-password.dto'
@@ -111,8 +109,7 @@ export class AuthController {
   }
 
   @Get('permission')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'viewer')
+  @UseGuards(JwtAuthGuard)
   @Header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
   @Header('Pragma', 'no-cache')
   @Header('Expires', '0')

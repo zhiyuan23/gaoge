@@ -6,6 +6,7 @@ import systemPermissionApi from '@/api/system/permission'
 import type { SearchFormData } from '@/components/common/EsSearch/types'
 
 import PermissionFormDialog from './components/PermissionFormDialog.vue'
+import ResourceCatalog from './components/ResourceCatalog.vue'
 import { SYSTEM_PERMISSION_DEFAULT_SEARCH } from './model/defaults'
 import {
   buildSystemPermissionCreatePayload,
@@ -28,6 +29,7 @@ const permissionList = ref<SystemPermission[]>([])
 const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const currentPermission = ref<SystemPermission | null>(null)
+const activeView = ref<'permissions' | 'resources'>('resources')
 
 const search = ref<SystemPermissionSearch>({ ...SYSTEM_PERMISSION_DEFAULT_SEARCH })
 
@@ -72,10 +74,10 @@ async function handleSubmit(payload: any) {
       await systemPermissionApi.create(buildSystemPermissionCreatePayload(payload))
       ElMessage.success('权限已创建')
     } else if (currentPermission.value) {
-      await systemPermissionApi.update(
-        currentPermission.value.id,
-        buildSystemPermissionUpdatePayload(payload),
-      )
+      await systemPermissionApi.update(currentPermission.value.id, {
+        ...buildSystemPermissionUpdatePayload(payload),
+        expectedUpdatedAt: currentPermission.value.updatedAt,
+      })
       ElMessage.success('权限信息已更新')
     }
     dialogVisible.value = false
@@ -117,54 +119,61 @@ onMounted(() => {
 <template>
   <div class="absolute-container">
     <FaPageMain class="flex-1 overflow-auto" main-class="flex-1 flex flex-col overflow-auto">
-      <EsSearch
-        v-model="search"
-        :fields="searchFields"
-        :default-visible-count="2"
-        @search="handleSearch"
-      />
+      <ElTabs v-model="activeView" class="mb-3">
+        <ElTabPane label="资源目录" name="resources" />
+        <ElTabPane label="权限清单" name="permissions" />
+      </ElTabs>
+      <ResourceCatalog v-if="activeView === 'resources'" />
+      <template v-else>
+        <EsSearch
+          v-model="search"
+          :fields="searchFields"
+          :default-visible-count="2"
+          @search="handleSearch"
+        />
 
-      <EsListToolbar>
-        <template #actions>
-          <ElButton
-            v-auth="SYSTEM_PERMISSION_PERMISSIONS.create"
-            type="primary"
-            plain
-            @click="openCreate"
-          >
-            新增权限
-          </ElButton>
-          <ElButton
-            v-auth="SYSTEM_PERMISSION_PERMISSIONS.syncBuiltIns"
-            type="default"
-            plain
-            @click="handleSync"
-          >
-            同步内置权限
-          </ElButton>
-        </template>
-      </EsListToolbar>
+        <EsListToolbar>
+          <template #actions>
+            <ElButton
+              v-auth="SYSTEM_PERMISSION_PERMISSIONS.create"
+              type="primary"
+              plain
+              @click="openCreate"
+            >
+              新增权限
+            </ElButton>
+            <ElButton
+              v-auth="SYSTEM_PERMISSION_PERMISSIONS.syncBuiltIns"
+              type="default"
+              plain
+              @click="handleSync"
+            >
+              同步内置权限
+            </ElButton>
+          </template>
+        </EsListToolbar>
 
-      <div class="table-wrapper">
-        <EsTable
-          :columns="SYSTEM_PERMISSION_TABLE_COLUMNS"
-          :data="permissionList"
-          :total="permissionList.length"
-          :loading="loading"
-          :show-pagination="false"
-          table-height="100%"
-          @action-click="({ row, action }) => handleAction(row, action.key)"
-        >
-          <template #status="{ row }">
-            <ElTag :type="row.status === 'active' ? 'success' : 'info'">
-              {{ row.status === 'active' ? '启用' : '停用' }}
-            </ElTag>
-          </template>
-          <template #isBuiltIn="{ row }">
-            {{ row.isBuiltIn ? '是' : '否' }}
-          </template>
-        </EsTable>
-      </div>
+        <div class="table-wrapper">
+          <EsTable
+            :columns="SYSTEM_PERMISSION_TABLE_COLUMNS"
+            :data="permissionList"
+            :total="permissionList.length"
+            :loading="loading"
+            :show-pagination="false"
+            table-height="100%"
+            @action-click="({ row, action }) => handleAction(row, action.key)"
+          >
+            <template #status="{ row }">
+              <ElTag :type="row.status === 'active' ? 'success' : 'info'">
+                {{ row.status === 'active' ? '启用' : '停用' }}
+              </ElTag>
+            </template>
+            <template #isBuiltIn="{ row }">
+              {{ row.isBuiltIn ? '是' : '否' }}
+            </template>
+          </EsTable>
+        </div>
+      </template>
     </FaPageMain>
 
     <PermissionFormDialog

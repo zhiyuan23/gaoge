@@ -3,8 +3,8 @@ import { ElMessage, ElMessageBox, ElTag } from 'element-plus'
 
 import type { SystemMenu } from '@/api/system/menu'
 import systemMenuApi from '@/api/system/menu'
-import type { GroupedSystemPermissionResponse } from '@/api/system/permission'
-import systemPermissionApi from '@/api/system/permission'
+import type { SystemResource } from '@/api/system/resource'
+import systemResourceApi from '@/api/system/resource'
 import type { SearchFormData } from '@/components/common/EsSearch/types'
 import { useCrudDialog } from '@/composables/useCrudDialog'
 
@@ -24,9 +24,9 @@ defineOptions({
 const loading = ref(false)
 const submitLoading = ref(false)
 const allMenuTree = ref<SystemMenu[]>([])
-const permissionGroups = ref<GroupedSystemPermissionResponse['groups']>([])
+const resources = ref<SystemResource[]>([])
 const permissionVisible = ref(false)
-const selectedPermissionIds = ref<number[]>([])
+const selectedResourceIds = ref<number[]>([])
 const createParentId = ref<number | null>(null)
 
 const search = ref<SystemMenuSearch>({ ...SYSTEM_MENU_DEFAULT_SEARCH })
@@ -81,9 +81,8 @@ async function fetchTree() {
   }
 }
 
-async function fetchPermissionGroups() {
-  const res = await systemPermissionApi.grouped()
-  permissionGroups.value = res.groups
+async function fetchResources() {
+  resources.value = await systemResourceApi.list()
 }
 
 function handleSearch(formData: SearchFormData) {
@@ -108,7 +107,10 @@ async function handleSubmit(payload: any) {
       await systemMenuApi.create(buildSystemMenuCreatePayload(payload))
       ElMessage.success('菜单已创建')
     } else if (currentRow.value) {
-      await systemMenuApi.update(currentRow.value.id, buildSystemMenuUpdatePayload(payload))
+      await systemMenuApi.update(currentRow.value.id, {
+        ...buildSystemMenuUpdatePayload(payload),
+        expectedUpdatedAt: currentRow.value.updatedAt,
+      })
       ElMessage.success('菜单已更新')
     }
     dialogVisible.value = false
@@ -131,7 +133,7 @@ async function handleDelete(row: SystemMenu) {
 
 async function openPermissionDialog(row: SystemMenu) {
   currentRow.value = row
-  selectedPermissionIds.value = row.permissions.map((item) => item.id)
+  selectedResourceIds.value = row.resources.map((item) => item.id)
   permissionVisible.value = true
 }
 
@@ -139,16 +141,17 @@ async function handlePermissionSubmit() {
   if (!currentRow.value) {
     return
   }
-  await systemMenuApi.updatePermissions(currentRow.value.id, {
-    permissionIds: selectedPermissionIds.value,
+  await systemMenuApi.updateResources(currentRow.value.id, {
+    resourceIds: selectedResourceIds.value,
+    expectedUpdatedAt: currentRow.value.updatedAt,
   })
-  ElMessage.success('菜单权限已更新')
+  ElMessage.success('菜单资源已更新')
   permissionVisible.value = false
   await fetchTree()
 }
 
 onMounted(() => {
-  Promise.all([fetchTree(), fetchPermissionGroups()])
+  Promise.all([fetchTree(), fetchResources()])
 })
 </script>
 
@@ -198,9 +201,9 @@ onMounted(() => {
             </template>
           </ElTableColumn>
           <ElTableColumn prop="sort" label="排序" width="80" />
-          <ElTableColumn label="绑定权限" width="110">
+          <ElTableColumn label="关联资源" width="110">
             <template #default="{ row }">
-              <span>{{ row.permissions.length }} 项</span>
+              <span>{{ row.resources.length }} 项</span>
             </template>
           </ElTableColumn>
           <ElTableColumn label="状态" width="96">
@@ -237,7 +240,7 @@ onMounted(() => {
                 type="primary"
                 @click="openPermissionDialog(row)"
               >
-                绑定权限
+                关联资源
               </ElButton>
               <ElButton
                 v-if="canDeleteMenu(row)"
@@ -266,9 +269,9 @@ onMounted(() => {
 
     <PermissionDialog
       v-model="permissionVisible"
-      :permission-groups="permissionGroups"
-      :selected-ids="selectedPermissionIds"
-      @update:selected-ids="selectedPermissionIds = $event"
+      :resources="resources"
+      :selected-ids="selectedResourceIds"
+      @update:selected-ids="selectedResourceIds = $event"
       @submit="handlePermissionSubmit"
     />
   </div>

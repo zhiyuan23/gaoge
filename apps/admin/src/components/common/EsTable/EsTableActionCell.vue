@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import useAuth from '@/composables/useAuth'
 
-import { isActionDisabled, isActionVisible } from './action'
+import {
+  isActionDisabled,
+  isActionLoading,
+  isActionVisible,
+  partitionActions,
+  shouldDisableActionTooltips,
+} from './action'
 import type { TableAction } from './types'
 
 defineOptions({
@@ -12,6 +18,10 @@ const props = defineProps({
   actions: {
     type: Array as PropType<TableAction[]>,
     default: () => [],
+  },
+  inlineLimit: {
+    type: Number,
+    default: 2,
   },
   row: {
     type: Object as PropType<any>,
@@ -28,6 +38,9 @@ const { auth } = useAuth()
 const ACTION_ICON_MAP = {
   edit: 'i-ri:edit-line',
   delete: 'i-ri:delete-bin-line',
+  publish: 'i-ri:send-plane-line',
+  republish: 'i-ri:refresh-line',
+  offline: 'i-ri:stop-circle-line',
   enable: 'i-ri:check-line',
   disable: 'i-ri:close-line',
   resetPassword: 'mdi:lock-reset',
@@ -41,28 +54,23 @@ const visibleActions = computed(() => {
   return props.actions.filter((action) => isActionVisible(action, auth, props.row))
 })
 
-const primaryAction = computed(() => {
-  return visibleActions.value[0]
-})
-
-const secondaryActions = computed(() => {
-  return visibleActions.value.slice(1)
-})
-
-const shouldUseDropdown = computed(() => {
-  return visibleActions.value.length > 2
-})
-
-const inlineActions = computed(() => {
-  return shouldUseDropdown.value ? [primaryAction.value].filter(Boolean) : visibleActions.value
-})
+const actionLayout = computed(() => partitionActions(visibleActions.value, props.inlineLimit))
+const shouldUseDropdown = computed(() => actionLayout.value.useDropdown)
+const inlineActions = computed(() => actionLayout.value.inlineActions)
+const secondaryActions = computed(() => actionLayout.value.secondaryActions)
+const rowBusy = computed(() =>
+  visibleActions.value.some((action) => isActionLoading(action, props.row)),
+)
+const disableActionTooltips = computed(() =>
+  shouldDisableActionTooltips(inlineActions.value.length, shouldUseDropdown.value),
+)
 
 const dropdownItems = computed(() => {
   return [
     secondaryActions.value.map((action) => ({
-      label: action.label,
+      label: isActionLoading(action, props.row) ? `${action.label}（处理中）` : action.label,
       icon: getActionIcon(action),
-      disabled: isActionDisabled(action, props.row),
+      disabled: rowBusy.value || isActionDisabled(action, props.row),
       class:
         action.type === 'danger'
           ? 'text-destructive focus:text-destructive data-[highlighted]:text-destructive'
@@ -87,7 +95,7 @@ function getActionIcon(action?: TableAction) {
 
 // 触发 action 点击前，先拦截已禁用的操作。
 function handleActionClick(action?: TableAction) {
-  if (!action || isActionDisabled(action, props.row)) {
+  if (!action || rowBusy.value || isActionDisabled(action, props.row)) {
     return
   }
 
@@ -98,27 +106,51 @@ function handleActionClick(action?: TableAction) {
 <template>
   <div class="flex-center gap-2">
     <template v-if="visibleActions.length">
-      <ElButton
+      <ElTooltip
         v-for="action in inlineActions"
         :key="action.key"
-        plain
-        circle
-        class="table-action-icon-button"
-        :class="{ 'table-action-icon-button-danger': action.type === 'danger' }"
-        :disabled="isActionDisabled(action, row)"
-        @click="handleActionClick(action)"
+        :content="action.label"
+        placement="top"
+        :show-after="300"
+        :disabled="disableActionTooltips"
       >
-        <FaIcon :name="getActionIcon(action)" class="size-4" />
-      </ElButton>
-      <FaDropdown
+        <span class="inline-flex">
+          <ElButton
+            plain
+            circle
+            class="table-action-icon-button"
+            :class="{ 'table-action-icon-button-danger': action.type === 'danger' }"
+            :aria-label="action.label"
+            :disabled="(rowBusy && !isActionLoading(action, row)) || isActionDisabled(action, row)"
+            :loading="isActionLoading(action, row)"
+            @click="handleActionClick(action)"
+          >
+            <FaIcon :name="getActionIcon(action)" class="size-4" />
+          </ElButton>
+        </span>
+      </ElTooltip>
+      <ElTooltip
         v-if="shouldUseDropdown"
-        content-class="min-w-max whitespace-nowrap"
-        :items="dropdownItems"
+        content="更多操作"
+        placement="top"
+        :show-after="300"
+        :disabled="disableActionTooltips"
       >
-        <ElButton plain circle class="table-action-icon-button" aria-label="更多操作">
-          <FaIcon :name="DEFAULT_MORE_ICON" class="size-4" />
-        </ElButton>
-      </FaDropdown>
+        <span class="inline-flex">
+          <FaDropdown content-class="min-w-max whitespace-nowrap" :items="dropdownItems">
+            <ElButton
+              plain
+              circle
+              class="table-action-icon-button"
+              aria-label="更多操作"
+              :disabled="rowBusy"
+              :loading="rowBusy"
+            >
+              <FaIcon :name="DEFAULT_MORE_ICON" class="size-4" />
+            </ElButton>
+          </FaDropdown>
+        </span>
+      </ElTooltip>
     </template>
     <span v-else class="text-secondary">--</span>
   </div>

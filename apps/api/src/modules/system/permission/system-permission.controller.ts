@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common'
 
@@ -40,25 +41,29 @@ export class SystemPermissionController {
 
   @Post()
   @RequirePermissions('system.permission.create')
-  create(@Body() dto: CreateSystemPermissionDto) {
-    return this.systemPermissionService.create(dto)
+  create(@Body() dto: CreateSystemPermissionDto, @Req() request: { user?: { id?: number } }) {
+    return this.systemPermissionService.create(dto, request.user?.id)
   }
 
   @Patch(':id')
   @RequirePermissions('system.permission.update')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemPermissionDto) {
-    return this.systemPermissionService.update(id, dto)
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSystemPermissionDto,
+    @Req() request: { user?: { id?: number } },
+  ) {
+    return this.systemPermissionService.update(id, dto, request.user?.id)
   }
 
   @Delete(':id')
   @RequirePermissions('system.permission.delete')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.systemPermissionService.remove(id)
+  remove(@Param('id', ParseIntPipe) id: number, @Req() request: { user?: { id?: number } }) {
+    return this.systemPermissionService.remove(id, request.user?.id)
   }
 
   @Post('sync-builtins')
   @RequirePermissions('system.permission.sync-builtins')
-  syncBuiltIns() {
-    return this.systemPermissionService.syncBuiltIns()
+  syncBuiltIns(@Req() request: { user?: { id?: number } }) {
+    return this.systemPermissionService.syncBuiltIns(request.user?.id)
   }
 }

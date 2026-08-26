@@ -70,6 +70,7 @@ function setupRoutes(router: Router) {
           switch (settingsStore.settings.app.routeBaseOn) {
             case 'frontend':
               routeStore.generateRoutesAtFront(asyncRoutes)
+              await menuStore.generateMenusAtFront()
               break
             case 'backend':
               if (!permissionsReady) {

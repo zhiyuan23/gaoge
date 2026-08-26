@@ -8,11 +8,12 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common'
 
 import { RequirePermissions } from '@/common/auth/permissions.decorator'
-import { PermissionsGuard } from '@/common/auth/permissions.guard'
+import { assertUserPermission, PermissionsGuard } from '@/common/auth/permissions.guard'
 import { JwtAuthGuard } from '@/modules/auth/jwt-auth.guard'
 
 import { CreateSystemUserDto } from './dto/create-system-user.dto'
@@ -29,8 +30,8 @@ export class SystemUserController {
 
   @Post()
   @RequirePermissions('system.user.create')
-  create(@Body() dto: CreateSystemUserDto) {
-    return this.systemUserService.create(dto)
+  create(@Body() dto: CreateSystemUserDto, @Req() request: { user?: { id?: number } }) {
+    return this.systemUserService.create(dto, request.user?.id)
   }
 
   @Get()
@@ -41,25 +42,47 @@ export class SystemUserController {
 
   @Patch(':id')
   @RequirePermissions('system.user.update')
-  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemUserDto) {
-    return this.systemUserService.update(id, dto)
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSystemUserDto,
+    @Req() request: { user?: { id?: number; permissions?: string[] } },
+  ) {
+    if (dto.status) {
+      assertUserPermission(
+        request.user,
+        dto.status === 'active' ? 'system.user.enable' : 'system.user.disable',
+      )
+    }
+    return this.systemUserService.update(id, dto, request.user?.id)
   }
 
   @Patch(':id/status')
   @RequirePermissions('system.user.enable', 'system.user.disable')
-  updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateSystemUserStatusDto) {
-    return this.systemUserService.updateStatus(id, dto)
+  updateStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSystemUserStatusDto,
+    @Req() request: { user?: { id?: number; permissions?: string[] } },
+  ) {
+    assertUserPermission(
+      request.user,
+      dto.status === 'active' ? 'system.user.enable' : 'system.user.disable',
+    )
+    return this.systemUserService.updateStatus(id, dto, request.user?.id)
   }
 
   @Patch(':id/reset-password')
   @RequirePermissions('system.user.reset-password')
-  resetPassword(@Param('id', ParseIntPipe) id: number, @Body() dto: ResetSystemUserPasswordDto) {
-    return this.systemUserService.resetPassword(id, dto)
+  resetPassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ResetSystemUserPasswordDto,
+    @Req() request: { user?: { id?: number } },
+  ) {
+    return this.systemUserService.resetPassword(id, dto, request.user?.id)
   }
 
   @Delete(':id')
   @RequirePermissions('system.user.delete')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.systemUserService.remove(id)
+  remove(@Param('id', ParseIntPipe) id: number, @Req() request: { user?: { id?: number } }) {
+    return this.systemUserService.remove(id, request.user?.id)
   }
 }

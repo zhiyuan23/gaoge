@@ -7,6 +7,8 @@ export const SYSTEM_ROLE_TABLE_COLUMNS: TableColumn[] = [
   { label: '角色编码', prop: 'code', minWidth: 160 },
   { label: '说明', prop: 'description', minWidth: 220 },
   { label: '绑定用户', prop: 'userCount', width: 96 },
+  { label: '模块数', prop: 'moduleCount', width: 88 },
+  { label: '资源数', prop: 'resourceCount', width: 88 },
   { label: '权限数', prop: 'permissionCount', width: 96 },
   { label: '排序', prop: 'sort', width: 88 },
   {

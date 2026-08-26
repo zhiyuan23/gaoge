@@ -65,7 +65,10 @@ async function handleSubmit(payload: any) {
       await systemUserApi.create(buildSystemUserCreatePayload(payload))
       ElMessage.success('新增成功')
     } else if (currentRow.value) {
-      await systemUserApi.update(currentRow.value.id, buildSystemUserUpdatePayload(payload))
+      await systemUserApi.update(currentRow.value.id, {
+        ...buildSystemUserUpdatePayload(payload),
+        expectedUpdatedAt: currentRow.value.updatedAt,
+      })
       ElMessage.success('更新成功')
     }
     dialogVisible.value = false
@@ -81,7 +84,10 @@ async function handleAction(row: SystemUser, key: string) {
     return
   }
   if (key === 'enable' || key === 'disable') {
-    await systemUserApi.updateStatus(row.id, { status: key === 'enable' ? 'active' : 'inactive' })
+    await systemUserApi.updateStatus(row.id, {
+      status: key === 'enable' ? 'active' : 'inactive',
+      expectedUpdatedAt: row.updatedAt,
+    })
     ElMessage.success(key === 'enable' ? '已启用' : '已停用')
     await fetchList()
     return
@@ -113,7 +119,10 @@ async function handleResetPasswordSubmit(payload: { newPassword: string }) {
   }
   resetLoading.value = true
   try {
-    await systemUserApi.resetPassword(resetTarget.value.id, payload)
+    await systemUserApi.resetPassword(resetTarget.value.id, {
+      ...payload,
+      expectedUpdatedAt: resetTarget.value.updatedAt,
+    })
     ElMessage.success('密码已重置')
     resetPasswordVisible.value = false
   } finally {
