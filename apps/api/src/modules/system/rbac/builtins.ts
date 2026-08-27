@@ -220,6 +220,7 @@ const footballCatalog: BuiltInMenuDefinition = {
     {
       name: 'player',
       title: '球员信息',
+      icon: 'ri:user-star-line',
       path: '/sports/football/player',
       routeName: 'player',
       menuType: 'menu',
@@ -232,6 +233,7 @@ const footballCatalog: BuiltInMenuDefinition = {
     {
       name: 'team',
       title: '球队信息',
+      icon: 'ri:team-line',
       path: '/sports/football/team',
       routeName: 'team',
       menuType: 'menu',
@@ -244,6 +246,7 @@ const footballCatalog: BuiltInMenuDefinition = {
     {
       name: 'matchRound',
       title: '比赛信息',
+      icon: 'ri:calendar-event-line',
       path: '/sports/football/match-round',
       routeName: 'matchRound',
       menuType: 'menu',
@@ -256,6 +259,7 @@ const footballCatalog: BuiltInMenuDefinition = {
     {
       name: 'assetRecord',
       title: '资产信息',
+      icon: 'ri:wallet-3-line',
       path: '/sports/football/asset-record',
       routeName: 'assetRecord',
       menuType: 'menu',
@@ -284,6 +288,7 @@ const contentCatalog: BuiltInMenuDefinition = {
     {
       name: 'contentBanner',
       title: 'Banner 管理',
+      icon: 'ri:slideshow-3-line',
       path: '/sports/content/banner',
       routeName: 'contentBanner',
       menuType: 'menu',
@@ -296,6 +301,7 @@ const contentCatalog: BuiltInMenuDefinition = {
     {
       name: 'contentRumorPost',
       title: '流言板',
+      icon: 'ri:message-3-line',
       path: '/sports/content/rumor-post',
       routeName: 'contentRumorPost',
       menuType: 'menu',
@@ -324,6 +330,7 @@ const systemCatalog: BuiltInMenuDefinition = {
     {
       name: 'systemUser',
       title: '用户管理',
+      icon: 'ri:user-line',
       path: '/system/user',
       routeName: 'systemUser',
       menuType: 'menu',
@@ -336,6 +343,7 @@ const systemCatalog: BuiltInMenuDefinition = {
     {
       name: 'systemRole',
       title: '角色管理',
+      icon: 'ri:shield-user-line',
       path: '/system/role',
       routeName: 'systemRole',
       menuType: 'menu',
@@ -348,6 +356,7 @@ const systemCatalog: BuiltInMenuDefinition = {
     {
       name: 'systemMenu',
       title: '菜单与权限',
+      icon: 'ri:menu-line',
       path: '/system/menu',
       routeName: 'systemMenu',
       menuType: 'menu',
@@ -360,6 +369,7 @@ const systemCatalog: BuiltInMenuDefinition = {
     {
       name: 'systemAudit',
       title: '审计日志',
+      icon: 'ri:file-search-line',
       path: '/system/audit',
       routeName: 'systemAudit',
       menuType: 'menu',
@@ -388,6 +398,7 @@ const wechatCatalog: BuiltInMenuDefinition = {
     {
       name: 'wechatShare',
       title: '微信分享配置',
+      icon: 'ri:share-line',
       path: '/wechat/share',
       routeName: 'wechatShare',
       menuType: 'menu',

@@ -32,7 +32,7 @@ const labels: Record<string, string> = {
 
 const moduleIcons: Record<string, string> = {
   content: 'i-ri:article-line',
-  football: 'i-solar:cup-star-outline',
+  football: 'i-proicons:soccer',
   system: 'i-ri:settings-3-line',
 }
 
@@ -49,6 +49,7 @@ const resourceIcons: Record<string, string> = {
   'system.permission': 'i-ri:key-2-line',
   'system.role': 'i-ri:shield-user-line',
   'system.user': 'i-ri:user-line',
+  'system.wechat-share': 'i-ri:share-line',
 }
 
 export function getSystemResourceModuleLabel(code: string) {

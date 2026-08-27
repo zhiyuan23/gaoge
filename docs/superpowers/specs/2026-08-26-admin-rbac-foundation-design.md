@@ -315,7 +315,70 @@ Resource migration 按“扩展 → 只读预检 → Resource 回填 → Permiss
 - 不恢复前端静态业务菜单，不降低 Permission Guard 或导航失败关闭语义。
 - 不借本次修复调整无关业务数据、菜单视觉样式或路由架构。
 
-## 13. 追溯入口
+## 13. 2026-08-27 菜单与资源图标语义一致性设计
+
+### 13.1 一致性原则
+
+“菜单结构”和“资源目录”表达的是同一套业务能力的两种视图，图标应按业务语义保持一致，但不机械要求树中所有层级共用同一图标：
+
+1. 同一业务概念在两种视图中使用同一图标。例如 `高歌 FC` 与 `足球资源` 都使用足球图标。
+2. 一对一绑定的页面与 Resource 使用同一业务图标。例如球员、球队、比赛、资产、用户、角色和审计。
+3. 一个页面绑定多个 Resource 时，菜单保留页面级图标，Resource 分别保留自身语义图标。例如“菜单与权限”页面使用菜单图标，`system.menu` 与 `system.permission` 分别使用菜单和钥匙图标。
+4. 没有显式图标的自定义节点继续按节点类型显示通用 fallback；未知 Resource 继续使用通用资源 fallback，不根据标题猜测业务语义。
+
+### 13.2 图标事实源与字段所有权
+
+- 菜单图标继续由服务端 `Menu.icon` 提供，数据库仍是运行时唯一事实源。Admin 菜单树、侧边导航和动态路由不得在渲染时从 Resource 映射反推或覆盖菜单图标。
+- 内置菜单注册表只提供新环境创建默认值；普通同步仍不得覆盖数据库已有图标。既有内置菜单的空图标通过一次性精确 migration 回填，范围必须同时受 `isBuiltIn = true`、确定的 `routeName` 和 `icon IS NULL` 限制。
+- Resource 当前没有可编辑图标字段。资源目录使用前端受控语义映射展示图标，并由回归测试锁定与内置菜单默认值的一致性。本次不为纯展示需求扩展 Resource 数据模型。
+- 一次性 migration 完成后，管理员仍可修改或显式清空菜单图标；后续普通同步不得自动补回。
+
+### 13.3 当前项目语义映射
+
+模块/目录层级：
+
+| 菜单概念   | 资源目录概念         | 图标                     |
+| ---------- | -------------------- | ------------------------ |
+| `高歌体育` | 无直接对应模块       | `solar:cup-star-outline` |
+| `高歌 FC`  | `足球资源`           | `proicons:soccer`        |
+| `内容管理` | `内容资源`           | `ri:article-line`        |
+| `用户权限` | `系统资源`           | `ri:settings-3-line`     |
+| `微信管理` | 无独立 Resource 模块 | `ri:wechat-2-line`       |
+
+页面/Resource 层级：
+
+| routeName          | Resource                                      | 图标                     |
+| ------------------ | --------------------------------------------- | ------------------------ |
+| `player`           | `football.player`                             | `ri:user-star-line`      |
+| `team`             | `football.team`                               | `ri:team-line`           |
+| `matchRound`       | `football.matchRound`                         | `ri:calendar-event-line` |
+| `assetRecord`      | `football.assetRecord`                        | `ri:wallet-3-line`       |
+| `contentBanner`    | `content.banner`                              | `ri:slideshow-3-line`    |
+| `contentRumorPost` | `content.rumorPost`                           | `ri:message-3-line`      |
+| `systemUser`       | `system.user`                                 | `ri:user-line`           |
+| `systemRole`       | `system.role`                                 | `ri:shield-user-line`    |
+| `systemMenu`       | `system.menu`（同时绑定 `system.permission`） | `ri:menu-line`           |
+| `systemAudit`      | `system.audit`                                | `ri:file-search-line`    |
+| `wechatShare`      | `system.wechat-share`                         | `ri:share-line`          |
+
+`football.fund` 与 `system.permission` 当前没有一对一独立菜单，分别保留 `ri:funds-line` 与 `ri:key-2-line` 的 Resource 语义图标。
+
+### 13.4 实施与验收
+
+1. 为上述内置叶子菜单补齐服务端创建默认图标，并用精确 migration 只回填既有空值。
+2. 将资源目录 `football` 模块改为足球图标，为 `system.wechat-share` 补充分享图标；其余已一致的 Resource 映射保持不变。
+3. API 回归测试同时验证 `create.icon` 和 `update` 不包含 `icon`，保证默认值与数据库字段所有权边界。
+4. Admin 回归测试锁定模块、Resource 和未知项 fallback 映射；浏览器检查菜单结构与资源目录的同语义节点。
+5. 运行受影响的 API/Admin 测试、typecheck、build、格式检查和 migration 验证，并确认普通同步不覆盖管理员自定义图标。
+
+### 13.5 本次不做
+
+- 不新增 `Resource.icon` 字段或 Resource 图标编辑功能。
+- 不让前端根据 Resource、标题或路径动态生成菜单图标。
+- 不强制顶层产品分组与下级业务目录共用图标。
+- 不调整与图标语义无关的菜单结构、排序、权限或页面布局。
+
+## 14. 追溯入口
 
 - 实施与验证：[2026-08-26-admin-rbac-foundation-implementation.md](../plans/2026-08-26-admin-rbac-foundation-implementation.md)
 - 长期开发规范：[admin-navigation.md](../../conventions/admin-navigation.md)

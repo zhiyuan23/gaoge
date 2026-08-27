@@ -1,15 +1,15 @@
 # Admin RBAC 工程底座实施与验证记录
 
 - 日期：2026-08-26
-- 状态：主体及 2026-08-27 回归修复已完成并通过验证
-- 当前基线：`gaoge/main@9439b0d`
+- 状态：主体、回归修复及 2026-08-27 图标语义一致性已完成
+- 当前基线：`gaoge/main` 当前分支（最终提交以 `git log` 为准）
 - 对应设计：[Admin RBAC 工程底座总设计](../specs/2026-08-26-admin-rbac-foundation-design.md)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement section 10 task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在保留服务端菜单唯一事实源和隔离数据库的前提下，恢复本地业务数据与默认图标，并让 Admin 路由初始化失败可靠结束而不是无限 loading。
+**Goal:** 在保留服务端菜单唯一事实源和隔离数据库的前提下，恢复本地业务数据与默认图标，收敛 Admin 路由初始化失败，并让菜单结构与资源目录使用一致的业务图标语义。
 
-**Architecture:** API 注册表继续定义内置菜单创建默认值，用一次性 Prisma migration 修复既有空图标；Admin 用统一失败收口函数把 route/menu store 写入 fail-closed 终态。历史业务数据通过临时、显式双数据库恢复脚本事务迁入 `gaoge_dev`，不向运行时代码加入旧库兼容路径。
+**Architecture:** API 注册表继续定义内置菜单创建默认值，用一次性 Prisma migration 修复既有空图标；Admin 用统一失败收口函数把 route/menu store 写入 fail-closed 终态。资源目录使用受控前端语义映射，并通过测试锁定与服务端内置菜单默认值的一致性；历史业务数据通过临时、显式双数据库恢复脚本事务迁入 `gaoge_dev`，不向运行时代码加入旧库兼容路径。
 
 **Tech Stack:** PostgreSQL、Prisma 5、NestJS/Jest、Vue 3、Pinia、Vue Router、Node test runner、pnpm。
 
@@ -31,6 +31,7 @@
 - 内置同步从只 upsert 调整为当前项目注册表精确同步，并保护自定义依赖。
 - Admin 使用服务端导航树和受控组件注册表，不再维护第二份业务菜单展示元数据。
 - 菜单与资源合并为同页工作区；角色权限采用 Resource 树；补齐审计、图标、代码颜色和清空图标交互。
+- 菜单图标继续由服务端 `Menu.icon` 提供，资源目录通过 Admin 受控语义映射展示；相同业务语义一致，不同信息层级不机械复用。
 - 最终内置数据为 2 个 Role、13 个 Resource、57 个 Permission、17 个 Menu。
 
 ## 2. 关键提交
@@ -126,7 +127,7 @@
 ### 6.1 数据库与契约
 
 - Prisma validate、generate、migrate status 通过。
-- 空库应用 27 个 migration，seed 输出 `roles=2, permissions=57, menus=17`。
+- 当前本地库应用 29 个 migration，seed 输出 `roles=2, permissions=57, menus=17`，17 个内置菜单图标均非空。
 - Resource migration 三场景和导航既有库 migration drill 通过。
 - 共享 route-name CJS、ESM 与 `.d.cts` 同序一致测试 3/3 通过。
 
@@ -141,7 +142,7 @@
 - 最终导航回归测试 17/17，通过；共享页面键契约测试 3/3，通过。
 - Admin typecheck 与生产 build 通过。
 - 任务路径 ESLint、Prettier、Stylelint 和 diff check 通过。
-- 全量 `apps/admin/tests/*.test.ts` 为 48/49 通过；唯一失败是任务前既有的 `football-match-round-latest.test.ts` Node 24 extensionless loader 问题，本次聚焦测试全部通过，未扩大范围修复该既有问题。
+- 全量 `apps/admin/tests/*.test.ts` 为 49/50 通过；唯一失败是任务前既有的 `football-match-round-latest.test.ts` Node 24 extensionless loader 问题，本次聚焦测试全部通过，未扩大范围修复该既有问题。
 
 ### 6.4 浏览器与接口
 
@@ -151,6 +152,7 @@
 - 无权 `GET /system/users` 及跨 Resource 写请求按全局包络返回应用码 403，允许的球员 GET 返回应用码 0。
 - 管理员与受限角色浏览器均无 routeName、重复路由或图标错误；仅保留既有 Vue Router `next()` callback deprecation warning。
 - 2026-08-27 隔离端口复验先复现共享 `.cjs` 命名导入错误，修复后管理员可直接打开球员、球队和菜单权限页面，浏览器无新增运行错误。
+- 2026-08-27 图标语义复验使用 API `3125`、Admin `9015`：菜单结构 17 个内置节点均渲染真实 SVG，“高歌 FC”与“足球资源”语义一致，资源叶子和微信分享图标正确，菜单/资源切换正常。
 
 ## 7. 复验环境
 
@@ -159,6 +161,7 @@
 - Round 1：API `3122`、Admin `9012`
 - Round 2：API `3123`、Admin `9013`
 - Regression smoke：API `3124`、Admin `9014`
+- Icon semantics smoke：API `3125`、Admin `9015`
 
 复验结束后均关闭隔离进程。日常本地运行仍使用项目约定的 3000/9000；端口冲突时应关闭旧进程，不以永久改端口掩盖重复启动。
 
@@ -460,3 +463,226 @@
   ```
 
   提交后重新运行 `git status --short`，Expected: 仅保留用户原有无关改动；最终 hash 以 Git history 中上述提交为准。最终 smoke 使用的 3124/9014 以及日常 3000/9000 均无监听。
+
+## 11. 2026-08-27 菜单与资源图标语义一致性实施计划
+
+### Task 5: 补齐服务端内置菜单语义图标
+
+**Files:**
+
+- Modify: `apps/api/src/modules/system/rbac/builtins.ts`
+- Modify: `apps/api/src/modules/system/rbac/rbac-sync.service.spec.ts`
+- Create: `apps/api/prisma/migrations/20260827150000_align_builtin_menu_icons/migration.sql`
+
+**Interfaces:**
+
+- Consumes: `BuiltInMenuDefinition.icon?: string` 和 `RbacSyncService.syncBuiltIns()` 既有字段所有权规则。
+- Produces: 11 个内置叶子菜单的创建默认图标，以及仅回填这些内置菜单空值的一次性 migration；普通同步的 `update` payload 仍不包含 `icon`。
+
+- [x] **Step 1: 补齐服务端叶子菜单默认图标**
+
+  按总设计语义映射一次性补齐 11 个内置叶子 `BuiltInMenuDefinition.icon`；遵循用户确认的非 TDD 执行方式，先完成整体实现，再统一验证。
+
+- [x] **Step 2: 扩展同步回归断言**
+
+  将现有默认图标断言扩展为完整语义映射：
+
+  ```ts
+  const expectedMenuIcons = [
+    ['sports', 'solar:cup-star-outline'],
+    ['sportsFootball', 'proicons:soccer'],
+    ['sportsContent', 'ri:article-line'],
+    ['systemManagement', 'ri:settings-3-line'],
+    ['system', 'ri:settings-3-line'],
+    ['wechat', 'ri:wechat-2-line'],
+    ['player', 'ri:user-star-line'],
+    ['team', 'ri:team-line'],
+    ['matchRound', 'ri:calendar-event-line'],
+    ['assetRecord', 'ri:wallet-3-line'],
+    ['contentBanner', 'ri:slideshow-3-line'],
+    ['contentRumorPost', 'ri:message-3-line'],
+    ['systemUser', 'ri:user-line'],
+    ['systemRole', 'ri:shield-user-line'],
+    ['systemMenu', 'ri:menu-line'],
+    ['systemAudit', 'ri:file-search-line'],
+    ['wechatShare', 'ri:share-line'],
+  ] as const
+
+  for (const [routeName, icon] of expectedMenuIcons) {
+    const menuUpsert = prisma.menu.upsert.mock.calls.find(
+      ([input]: any[]) => input.where.routeName === routeName,
+    )?.[0]
+    expect(menuUpsert?.create.icon).toBe(icon)
+    expect(menuUpsert?.update).not.toHaveProperty('icon')
+  }
+  ```
+
+- [x] **Step 3: 添加精确 migration**
+
+  新增 migration：
+
+  ```sql
+  UPDATE "Menu"
+  SET
+    "icon" = CASE "routeName"
+      WHEN 'player' THEN 'ri:user-star-line'
+      WHEN 'team' THEN 'ri:team-line'
+      WHEN 'matchRound' THEN 'ri:calendar-event-line'
+      WHEN 'assetRecord' THEN 'ri:wallet-3-line'
+      WHEN 'contentBanner' THEN 'ri:slideshow-3-line'
+      WHEN 'contentRumorPost' THEN 'ri:message-3-line'
+      WHEN 'systemUser' THEN 'ri:user-line'
+      WHEN 'systemRole' THEN 'ri:shield-user-line'
+      WHEN 'systemMenu' THEN 'ri:menu-line'
+      WHEN 'systemAudit' THEN 'ri:file-search-line'
+      WHEN 'wechatShare' THEN 'ri:share-line'
+    END,
+    "updatedAt" = CURRENT_TIMESTAMP
+  WHERE "isBuiltIn" = true
+    AND "icon" IS NULL
+    AND "routeName" IN (
+      'player',
+      'team',
+      'matchRound',
+      'assetRecord',
+      'contentBanner',
+      'contentRumorPost',
+      'systemUser',
+      'systemRole',
+      'systemMenu',
+      'systemAudit',
+      'wechatShare'
+    );
+  ```
+
+- [x] **Step 4: 统一验证默认值、字段所有权和 migration 范围**
+
+  Run:
+
+  ```bash
+  pnpm --filter @gaoge/app-api test -- rbac-sync.service.spec.ts --runInBand
+  pnpm --filter @gaoge/app-api exec prisma validate
+  pnpm exec prettier --check apps/api/src/modules/system/rbac/builtins.ts apps/api/src/modules/system/rbac/rbac-sync.service.spec.ts
+  git diff --check
+  ```
+
+  实际结果：聚焦测试 8/8、Prisma validate、ESLint 和 diff check 通过；所有 `update` payload 不含 `icon`。SQL 不交给未配置 parser 的 Prettier，改由 Task 7 的真实 `migrate deploy` 和数据库查询验证。
+
+### Task 6: 对齐资源目录语义图标
+
+**Files:**
+
+- Modify: `apps/admin/src/views/system/components/system-resource-groups.ts`
+- Modify: `apps/admin/tests/system-access-workspace.test.ts`
+
+**Interfaces:**
+
+- Consumes: `getSystemResourceModuleIcon(code: string): string` 与 `getSystemResourceIcon(key: string): string`。
+- Produces: `football -> i-proicons:soccer`、`system.wechat-share -> i-ri:share-line`，并保持未知模块和未知 Resource 的现有 fallback。
+
+- [x] **Step 1: 修改受控图标映射**
+
+  将 `moduleIcons.football` 改为 `i-proicons:soccer`，并在 `resourceIcons` 增加：
+
+  ```ts
+  'system.wechat-share': 'i-ri:share-line',
+  ```
+
+  其余映射、分组顺序和树构建逻辑保持不变。
+
+- [x] **Step 2: 写入语义映射与 fallback 回归测试**
+
+  在 `system-access-workspace.test.ts` 导入两个图标解析函数并新增：
+
+  ```ts
+  test('resource tree icons match menu semantics and retain safe fallbacks', () => {
+    assert.equal(getSystemResourceModuleIcon('football'), 'i-proicons:soccer')
+    assert.equal(getSystemResourceModuleIcon('content'), 'i-ri:article-line')
+    assert.equal(getSystemResourceModuleIcon('system'), 'i-ri:settings-3-line')
+    assert.equal(getSystemResourceModuleIcon('custom'), 'i-ri:folder-3-line')
+
+    assert.equal(getSystemResourceIcon('football.player'), 'i-ri:user-star-line')
+    assert.equal(getSystemResourceIcon('system.menu'), 'i-ri:menu-line')
+    assert.equal(getSystemResourceIcon('system.permission'), 'i-ri:key-2-line')
+    assert.equal(getSystemResourceIcon('system.wechat-share'), 'i-ri:share-line')
+    assert.equal(getSystemResourceIcon('custom.unknown'), 'i-ri:stack-line')
+  })
+  ```
+
+- [x] **Step 3: 统一验证资源目录映射**
+
+  Run:
+
+  ```bash
+  pnpm --filter @gaoge/app-admin exec node --test --experimental-strip-types tests/system-access-workspace.test.ts
+  pnpm exec prettier --check apps/admin/src/views/system/components/system-resource-groups.ts apps/admin/tests/system-access-workspace.test.ts
+  git diff --check
+  ```
+
+  实际结果：工作区单文件 5/5，通过；与导航和 `FaIcon` 合并聚焦运行 24/24，通过；已知语义映射和未知项 fallback 均被锁定。
+
+### Task 7: 应用迁移并完成整体验收
+
+**Files:**
+
+- Modify: `docs/superpowers/plans/2026-08-26-admin-rbac-foundation-implementation.md`
+- Modify if promoted by knowledge-candidate review: canonical RBAC knowledge page selected by `kb-maintainer`
+
+**Interfaces:**
+
+- Consumes: Task 5 的服务端默认图标和 migration、Task 6 的资源目录受控映射。
+- Produces: 已迁移本地数据库、自动化和浏览器证据、更新后的实施记录与单个语义化功能提交。
+
+- [x] **Step 1: 应用 migration、生成 Prisma Client 并同步内置数据**
+
+  Run:
+
+  ```bash
+  pnpm --filter @gaoge/app-api exec prisma migrate deploy
+  pnpm --filter @gaoge/app-api db:generate
+  pnpm --filter @gaoge/app-api db:seed
+  pnpm --filter @gaoge/app-api exec prisma migrate status
+  ```
+
+  实际结果：本地 `gaoge_dev` 已应用 29/29 migrations，seed 输出 `roles=2, permissions=57, menus=17`；只读查询确认 17 个内置菜单图标全部非空。同步测试确认普通 `update` payload 不包含 `icon`。
+
+- [x] **Step 2: 运行聚焦与全量自动化验证**
+
+  Run:
+
+  ```bash
+  pnpm --filter @gaoge/app-api test -- rbac-sync.service.spec.ts --runInBand
+  pnpm --filter @gaoge/app-admin exec node --test --experimental-strip-types tests/system-access-workspace.test.ts tests/fa-icon-resolver.test.ts tests/server-navigation.test.ts
+  pnpm --filter @gaoge/app-api typecheck
+  pnpm --filter @gaoge/app-admin typecheck
+  pnpm --filter @gaoge/app-api build
+  pnpm --filter @gaoge/app-admin build
+  pnpm --filter @gaoge/app-api test --runInBand
+  node --test --experimental-strip-types 'apps/admin/tests/*.test.ts'
+  pnpm exec prettier --check apps/api/src/modules/system/rbac/builtins.ts apps/api/src/modules/system/rbac/rbac-sync.service.spec.ts apps/admin/src/views/system/components/system-resource-groups.ts apps/admin/tests/system-access-workspace.test.ts docs/superpowers/specs/2026-08-26-admin-rbac-foundation-design.md docs/superpowers/plans/2026-08-26-admin-rbac-foundation-implementation.md
+  git diff --check
+  ```
+
+  实际结果：API 全量 43 suites / 248 tests、API 聚焦 8/8、Admin 聚焦 24/24、API/Admin typecheck 与 production build 均通过。Admin 全量新增本次断言后为 49/50，通过项较原基线增加 1；唯一失败仍是已记录的 `football-match-round-latest.test.ts` Node 24 extensionless import，与本次修改无关。
+
+- [x] **Step 3: 使用隔离端口完成浏览器 smoke test**
+
+  使用 API `3125`、Admin `9015` 启动当前工作区并以管理员登录。菜单结构 17 个内置节点均渲染真实 Iconify SVG；“高歌 FC”和“足球资源”均使用 `proicons` 足球图标，微信分享与各叶子业务节点均显示对应 `ri` 语义图标；菜单/资源切换正常。控制台无新增图标或导航错误，仅保留既有 Vue Router `next()` deprecation warning。验收后已关闭 3125/9015，未影响用户已有的 9000 进程。
+
+- [x] **Step 4: 回写实施结果并执行知识候选检查**
+
+  将实际 migration、测试数量、已知非任务失败和浏览器结果回写本节。按知识库维护规则检查“菜单图标服务端事实源 + Resource 受控语义映射 + 同语义一致而非层级机械一致”是否应合并到现有 RBAC 底座知识；只有确认是稳定跨项目规则时才通过 `kb-maintainer` 更新 canonical 页面。
+
+  实际结果：已更新知识库 canonical 页面“高歌 RBAC 工程底座同步”和“高歌数字主工程源码与知识映射”，记录服务端菜单图标所有权、Resource 展示映射、跨层级语义边界、29 条 migration、API 248/248、Admin 49/50 和浏览器证据；高歌数字导览已有入口且阅读路径未变化，判定为 `guide-no-op`。知识库 validate、audit、retrieval readiness（18/18）和 diff check 均通过；审计中的 4 个过期复核与 1 个孤立工作日志为既有非任务警告。
+
+- [x] **Step 5: 整理为单个功能提交**
+
+  使用 `git status --short`、`git diff --check` 和 `git diff --cached --name-only` 核对只包含本节任务文件。若实施过程中产生临时 checkpoint，在尚未推送的当前分支上整理为一个语义化提交：
+
+  ```bash
+  git commit -m "fix(rbac): align menu and resource icons"
+  ```
+
+  Expected: 工作区干净；不推送远程，不改写已推送历史，不删除现有 stash。
+
+  实际结果：本轮连续的设计、实施计划和代码实现作为一个 `fix(rbac): align menu and resource icons` 功能提交整理在当前 `main`；不推送远程，不删除现有 stash。

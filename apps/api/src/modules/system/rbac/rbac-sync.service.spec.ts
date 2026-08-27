@@ -138,8 +138,22 @@ describe('RbacSyncService', () => {
     )
     for (const [routeName, icon] of [
       ['sports', 'solar:cup-star-outline'],
-      ['systemManagement', 'ri:settings-3-line'],
+      ['sportsFootball', 'proicons:soccer'],
       ['sportsContent', 'ri:article-line'],
+      ['systemManagement', 'ri:settings-3-line'],
+      ['system', 'ri:settings-3-line'],
+      ['wechat', 'ri:wechat-2-line'],
+      ['player', 'ri:user-star-line'],
+      ['team', 'ri:team-line'],
+      ['matchRound', 'ri:calendar-event-line'],
+      ['assetRecord', 'ri:wallet-3-line'],
+      ['contentBanner', 'ri:slideshow-3-line'],
+      ['contentRumorPost', 'ri:message-3-line'],
+      ['systemUser', 'ri:user-line'],
+      ['systemRole', 'ri:shield-user-line'],
+      ['systemMenu', 'ri:menu-line'],
+      ['systemAudit', 'ri:file-search-line'],
+      ['wechatShare', 'ri:share-line'],
     ] as const) {
       const menuUpsert = prisma.menu.upsert.mock.calls.find(
         ([input]: any[]) => input.where.routeName === routeName,
