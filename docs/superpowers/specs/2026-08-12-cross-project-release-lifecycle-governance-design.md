@@ -29,6 +29,8 @@
 
 ## 线上现状与治理范围
 
+### 2026-08-12 初始盘点
+
 盘点时共有 10 个已上线 release 根目录，未来 Finance 上线后增加为 11 个：
 
 | 项目               | 组件       | Release 根目录                          | 发布用户     | 盘点版本数 |
@@ -48,6 +50,36 @@
 盘点总数为 62 个目录，目标稳定上限为 30 个现有项目版本；Finance 上线后的完整上限为 33 个。Brand 与 Sports/Web 的旧静态版本数量最多，但体积较小，因此首次治理无需冒险集中删除。
 
 固定目录 `/var/www/h5` 与 Docker 运行的 Uptime Kuma 不采用该 release 模型，不由本管理器删除。它们只进入磁盘巡检和独立日志、Docker 缓存治理范围。
+
+### 2026-08-13 当前状态
+
+统一 release 管理器 `1.0.0` 已覆盖 5 个仓库的 11 个线上发布 target，审计与报告 timer 均已启用。当前版本数量是本次治理的验证快照，长期约束仍以“每个独立 release 根目录稳定保留 3 个成功版本”为准。
+
+| 项目               | 组件       | Release 根目录                          | 当前版本数 | 稳定上限 |
+| ------------------ | ---------- | --------------------------------------- | ---------: | -------: |
+| Gaoge              | Admin      | `/var/www/gaoge/admin/releases`         |          3 |        3 |
+| Gaoge              | API        | `/var/www/gaoge/api/releases/api`       |          3 |        3 |
+| Gaoge              | Brand      | `/var/www/gaoge/brand/releases`         |          3 |        3 |
+| Gaoge              | Sports/Web | `/var/www/gaoge/web/releases`           |          3 |        3 |
+| Gaoge Compass      | Admin      | `/var/www/gaoge-compass/admin/releases` |          3 |        3 |
+| Gaoge Compass      | API        | `/var/www/gaoge-compass/api/releases`   |          3 |        3 |
+| Gaoge Club         | Admin      | `/var/www/gaoge-club/admin/releases`    |          3 |        3 |
+| Gaoge Club         | API        | `/var/www/gaoge-club/api/releases/api`  |          3 |        3 |
+| Gaoge CRM          | Admin      | `/var/www/gaoge-crm/admin/releases`     |          3 |        3 |
+| Gaoge CRM          | API        | `/var/www/gaoge-crm/api/releases`       |          3 |        3 |
+| Gaoge Finance News | 统一发布包 | `/var/www/gaoge-finance-news/releases`  |          4 |        3 |
+
+当前共 34 个 release 目录，稳定上限为 33 个。Finance 多出的 1 个成功版本仍处于 24 小时新目录保护期，管理器计划中没有可安全删除候选；保护期结束后由后续部署回收或定时巡检自然收敛，不为追求数量立即删除受保护目录。核验时根分区使用率为 45%、可用约 21 GiB，inode 使用率为 27%，均低于发布门禁。
+
+### 新项目默认继承规则
+
+以后每个采用不可变 release 目录的新程序或独立发布组件，首次上线时默认保留 3 个成功版本：
+
+1. `current`：当前线上运行版本。
+2. `previous`：上一个已验证成功版本，作为直接回滚目标。
+3. 额外应急版本：除前两者外最近的一个成功版本，用于二次回滚或紧急恢复。
+
+该规则是新项目生产部署完成条件，不是上线后的可选优化。新 target 必须同时登记绝对 release 根目录、运行用户、健康检查、`current`/`previous`、3 版本上限、磁盘与 inode 门禁、部署后限量回收以及定时补偿巡检，避免再次因历史版本无限累积占满服务器磁盘。
 
 ## 方案选择
 
@@ -337,7 +369,7 @@ systemd timer 每晚执行一次：
 - 达到磁盘硬门限时不会创建新 release。
 - 清理失败不影响已经通过健康检查的线上版本。
 - 所有现有域名、PM2 服务、Nginx 路由和数据库迁移流程保持正常。
-- 线上版本目录从当前 62 个逐步收敛到最多 30 个；Finance 上线后全机稳定上限为 33 个。
+- 历史 62 个目录已完成分批收敛；Finance 上线后当前为 34 个，待受保护的新目录到期后全机稳定上限为 33 个。
 - 工具、配置、运行手册与知识库对同一规则描述一致。
 
 ## 风险与回退
@@ -360,4 +392,4 @@ systemd timer 每晚执行一次：
 - 部署后单 target 最多删除 1 个，夜间全机最多删除 3 个。
 - 首次接管先 dry-run，再分批收敛。
 - `pnpm store prune` 不自动化。
-- 实施覆盖 5 个仓库、10 个现有发布组件和 Finance 的未来统一发布入口。
+- 实施覆盖 5 个仓库和包括 Finance 在内的 11 个线上发布入口；后续新程序默认继承同一规则。
