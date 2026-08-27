@@ -1,4 +1,4 @@
-import { ADMIN_PAGE_ROUTE_NAMES } from '../admin-page-route-names.cjs'
+import { ADMIN_PAGE_ROUTE_NAMES } from './admin-page-route-names.js'
 
 export { ADMIN_PAGE_ROUTE_NAMES }
 

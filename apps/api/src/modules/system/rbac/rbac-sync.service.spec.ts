@@ -136,6 +136,18 @@ describe('RbacSyncService', () => {
         }),
       }),
     )
+    for (const [routeName, icon] of [
+      ['sports', 'solar:cup-star-outline'],
+      ['systemManagement', 'ri:settings-3-line'],
+      ['sportsContent', 'ri:article-line'],
+    ] as const) {
+      const menuUpsert = prisma.menu.upsert.mock.calls.find(
+        ([input]: any[]) => input.where.routeName === routeName,
+      )?.[0]
+
+      expect(menuUpsert?.create.icon).toBe(icon)
+      expect(menuUpsert?.update).not.toHaveProperty('icon')
+    }
     expect(prisma.menu.updateMany).toHaveBeenCalledWith({
       where: { routeName: { in: ['systemPermission'] }, isBuiltIn: true },
       data: { status: 'inactive', visible: false },

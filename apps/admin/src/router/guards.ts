@@ -11,7 +11,10 @@ import useUserStore from '@/store/user'
 
 import { asyncRoutes, asyncRoutesByFilesystem } from './routes'
 import { resolveServerNavigation } from './server-navigation'
-import { initializeServerNavigation } from './server-navigation-guard'
+import {
+  finalizeServerNavigationFailure,
+  initializeServerNavigation,
+} from './server-navigation-guard'
 
 import '@/assets/styles/nprogress.css'
 
@@ -118,6 +121,14 @@ function setupRoutes(router: Router) {
           routeStore.setCurrentRemoveRoutes(removeRoutes)
         } catch (error) {
           console.error('[Gaoge Admin] 动态路由生成失败', error)
+          if (settingsStore.settings.app.routeBaseOn === 'backend') {
+            finalizeServerNavigationFailure({
+              isGenerated: routeStore.isGenerate,
+              setRoutes: (routes) => routeStore.generateRoutesFromServer(routes),
+              setMenus: (menus) => menuStore.setServerMenus(menus),
+            })
+            ElMessage.error('菜单初始化失败，请刷新页面或重新登录。')
+          }
         }
         // 动态路由生成并注册后，重新进入当前路由
         next({

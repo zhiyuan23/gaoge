@@ -9,6 +9,7 @@
     },
     "./admin-page-route-names": {
       "types": "./admin-page-route-names.d.cts",
+      "import": "./src/admin-page-route-names.ts",
       "require": "./admin-page-route-names.cjs",
       "default": "./admin-page-route-names.cjs"
     }

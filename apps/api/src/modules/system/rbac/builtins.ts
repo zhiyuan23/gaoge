@@ -271,6 +271,7 @@ const footballCatalog: BuiltInMenuDefinition = {
 const contentCatalog: BuiltInMenuDefinition = {
   name: 'content',
   title: '内容管理',
+  icon: 'ri:article-line',
   path: '/sports/content',
   routeName: 'sportsContent',
   menuType: 'catalog',
@@ -403,6 +404,7 @@ export const BUILT_IN_MENU_DEFINITIONS: BuiltInMenuDefinition[] = [
   {
     name: 'sports',
     title: '高歌体育',
+    icon: 'solar:cup-star-outline',
     path: null,
     routeName: 'sports',
     menuType: 'group',
@@ -416,6 +418,7 @@ export const BUILT_IN_MENU_DEFINITIONS: BuiltInMenuDefinition[] = [
   {
     name: 'systemManagement',
     title: '系统管理',
+    icon: 'ri:settings-3-line',
     path: null,
     routeName: 'systemManagement',
     menuType: 'group',

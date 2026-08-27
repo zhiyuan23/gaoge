@@ -8,7 +8,10 @@ import type { AdminNavigationNode } from '@gaoge/shared-types'
 
 import { fixedHiddenRoutes } from '../src/router/fixed-hidden-routes.ts'
 import { resolveServerNavigation } from '../src/router/server-navigation.ts'
-import { initializeServerNavigation } from '../src/router/server-navigation-guard.ts'
+import {
+  finalizeServerNavigationFailure,
+  initializeServerNavigation,
+} from '../src/router/server-navigation-guard.ts'
 import { shouldFilterMenusByPermission } from '../src/store/menu/navigation-mode.ts'
 
 import type { Menu, Route } from '#/global'
@@ -284,6 +287,35 @@ test('fails closed when backend navigation fetch or resolution fails', async () 
       { kind: 'menus', value: [] },
     ])
   }
+})
+
+test('finalizes a pre-navigation backend failure with empty generated state', () => {
+  const calls: Array<{ kind: 'routes' | 'menus'; value: unknown[] }> = []
+
+  const finalized = finalizeServerNavigationFailure({
+    isGenerated: false,
+    setRoutes: (routes) => calls.push({ kind: 'routes', value: routes }),
+    setMenus: (menus) => calls.push({ kind: 'menus', value: menus }),
+  })
+
+  assert.equal(finalized, true)
+  assert.deepEqual(calls, [
+    { kind: 'routes', value: [] },
+    { kind: 'menus', value: [] },
+  ])
+})
+
+test('keeps an existing terminal route state when failure bubbles to the outer guard', () => {
+  const calls: string[] = []
+
+  const finalized = finalizeServerNavigationFailure({
+    isGenerated: true,
+    setRoutes: () => calls.push('routes'),
+    setMenus: () => calls.push('menus'),
+  })
+
+  assert.equal(finalized, false)
+  assert.deepEqual(calls, [])
 })
 
 test('retains systemPermission as a fixed backend route', () => {

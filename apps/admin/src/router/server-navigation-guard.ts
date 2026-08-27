@@ -16,6 +16,26 @@ export interface ServerNavigationInitializationDependencies {
   setRoutes: (routes: Route.recordMainRaw[]) => void
 }
 
+interface ServerNavigationFailureDependencies {
+  isGenerated: boolean
+  setMenus: (menus: Menu.recordMainRaw[]) => void
+  setRoutes: (routes: Route.recordMainRaw[]) => void
+}
+
+export function finalizeServerNavigationFailure({
+  isGenerated,
+  setMenus,
+  setRoutes,
+}: ServerNavigationFailureDependencies) {
+  if (isGenerated) {
+    return false
+  }
+
+  setRoutes([])
+  setMenus([])
+  return true
+}
+
 export async function initializeServerNavigation({
   fetchNavigation,
   reportDiagnostics,
@@ -30,8 +50,11 @@ export async function initializeServerNavigation({
     setMenus(resolved.menus)
     reportDiagnostics(resolved.diagnostics)
   } catch (error) {
-    setRoutes([])
-    setMenus([])
+    finalizeServerNavigationFailure({
+      isGenerated: false,
+      setRoutes,
+      setMenus,
+    })
     throw error
   }
 }

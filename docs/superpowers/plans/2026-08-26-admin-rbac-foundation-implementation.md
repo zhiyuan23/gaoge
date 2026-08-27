@@ -1,9 +1,26 @@
 # Admin RBAC 工程底座实施与验证记录
 
 - 日期：2026-08-26
-- 状态：已完成
-- 最终基线：`gaoge/main@307c31af7bc5`
+- 状态：主体及 2026-08-27 回归修复已完成并通过验证
+- 当前基线：`gaoge/main@9439b0d`
 - 对应设计：[Admin RBAC 工程底座总设计](../specs/2026-08-26-admin-rbac-foundation-design.md)
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement section 10 task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** 在保留服务端菜单唯一事实源和隔离数据库的前提下，恢复本地业务数据与默认图标，并让 Admin 路由初始化失败可靠结束而不是无限 loading。
+
+**Architecture:** API 注册表继续定义内置菜单创建默认值，用一次性 Prisma migration 修复既有空图标；Admin 用统一失败收口函数把 route/menu store 写入 fail-closed 终态。历史业务数据通过临时、显式双数据库恢复脚本事务迁入 `gaoge_dev`，不向运行时代码加入旧库兼容路径。
+
+**Tech Stack:** PostgreSQL、Prisma 5、NestJS/Jest、Vue 3、Pinia、Vue Router、Node test runner、pnpm。
+
+## Global Constraints
+
+- 数据库 `Menu` 仍是运行时业务菜单的唯一事实源，不恢复前端静态业务菜单 fallback。
+- 普通内置同步不得覆盖数据库拥有的标题、图标、排序、状态和显隐。
+- 旧 `gaoge_db` 全程只读；`gaoge_dev` 写入必须先预检并在一个事务内完成。
+- 不迁移旧 RBAC、`_prisma_migrations` 或 `RefreshToken`，不把数据库地址和凭据写入仓库。
+- 只修改本任务文件；现有无关工作区改动不得暂存、格式化或提交。
+- 完成所有验证后创建一个语义化功能提交，并把最终结果回写本总记录。
 
 本文合并记录 2026-08-26 RBAC Resource 迁入、目标项目菜单修复、内置数据精确同步、权限工作区对齐、服务端驱动导航及两轮复验。它是故障排查、复验和后续底座同步的一次性实施入口，不再保留多个阶段性 implementation plan。
 
@@ -66,6 +83,7 @@
 | 自定义角色读不到权限   | legacy `RolesGuard` 与新 Permission 模型并行       | 移除 Admin 业务角色旁路，统一 Permission Guard       |
 | 重复同步追加超级管理员 | legacy `User.role` 覆盖显式 `UserRole`             | 仅对无显式关系的历史用户回填                         |
 | 清空菜单图标无效       | Admin 将空输入映射为 `undefined`                   | update 显式发送 `icon: ''`，create 可省略            |
+| 登录后业务页面空白     | Vite ESM 源文件命名导入 `.cjs` 页面键常量          | 为共享页面键提供独立 ESM/CJS exports 并锁定同序契约  |
 
 ## 5. 主要实现位置
 
@@ -82,6 +100,7 @@
 ### Admin 与共享契约
 
 - `packages/shared/types/src/admin-navigation.ts`
+- `packages/shared/types/src/admin-page-route-names.ts`
 - `packages/shared/types/admin-page-route-names.cjs`
 - `apps/admin/src/router/admin-page-registry.ts`
 - `apps/admin/src/router/server-navigation.ts`
@@ -109,7 +128,7 @@
 - Prisma validate、generate、migrate status 通过。
 - 空库应用 27 个 migration，seed 输出 `roles=2, permissions=57, menus=17`。
 - Resource migration 三场景和导航既有库 migration drill 通过。
-- 共享 route-name CJS 与 `.d.cts` 同序一致测试 2/2 通过。
+- 共享 route-name CJS、ESM 与 `.d.cts` 同序一致测试 3/3 通过。
 
 ### 6.2 API
 
@@ -119,10 +138,10 @@
 
 ### 6.3 Admin
 
-- 最终导航/RBAC/工作区/payload 聚焦测试 27/27，通过。
+- 最终导航回归测试 17/17，通过；共享页面键契约测试 3/3，通过。
 - Admin typecheck 与生产 build 通过。
 - 任务路径 ESLint、Prettier、Stylelint 和 diff check 通过。
-- 全量 `apps/admin/tests/*.test.ts` 中有一个任务前既有的 `football-match-round-latest.test.ts` Node 24 extensionless loader 问题；本次相关 46 个测试通过，未扩大范围修复该既有问题。
+- 全量 `apps/admin/tests/*.test.ts` 为 48/49 通过；唯一失败是任务前既有的 `football-match-round-latest.test.ts` Node 24 extensionless loader 问题，本次聚焦测试全部通过，未扩大范围修复该既有问题。
 
 ### 6.4 浏览器与接口
 
@@ -131,6 +150,7 @@
 - 受限角色只显示授权足球页面，直接打开无权路由为 404。
 - 无权 `GET /system/users` 及跨 Resource 写请求按全局包络返回应用码 403，允许的球员 GET 返回应用码 0。
 - 管理员与受限角色浏览器均无 routeName、重复路由或图标错误；仅保留既有 Vue Router `next()` callback deprecation warning。
+- 2026-08-27 隔离端口复验先复现共享 `.cjs` 命名导入错误，修复后管理员可直接打开球员、球队和菜单权限页面，浏览器无新增运行错误。
 
 ## 7. 复验环境
 
@@ -138,6 +158,7 @@
 
 - Round 1：API `3122`、Admin `9012`
 - Round 2：API `3123`、Admin `9013`
+- Regression smoke：API `3124`、Admin `9014`
 
 复验结束后均关闭隔离进程。日常本地运行仍使用项目约定的 3000/9000；端口冲突时应关闭旧进程，不以永久改端口掩盖重复启动。
 
@@ -154,6 +175,288 @@
 
 ## 9. 当前维护结论
 
-- 当前实现基线以 `gaoge/main@307c31af7bc5` 和总设计为准。
+- 当前实现基线以包含本文的 `fix(rbac): recover server navigation regressions` 提交和总设计为准。
 - 后续功能调整应直接更新总设计与本实施记录，避免按每次回归再创建同主题独立 spec。
 - 旧阶段性文档只保留历史背景或替代提示；跨仓同步优先读取总设计第 11 节和本记录第 8 节。
+
+## 10. 2026-08-27 回归修复实施计划
+
+### Task 1: 恢复服务端内置菜单默认图标
+
+**Files:**
+
+- Modify: `apps/api/src/modules/system/rbac/builtins.ts`
+- Modify: `apps/api/src/modules/system/rbac/rbac-sync.service.spec.ts`
+- Create: `apps/api/prisma/migrations/20260827090000_restore_builtin_menu_icons/migration.sql`
+
+**Interfaces:**
+
+- Consumes: `BuiltInMenuDefinition.icon?: string` 和 `RbacSyncService.syncBuiltIns()` 现有字段所有权规则。
+- Produces: `sports -> solar:cup-star-outline`、`systemManagement -> ri:settings-3-line`、`sportsContent -> ri:article-line` 三个创建默认值；既有数据库只回填对应内置节点的空图标。
+
+- [x] **Step 1: 写入会失败的注册表回归断言**
+
+  在 `rbac-sync.service.spec.ts` 的首次成功同步用例中，从 `prisma.menu.upsert.mock.calls` 按 `where.routeName` 查找三个调用，断言 `create.icon` 分别为上述三个值，同时断言 `update` 不含 `icon`：
+
+  ```ts
+  const menuUpsertFor = (routeName: string) =>
+    prisma.menu.upsert.mock.calls.find(([input]) => input.where.routeName === routeName)?.[0]
+
+  expect(menuUpsertFor('sports')?.create.icon).toBe('solar:cup-star-outline')
+  expect(menuUpsertFor('systemManagement')?.create.icon).toBe('ri:settings-3-line')
+  expect(menuUpsertFor('sportsContent')?.create.icon).toBe('ri:article-line')
+  expect(menuUpsertFor('sports')?.update).not.toHaveProperty('icon')
+  ```
+
+- [x] **Step 2: 运行测试并确认默认值缺失**
+
+  Run: `pnpm --filter @gaoge/app-api test -- rbac-sync.service.spec.ts --runInBand`
+
+  Expected: FAIL，三个 `create.icon` 断言中至少 `sports`、`systemManagement`、`sportsContent` 为 `undefined`。
+
+- [x] **Step 3: 补齐注册表并新增精确回填 migration**
+
+  在三个定义上添加 `icon`。migration 使用单条受限更新，不修改非空值或自定义菜单：
+
+  ```sql
+  UPDATE "Menu"
+  SET
+    "icon" = CASE "routeName"
+      WHEN 'sports' THEN 'solar:cup-star-outline'
+      WHEN 'systemManagement' THEN 'ri:settings-3-line'
+      WHEN 'sportsContent' THEN 'ri:article-line'
+    END,
+    "updatedAt" = CURRENT_TIMESTAMP
+  WHERE "isBuiltIn" = true
+    AND "icon" IS NULL
+    AND "routeName" IN ('sports', 'systemManagement', 'sportsContent');
+  ```
+
+- [x] **Step 4: 验证注册表与 migration**
+
+  Run: `pnpm --filter @gaoge/app-api test -- rbac-sync.service.spec.ts --runInBand`
+
+  Expected: PASS，并确认 upsert `update` 仍不含 `icon`。
+
+  Run: `pnpm --filter @gaoge/app-api exec prisma validate`
+
+  Expected: `The schema ... is valid`。
+
+### Task 2: 收敛 Admin 路由初始化失败状态
+
+**Files:**
+
+- Modify: `apps/admin/src/router/server-navigation-guard.ts`
+- Modify: `apps/admin/src/router/guards.ts`
+- Modify: `apps/admin/tests/server-navigation.test.ts`
+
+**Interfaces:**
+
+- Produces: `finalizeServerNavigationFailure({ isGenerated, setRoutes, setMenus }): boolean`；未进入终态时按 routes 后 menus 的顺序写入空数组并返回 `true`，已有终态时不重复写入并返回 `false`。
+- Consumes: `routeStore.generateRoutesFromServer([])` 会令 `isGenerate = true`；`menuStore.setServerMenus([])` 会清空服务端菜单。
+
+- [x] **Step 1: 写入失败终态测试**
+
+  在 `server-navigation.test.ts` 导入 `finalizeServerNavigationFailure`，新增两个纯函数行为测试：一个验证前置失败写入空终态，另一个验证已有终态不会重复写入。
+
+  ```ts
+  test('finalizes a pre-navigation backend failure with empty generated state', () => {
+    const calls: Array<{ kind: 'routes' | 'menus'; value: unknown[] }> = []
+
+    finalizeServerNavigationFailure({
+      isGenerated: false,
+      setRoutes: (routes) => calls.push({ kind: 'routes', value: routes }),
+      setMenus: (menus) => calls.push({ kind: 'menus', value: menus }),
+    })
+
+    assert.deepEqual(calls, [
+      { kind: 'routes', value: [] },
+      { kind: 'menus', value: [] },
+    ])
+  })
+  ```
+
+- [x] **Step 2: 运行测试并确认导出不存在**
+
+  Run: `node --test apps/admin/tests/server-navigation.test.ts`
+
+  Expected: FAIL，提示 `finalizeServerNavigationFailure` 未导出或源码断言不匹配。
+
+- [x] **Step 3: 实现统一失败收口并接入守卫**
+
+  在 `server-navigation-guard.ts` 增加：
+
+  ```ts
+  interface ServerNavigationFailureDependencies {
+    isGenerated: boolean
+    setMenus: (menus: Menu.recordMainRaw[]) => void
+    setRoutes: (routes: Route.recordMainRaw[]) => void
+  }
+
+  export function finalizeServerNavigationFailure({
+    isGenerated,
+    setMenus,
+    setRoutes,
+  }: ServerNavigationFailureDependencies) {
+    if (isGenerated) {
+      return false
+    }
+    setRoutes([])
+    setMenus([])
+    return true
+  }
+  ```
+
+  `initializeServerNavigation()` 的 catch 改为调用该函数后重新抛错。`guards.ts` 的外层 catch 在 backend 模式且尚未生成路由时调用同一函数，随后通过 `ElMessage.error('菜单初始化失败，请刷新页面或重新登录。')` 提示；导航请求自身已经完成失败收口时不重复写入状态。
+
+- [x] **Step 4: 验证成功、导航失败和权限前置失败三条路径**
+
+  Run: `node --test apps/admin/tests/server-navigation.test.ts`
+
+  Expected: PASS；既有成功共享结果测试和 fetch/resolve fail-closed 测试继续通过，新测试证明权限前置失败可写入终态。
+
+  Run: `pnpm --filter @gaoge/app-admin typecheck`
+
+  Expected: PASS。
+
+### Task 3: 事务恢复本地业务数据
+
+**Files:**
+
+- Temporarily create, execute, then remove: `apps/api/prisma/.recover-local-business-data.ts`
+- Modify after verification: `docs/superpowers/plans/2026-08-26-admin-rbac-foundation-implementation.md`
+
+**Interfaces:**
+
+- Consumes: 仅在命令环境中提供的 `SOURCE_DATABASE_URL`、`TARGET_DATABASE_URL` 和显式 `APPLY_RECOVERY=1`。
+- Produces: `gaoge_dev` 中恢复的普通用户与 10 张业务表数据；不产生仓库运行时接口。
+
+- [x] **Step 1: 停止并确认当前仓库本地进程**
+
+  使用 `ps -Ao pid=,command=` 和 `lsof -nP -iTCP:3000 -sTCP:LISTEN`、`lsof -nP -iTCP:9000 -sTCP:LISTEN` 精确确认 PID 及工作目录，只停止当前仓库 API/Admin 进程。再次运行两条 `lsof`，Expected: 3000、9000 均无监听。
+
+- [x] **Step 2: 创建默认 dry-run 的临时恢复脚本**
+
+  脚本创建两个 `PrismaClient`，先读取源库快照；目标库预检以下业务模型计数全部为 0：`team`、`player`、`playerTeam`、`matchRound`、`matchRoundResult`、`footballAssetRecord`、`teamFund`、`banner`、`rumorPost`、`wechatShareConfig`。目标已有用户允许保留，但源库除相同 ID 外的用户不得与目标 `account/openid/unionid/phone` 冲突。
+
+  dry-run 输出逐表源数量、目标数量、待迁用户 ID 和冲突结果；仅当 `APPLY_RECOVERY === '1'` 时进入写事务，否则以 0 退出且不写数据。
+
+- [x] **Step 3: 在一个目标事务中按依赖顺序写入**
+
+  使用 `target.$transaction(async (tx) => { ... }, { timeout: 120_000 })`，顺序必须为：
+
+  ```text
+  User（排除目标已有 ID）
+  Team
+  Player
+  PlayerTeam
+  MatchRound
+  MatchRoundResult
+  FootballAssetRecord
+  TeamFund
+  Banner
+  RumorPost / MessageBoardPost
+  WechatShareConfig
+  ```
+
+  每个模型使用 `createMany({ data })` 保留原 ID 和时间。事务内重新 count，并对 `Player.userId`、`Player.primaryTeamId`、`PlayerTeam`、`MatchRoundResult` 做孤儿关联计数；任一数量或关联断言失败时 throw 回滚。
+
+- [x] **Step 4: 重置自增 sequence 并执行 dry-run**
+
+  在同一事务内对 `User`、`Team`、`Player`、`MatchRound`、`MatchRoundResult`、`FootballAssetRecord`、`TeamFund`、`Banner`、`MessageBoardPost` 执行等价操作：
+
+  ```sql
+  SELECT setval(
+    pg_get_serial_sequence('"Player"', 'id'),
+    COALESCE((SELECT MAX("id") FROM "Player"), 1),
+    EXISTS (SELECT 1 FROM "Player")
+  );
+  ```
+
+  先只提供 URL 运行 dry-run。Expected: 目标业务表仍为空，输出与设计记录的源计数一致，无非预期用户冲突。
+
+- [x] **Step 5: 显式执行恢复并做数据库后验检查**
+
+  仅在 dry-run 通过后设置 `APPLY_RECOVERY=1` 再运行一次。Expected: 单事务提交，业务表数量与源库一致；目标 admin 与当前 RBAC 数量不变；`RefreshToken` 未从源库复制。
+
+  Run: `pnpm --filter @gaoge/app-api exec prisma migrate status`
+
+  Expected: 只有 Task 1 新增的图标 migration 尚待 Task 4 应用，不存在其他意外 pending migration。
+
+- [x] **Step 6: 删除临时脚本并记录非敏感结果**
+
+  用补丁删除 `.recover-local-business-data.ts`，确认 `git status --short` 不包含该文件。在本节后新增实际逐表数量、后验检查和执行日期，但不得记录 URL、用户名、密码或 token。
+
+#### 数据恢复执行结果
+
+2026-08-27 在停止当前仓库 3000/9000 开发进程及一个已卡住的 Prisma migration 进程后完成恢复。dry-run 证明目标业务表为空、待迁普通用户仅为 ID 8 和 9，且不存在唯一字段冲突；随后单事务写入并在事务内通过数量、孤儿关系、sequence 和 RBAC 不变断言。
+
+| 数据                           | 恢复后数量 |
+| ------------------------------ | ---------- |
+| User                           | 3          |
+| Team / Player                  | 3 / 39     |
+| PlayerTeam                     | 40         |
+| MatchRound/Result              | 14 / 42    |
+| FootballAssetRecord / TeamFund | 37 / 0     |
+| Banner / MessageBoardPost      | 5 / 0      |
+| WechatShareConfig              | 1          |
+
+目标库 Role/Resource/Permission/Menu 保持 `2 / 13 / 57 / 17`；目标原有 1 条 RefreshToken 保留，源库 RefreshToken 未迁入。临时脚本执行后已删除，仓库中不保留数据库地址、凭据或旧库运行时兼容逻辑。
+
+### Task 4: 全量验证、知识同步与最终提交
+
+**Files:**
+
+- Modify: `docs/superpowers/specs/2026-08-26-admin-rbac-foundation-design.md`
+- Modify: `docs/superpowers/plans/2026-08-26-admin-rbac-foundation-implementation.md`
+- Modify if stable convention changed: `docs/conventions/admin-navigation.md`
+- Modify: `packages/shared/types/package.json`
+- Modify: `packages/shared/types/src/admin-navigation.ts`
+- Create: `packages/shared/types/src/admin-page-route-names.ts`
+- Modify: `packages/shared/types/tests/admin-page-route-names-contract.test.mjs`
+- Knowledge candidate only if required by repository rule: current Markdown knowledge base through `kb-maintainer`
+
+**Interfaces:**
+
+- Consumes: Task 1–3 的代码、migration 与本地数据结果。
+- Produces: 可复验的最终记录、必要的长期知识候选和一个不含无关改动的 Git 提交。
+
+- [x] **Step 1: 应用 migration、生成客户端并同步内置数据**
+
+  在 `gaoge_dev` 上运行 Prisma deploy/generate 和现有 seed/sync 入口。Expected: 新 migration 应用成功，三个目标菜单图标非空，Role/Resource/Permission/Menu 数量仍为当前注册表数量，重复同步不改变管理员拥有的非空展示字段。
+
+- [x] **Step 2: 运行聚焦与全量自动化验证**
+
+  Run:
+
+  ```bash
+  pnpm --filter @gaoge/app-api test -- rbac-sync.service.spec.ts --runInBand
+  node --test apps/admin/tests/server-navigation.test.ts
+  pnpm --filter @gaoge/app-api typecheck
+  pnpm --filter @gaoge/app-admin typecheck
+  pnpm --filter @gaoge/app-api test --runInBand
+  pnpm --filter @gaoge/app-api build
+  pnpm --filter @gaoge/app-admin build
+  pnpm exec prettier --check apps/api/src/modules/system/rbac/builtins.ts apps/api/src/modules/system/rbac/rbac-sync.service.spec.ts apps/admin/src/router/server-navigation-guard.ts apps/admin/src/router/guards.ts apps/admin/tests/server-navigation.test.ts docs/superpowers/specs/2026-08-26-admin-rbac-foundation-design.md docs/superpowers/plans/2026-08-26-admin-rbac-foundation-implementation.md
+  git diff --check
+  ```
+
+  Expected: 全部通过；如全量 Admin 测试仍命中已记录的 Node 24 extensionless loader 既有问题，必须单独复跑本次聚焦测试并在记录中如实说明，不能把既有失败写成通过。
+
+- [x] **Step 3: 使用隔离端口完成接口与浏览器 smoke test**
+
+  隔离 API/Admin 使用 3124/9014，不占用 3000/9000。管理员登录后确认服务端菜单和三个目标图标可见，菜单树保持“高歌体育 → 系统管理”，球员页面显示恢复数据，球队页面显示 3 支球队。首次点击业务页复现并定位共享 `.cjs` 命名导入错误；修复 ESM/CJS 条件入口后直接路由和菜单点击均正常，无新增浏览器错误。权限前置失败、导航请求失败和导航解析失败由 17/17 聚焦测试覆盖，均收敛空终态，不恢复静态越权菜单。
+
+- [x] **Step 4: 回写总文档与知识候选**
+
+  总设计、实施记录与 `docs/conventions/admin-navigation.md` 已回写真实测试数量、migration 状态、共享 ESM/CJS 页面键修复和 smoke 结果。经知识候选检查，使用已获用户确认的 `kb-maintainer` sync 模式，仅更新正式知识页 `高歌数字-RBAC 工程底座同步.md`；导览及其他项目页职责未变化，不做连带修改。
+
+- [x] **Step 5: 仅提交任务文件**
+
+  先用 `git status --short` 和 `git diff --cached --name-only` 核对范围，排除用户原有的 auto-import 与跨项目发布文档改动。提交信息：
+
+  ```bash
+  git commit -m "fix(rbac): recover server navigation regressions"
+  ```
+
+  提交后重新运行 `git status --short`，Expected: 仅保留用户原有无关改动；最终 hash 以 Git history 中上述提交为准。最终 smoke 使用的 3124/9014 以及日常 3000/9000 均无监听。
