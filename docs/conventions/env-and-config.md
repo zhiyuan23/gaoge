@@ -61,7 +61,7 @@
 
 ### API 生产数据库
 
-- GitHub Secret `DEPLOY_ENV_FILE_API` 是 API 生产配置的唯一来源，其中必须且只能包含一个 `DATABASE_URL`
+- GitHub Secret `DEPLOY_ENV_FILE_API` 是 API 生产数据库及普通运行配置的唯一来源，其中必须且只能包含一个 `DATABASE_URL`
 - 服务器唯一运行时配置文件为 `/var/www/gaoge/api/shared/api.env`；release 的 `.env` 软链接、Prisma migration 和 PM2 运行时都读取这同一文件
 - `DATABASE_URL` 必须明确且只配置一次 `schema=public`；缺失、重复或使用其他 schema 都会阻止发布
 - workflow 构建 Prisma Client 时只使用无真实权限的占位连接串，不读取独立的生产 `DATABASE_URL` Secret
@@ -71,6 +71,15 @@
 - 修改生产数据库配置时必须更新完整的 `DEPLOY_ENV_FILE_API`，不能另外新增 migration 专用或 PM2 专用连接串
 - workflow 通过 GitHub Actions step env 和 `printf` 传输完整配置；migration 先使用 `env -i` 清空继承环境，再通过 Node 22 `--env-file` 加载配置；所有正向和回滚 PM2 启动也先清空继承环境，ecosystem 再使用 Node `parseEnv` 解析 `.env` 并把结果作为显式 `env` 传给应用。这样服务器 profile、GitHub runner 或 PM2 旧环境中的同名变量都不能覆盖生产配置文件
 - 禁止用 Shell `source`/`.` 执行 dotenv 文件，也禁止直接使用会保留同名继承变量的 `process.loadEnvFile` 作为 PM2 生产配置加载方式
+
+### API 生产 OSS
+
+- OSS 专用配置保存在服务器 `/var/www/gaoge/api/shared/oss.env`，权限必须为 `0600`；真实值不进入 GitHub Actions 日志、仓库或知识库
+- API release 的 `.env.oss` 软链接指向该共享文件，发布流程不会用 `DEPLOY_ENV_FILE_API` 覆盖它
+- PM2 只允许 `.env.oss` 提供六个 `ALIYUN_OSS_*` 变量；即使文件误含 `DATABASE_URL`、`JWT_SECRET` 等其他键，也不会覆盖 `.env`
+- `.env.oss` 不存在时保持现有本地上传回退，不影响 API 启动
+- 当前生产对象根前缀为 `gaoge`，admin 头像对象位于 `gaoge/admin-avatar/<userId>/...`
+- `gaoge-assets` Bucket 保持私有；新上传头像通过对象级 `public-read` 延续现有公网 HTTPS URL 访问方式，不修改 Bucket ACL 或 Policy
 
 ## 脚本与工具约定
 

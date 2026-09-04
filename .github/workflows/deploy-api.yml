@@ -251,6 +251,7 @@ jobs:
             tar -xzf \"\$RELEASE_DIR/${{ env.API_RELEASE_ARCHIVE }}\" -C \"\$RELEASE_DIR\"
             rm -f \"\$RELEASE_DIR/${{ env.API_RELEASE_ARCHIVE }}\"
             ln -sfn ${{ secrets.API_DEPLOY_PATH }}/shared/api.env \"\$RELEASE_DIR/.env\"
+            ln -sfn ${{ secrets.API_DEPLOY_PATH }}/shared/oss.env \"\$RELEASE_DIR/.env.oss\"
           '"
 
       - name: 校验、备份并执行生产迁移

@@ -62,6 +62,7 @@ test('api deployment uses one database source and persists PM2 only after verifi
   assert.match(workflow, /Number\.parseInt\(process\.versions\.node, 10\) !== 22/)
   assert.match(workflow, /api\.env\.next-\$RELEASE_ID/)
   assert.match(workflow, /mv .*NEXT_ENV_FILE.*SHARED_ENV_FILE/)
+  assert.match(workflow, /ln -sfn .*\/shared\/oss\.env .*\$RELEASE_DIR\/\.env\.oss/)
   assert.match(workflow, /env:\s+DEPLOY_ENV_FILE_API: \$\{\{ secrets\.DEPLOY_ENV_FILE_API \}\}/)
   assert.match(workflow, /printf '%s\\n' "\$DEPLOY_ENV_FILE_API"/)
   assert.doesNotMatch(workflow, /\. \.\/\.env/)
@@ -223,4 +224,45 @@ test('api PM2 production runtime file overrides inherited process environment', 
   assert.equal(app.env.DATABASE_URL, 'postgresql://from-file')
   assert.equal(app.env.PORT, '3456')
   assert.equal(app.instances, 2)
+})
+
+test('api PM2 loads only allowlisted OSS values from the server-managed file', () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'gaoge-ecosystem-oss-env-'))
+  const ecosystemPath = path.join(directory, 'ecosystem.config.cjs')
+  copyFileSync(path.join(workspaceRoot, 'apps/api/ecosystem.config.cjs'), ecosystemPath)
+  writeFileSync(
+    path.join(directory, '.env'),
+    ['DATABASE_URL="postgresql://from-base-file"', 'JWT_SECRET="from-base-file"', ''].join('\n'),
+  )
+  writeFileSync(
+    path.join(directory, '.env.oss'),
+    [
+      'ALIYUN_OSS_REGION="oss-cn-beijing"',
+      'ALIYUN_OSS_BUCKET="gaoge-assets"',
+      'ALIYUN_OSS_ACCESS_KEY_ID="test-access-key-id"',
+      'ALIYUN_OSS_ACCESS_KEY_SECRET="test-access-key-secret"',
+      'ALIYUN_OSS_PUBLIC_BASE_URL="https://gaoge-assets.oss-cn-beijing.aliyuncs.com"',
+      'ALIYUN_OSS_PREFIX="gaoge"',
+      'DATABASE_URL="postgresql://must-not-override"',
+      'JWT_SECRET="must-not-override"',
+      '',
+    ].join('\n'),
+  )
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      '-e',
+      `const config = require(${JSON.stringify(ecosystemPath)}); process.stdout.write(JSON.stringify(config.apps[0].env))`,
+    ],
+    { encoding: 'utf8' },
+  )
+
+  assert.equal(result.status, 0, result.stderr)
+  const env = JSON.parse(result.stdout)
+  assert.equal(env.ALIYUN_OSS_REGION, 'oss-cn-beijing')
+  assert.equal(env.ALIYUN_OSS_BUCKET, 'gaoge-assets')
+  assert.equal(env.ALIYUN_OSS_PREFIX, 'gaoge')
+  assert.equal(env.DATABASE_URL, 'postgresql://from-base-file')
+  assert.equal(env.JWT_SECRET, 'from-base-file')
 })

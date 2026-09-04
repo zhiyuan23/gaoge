@@ -103,6 +103,7 @@ async function uploadAdminAvatarToOss(
   await client.put(objectKey, file.buffer, {
     headers: {
       'Content-Type': file.mimetype,
+      'x-oss-object-acl': 'public-read',
     },
   })
 

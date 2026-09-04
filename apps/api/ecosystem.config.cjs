@@ -2,13 +2,33 @@
 const { readFileSync } = require('node:fs')
 const { parseEnv } = require('node:util')
 
-let runtimeEnv = {}
+const OSS_ENV_KEYS = [
+  'ALIYUN_OSS_REGION',
+  'ALIYUN_OSS_BUCKET',
+  'ALIYUN_OSS_ACCESS_KEY_ID',
+  'ALIYUN_OSS_ACCESS_KEY_SECRET',
+  'ALIYUN_OSS_PUBLIC_BASE_URL',
+  'ALIYUN_OSS_PREFIX',
+]
 
-try {
-  runtimeEnv = parseEnv(readFileSync(`${__dirname}/.env`, 'utf8'))
-} catch (error) {
-  if (error?.code !== 'ENOENT') {
-    throw error
+const readOptionalEnv = (filename) => {
+  try {
+    return parseEnv(readFileSync(`${__dirname}/${filename}`, 'utf8'))
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      throw error
+    }
+
+    return {}
+  }
+}
+
+const runtimeEnv = parseEnv(readFileSync(`${__dirname}/.env`, 'utf8'))
+const ossEnv = readOptionalEnv('.env.oss')
+
+for (const key of OSS_ENV_KEYS) {
+  if (ossEnv[key] !== undefined) {
+    runtimeEnv[key] = ossEnv[key]
   }
 }
 

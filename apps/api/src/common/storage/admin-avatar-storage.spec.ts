@@ -70,6 +70,7 @@ describe('admin-avatar-storage', () => {
     expect(mockPut.mock.calls[0]?.[2]).toEqual({
       headers: {
         'Content-Type': 'image/png',
+        'x-oss-object-acl': 'public-read',
       },
     })
     expect(avatarUrl).toMatch(
